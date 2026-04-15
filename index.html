@@ -1,0 +1,965 @@
+import { useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+
+/* ═══════════════════════════════════════════════════════════════
+   LA OPCIÓN PRODUCCIONES — GESTIÓN FINANCIERA DE ESPECTÁCULOS
+   ═══════════════════════════════════════════════════════════════ */
+
+// ── ID & FORMAT ──────────────────────────────────────────────
+const gid = () => crypto.randomUUID().slice(0, 8);
+const fmt = (n) => new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", minimumFractionDigits: 2 }).format(n);
+const fmtPct = (n) => `${(n || 0).toFixed(2)}%`;
+const r2 = (n) => Math.round(n * 100) / 100;
+
+// ── BRAND PALETTE (from logo) ────────────────────────────────
+const C = {
+  bg: "#0A0A0F", surface: "#111118", surfaceAlt: "#16161F", card: "#1A1A24",
+  border: "#2A2A3A", borderLight: "#35354A",
+  text: "#EEEEF4", textMuted: "#9090AA", textDim: "#606078",
+  cyan: "#6EC8E4", cyanDim: "rgba(110,200,228,0.12)",
+  pink: "#E85DA0", pinkDim: "rgba(232,93,160,0.12)",
+  yellow: "#E8D44C", yellowDim: "rgba(232,212,76,0.12)",
+  success: "#4ADE80", successDim: "rgba(74,222,128,0.10)",
+  danger: "#F87171", dangerDim: "rgba(248,113,113,0.10)",
+  purple: "#A78BFA", purpleDim: "rgba(167,139,250,0.10)",
+  warn: "#FBBF24", warnDim: "rgba(251,191,36,0.10)",
+};
+const FD = "'Outfit', 'DM Sans', sans-serif";
+const FB = "'DM Sans', 'Segoe UI', sans-serif";
+const CHART_COLORS = [C.cyan, C.pink, C.yellow, C.purple, C.success, "#F97316", "#6366F1", "#EC4899"];
+
+// ── LOGO SVG (recreated from the uploaded logo for inline use) ──
+const LogoSVG = ({ size = 120 }) => (
+  <svg width={size} height={size * 0.55} viewBox="0 0 340 187" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <text x="170" y="70" textAnchor="middle" fontFamily="'Outfit','Arial Black',sans-serif" fontSize="54" fontWeight="900" letterSpacing="4" fill={C.text}>LA OPCIÓN</text>
+    <line x1="30" y1="90" x2="310" y2="90" stroke={C.cyan} strokeWidth="4"/>
+    <line x1="30" y1="100" x2="310" y2="100" stroke={C.pink} strokeWidth="4"/>
+    <line x1="30" y1="110" x2="310" y2="110" stroke={C.yellow} strokeWidth="4"/>
+    <text x="170" y="145" textAnchor="middle" fontFamily="'Outfit','Arial',sans-serif" fontSize="22" fontWeight="300" letterSpacing="10" fill={C.textMuted}>PRODUCCIONES</text>
+  </svg>
+);
+
+// ── DEFAULT DATA ─────────────────────────────────────────────
+const DEF_PLATFORMS = [
+  { id: "p1", name: "Atrápalo", commission: 10, ivaOnCommission: true, active: true },
+  { id: "p2", name: "Fever", commission: 20, ivaOnCommission: false, active: true },
+  { id: "p3", name: "Kultur", commission: 13, ivaOnCommission: true, active: true },
+  { id: "p4", name: "Abonoteatro", commission: 0, ivaOnCommission: false, active: true },
+  { id: "p5", name: "Laopcion", commission: 5, ivaOnCommission: true, active: true },
+  { id: "p6", name: "Universe", commission: 10, ivaOnCommission: true, active: true },
+];
+const DEF_VENUES = [
+  { id: "v1", name: "Teatro Lara", active: true },
+  { id: "v2", name: "Sala Mirador", active: true },
+  { id: "v3", name: "Teatro Alfil", active: true },
+  { id: "v4", name: "La Escalera de Jacob", active: true },
+];
+const DEF_WORKS = [
+  { id: "w1", name: "El Último Aplauso", active: true },
+  { id: "w2", name: "Noches de Impro", active: true },
+  { id: "w3", name: "Microteatro: Silencio", active: true },
+  { id: "w4", name: "Stand-up Comedy Night", active: true },
+  { id: "w5", name: "El Gran Bingo Drag", active: true },
+];
+const DEF_EXPENSE_TYPES = [
+  { id: "et1", name: "Autor", active: true },
+  { id: "et2", name: "Alquiler", active: true },
+  { id: "et3", name: "Otros gastos", active: true },
+];
+const DEF_AGREEMENTS = [
+  { id: "at1", name: "50% Taquilla", mode: "percentage", value: 50, active: true },
+  { id: "at2", name: "60% Taquilla", mode: "percentage", value: 60, active: true },
+  { id: "at3", name: "Caché 50€", mode: "fixed", value: 50, active: true },
+  { id: "at4", name: "Caché 100€", mode: "fixed", value: 100, active: true },
+  { id: "at5", name: "Caché 400€", mode: "fixed", value: 400, active: true },
+];
+
+// ── SNAPSHOT BUILDERS ────────────────────────────────────────
+function snapPlatforms(platforms, income) {
+  const s = {};
+  platforms.forEach(pl => {
+    const amt = parseFloat(income[pl.id]) || 0;
+    s[pl.id] = { name: pl.name, commission: pl.commission, ivaOnCommission: pl.ivaOnCommission, income: amt };
+  });
+  return s;
+}
+function snapAgreement(a) {
+  return a ? { name: a.name, mode: a.mode, value: a.value } : null;
+}
+
+// ── CALCULATION ENGINE (matches spreadsheet logic) ───────────
+function calcShow(show) {
+  const ps = show.platformSnapshots || {};
+  const inc = show.income || {};
+  const agr = show.agreementSnapshot;
+
+  // Platform incomes
+  const commissions = [];
+  let totalPlatformIncome = 0;
+  let totalCommission = 0;
+
+  Object.entries(ps).forEach(([pid, snap]) => {
+    const amt = r2(snap.income || 0);
+    totalPlatformIncome += amt;
+    const base = r2(amt * snap.commission / 100);
+    const iva = snap.ivaOnCommission ? r2(base * 0.21) : 0;
+    const total = r2(base + iva);
+    commissions.push({ id: pid, name: snap.name, income: amt, commBase: base, commIva: iva, commTotal: total, pct: snap.commission, hasIva: snap.ivaOnCommission });
+    totalCommission += total;
+  });
+
+  const cashBox = r2(parseFloat(inc.cashBox) || 0);
+  const cardBox = r2(parseFloat(inc.cardBox) || 0);
+  const ventaBruta = r2(totalPlatformIncome + cashBox + cardBox);
+  const ventaNeta = r2(ventaBruta / 1.10);
+
+  // Manual expenses
+  const manualExp = (show.expenses || []).reduce((s, e) => s + r2(parseFloat(e.amount) || 0), 0);
+  const totalGastos = r2(totalCommission + manualExp);
+  const totalNeto = r2(ventaNeta - totalGastos);
+
+  // Cache / agreement
+  let cache = 0;
+  if (agr) {
+    if (agr.mode === "percentage") cache = r2(totalNeto * agr.value / 100);
+    else cache = r2(agr.value); // fixed: respect document behavior, can go negative
+  }
+  const restanteOpcion = r2(totalNeto - cache);
+
+  return {
+    commissions, cashBox, cardBox, ventaBruta, ventaNeta,
+    totalCommission: r2(totalCommission), manualExp: r2(manualExp),
+    totalGastos, totalNeto, cache, restanteOpcion, agreement: agr,
+  };
+}
+
+function isInUse(type, id, shows) {
+  const m = { venue: "venueId", work: "workId", agreement: "agreementId", platform: (s) => !!s.platformSnapshots?.[id], expenseType: (s) => (s.expenses||[]).some(e => e.typeId === id) };
+  const k = m[type];
+  return typeof k === "function" ? shows.some(k) : shows.some(s => s[k] === id);
+}
+
+// ── SAMPLE SHOWS ─────────────────────────────────────────────
+const SAMPLE_SHOWS = [
+  { id: "s1", venueId: "v1", workId: "w1", venueName: "Teatro Lara", workName: "El Último Aplauso", date: "2026-02-07", time: "20:00", agreementId: "at1", agreementSnapshot: { name: "50% Taquilla", mode: "percentage", value: 50 }, notes: "Estreno",
+    income: { p1: 1200, p2: 850, p3: 400, p4: 0, p5: 300, p6: 200, cashBox: 600, cardBox: 450 },
+    platformSnapshots: { p1: { name: "Atrápalo", commission: 10, ivaOnCommission: true, income: 1200 }, p2: { name: "Fever", commission: 20, ivaOnCommission: false, income: 850 }, p3: { name: "Kultur", commission: 13, ivaOnCommission: true, income: 400 }, p4: { name: "Abonoteatro", commission: 0, ivaOnCommission: false, income: 0 }, p5: { name: "Laopcion", commission: 5, ivaOnCommission: true, income: 300 }, p6: { name: "Universe", commission: 10, ivaOnCommission: true, income: 200 } },
+    expenses: [{ typeId: "et1", typeName: "Autor", amount: 200 }, { typeId: "et2", typeName: "Alquiler", amount: 350 }],
+    status: { ticketsSent: true, emailSent: true, invoiceSent: false, sentToAdmin: false, paymentDate: "" } },
+  { id: "s2", venueId: "v2", workId: "w2", venueName: "Sala Mirador", workName: "Noches de Impro", date: "2026-02-14", time: "21:30", agreementId: "at2", agreementSnapshot: { name: "60% Taquilla", mode: "percentage", value: 60 }, notes: "",
+    income: { p1: 500, p2: 1600, p3: 0, p4: 200, p5: 0, p6: 100, cashBox: 300, cardBox: 250 },
+    platformSnapshots: { p1: { name: "Atrápalo", commission: 10, ivaOnCommission: true, income: 500 }, p2: { name: "Fever", commission: 20, ivaOnCommission: false, income: 1600 }, p3: { name: "Kultur", commission: 13, ivaOnCommission: true, income: 0 }, p4: { name: "Abonoteatro", commission: 0, ivaOnCommission: false, income: 200 }, p5: { name: "Laopcion", commission: 5, ivaOnCommission: true, income: 0 }, p6: { name: "Universe", commission: 10, ivaOnCommission: true, income: 100 } },
+    expenses: [{ typeId: "et2", typeName: "Alquiler", amount: 280 }],
+    status: { ticketsSent: true, emailSent: true, invoiceSent: true, sentToAdmin: true, paymentDate: "2026-02-20" } },
+  { id: "s3", venueId: "v3", workId: "w3", venueName: "Teatro Alfil", workName: "Microteatro: Silencio", date: "2026-02-21", time: "19:00", agreementId: "at4", agreementSnapshot: { name: "Caché 100€", mode: "fixed", value: 100 }, notes: "Sesión doble",
+    income: { p1: 0, p2: 900, p3: 600, p4: 0, p5: 150, p6: 0, cashBox: 400, cardBox: 200 },
+    platformSnapshots: { p1: { name: "Atrápalo", commission: 10, ivaOnCommission: true, income: 0 }, p2: { name: "Fever", commission: 20, ivaOnCommission: false, income: 900 }, p3: { name: "Kultur", commission: 13, ivaOnCommission: true, income: 600 }, p4: { name: "Abonoteatro", commission: 0, ivaOnCommission: false, income: 0 }, p5: { name: "Laopcion", commission: 5, ivaOnCommission: true, income: 150 }, p6: { name: "Universe", commission: 10, ivaOnCommission: true, income: 0 } },
+    expenses: [{ typeId: "et1", typeName: "Autor", amount: 150 }, { typeId: "et3", typeName: "Otros gastos", amount: 100 }],
+    status: { ticketsSent: true, emailSent: false, invoiceSent: false, sentToAdmin: false, paymentDate: "" } },
+  { id: "s4", venueId: "v4", workId: "w4", venueName: "La Escalera de Jacob", workName: "Stand-up Comedy Night", date: "2026-02-28", time: "22:00", agreementId: "at5", agreementSnapshot: { name: "Caché 400€", mode: "fixed", value: 400 }, notes: "",
+    income: { p1: 300, p2: 0, p3: 200, p4: 500, p5: 0, p6: 350, cashBox: 800, cardBox: 600 },
+    platformSnapshots: { p1: { name: "Atrápalo", commission: 10, ivaOnCommission: true, income: 300 }, p2: { name: "Fever", commission: 20, ivaOnCommission: false, income: 0 }, p3: { name: "Kultur", commission: 13, ivaOnCommission: true, income: 200 }, p4: { name: "Abonoteatro", commission: 0, ivaOnCommission: false, income: 500 }, p5: { name: "Laopcion", commission: 5, ivaOnCommission: true, income: 0 }, p6: { name: "Universe", commission: 10, ivaOnCommission: true, income: 350 } },
+    expenses: [{ typeId: "et2", typeName: "Alquiler", amount: 400 }, { typeId: "et3", typeName: "Otros gastos", amount: 75 }],
+    status: { ticketsSent: true, emailSent: true, invoiceSent: true, sentToAdmin: false, paymentDate: "" } },
+];
+
+// ── ICONS ────────────────────────────────────────────────────
+const Ic = ({ d, size = 18, color = "currentColor" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
+const IX = {
+  home: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10",
+  list: "M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z",
+  plus: "M12 5v14 M5 12h14",
+  gear: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+  check: "M20 6L9 17l-5-5",
+  x: "M18 6L6 18 M6 6l12 12",
+  pen: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z",
+  trash: "M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+  chart: "M18 20V10 M12 20V4 M6 20v-6",
+  out: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9",
+  search: "M11 17.25a6.25 6.25 0 1 1 0-12.5 6.25 6.25 0 0 1 0 12.5z M21 21l-4.35-4.35",
+  alert: "M12 9v4 M12 17h.01 M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z",
+  cal: "M16 2v4 M8 2v4 M3 10h18 M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z",
+  filter: "M22 3H2l8 9.46V19l4 2v-8.54L22 3z",
+  summary: "M4 6h16 M4 10h16 M4 14h10 M4 18h6",
+  pie: "M21.21 15.89A10 10 0 1 1 8 2.83 M22 12A10 10 0 0 0 12 2v10z",
+};
+
+// ══════════════════════════════════════════════════════════════
+// UI COMPONENTS
+// ══════════════════════════════════════════════════════════════
+function Card({ children, style, onClick }) {
+  return <div onClick={onClick} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20, cursor: onClick ? "pointer" : "default", transition: "all .15s", ...style }}
+    onMouseEnter={e => { if (onClick) e.currentTarget.style.borderColor = C.cyan; }}
+    onMouseLeave={e => { if (onClick) e.currentTarget.style.borderColor = C.border; }}
+  >{children}</div>;
+}
+
+function KPI({ label, value, sub, color = C.cyan, dim = C.cyanDim, icon }) {
+  return <Card>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+      <span style={{ fontSize: 10, color: C.textMuted, fontFamily: FB, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600 }}>{label}</span>
+      {icon && <div style={{ width: 28, height: 28, borderRadius: 7, background: dim, display: "flex", alignItems: "center", justifyContent: "center" }}><Ic d={icon} size={14} color={color}/></div>}
+    </div>
+    <div style={{ fontSize: 22, fontFamily: FD, fontWeight: 800, color, letterSpacing: "-.5px" }}>{value}</div>
+    {sub && <div style={{ fontSize: 11, color: C.textDim, fontFamily: FB, marginTop: 4 }}>{sub}</div>}
+  </Card>;
+}
+
+function Btn({ children, onClick, v = "primary", sz = "md", style: sx, disabled }) {
+  const b = { fontFamily: FB, border: "none", borderRadius: 8, cursor: disabled ? "not-allowed" : "pointer", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6, transition: "all .15s", opacity: disabled ? .5 : 1 };
+  const szs = { sm: { padding: "5px 11px", fontSize: 12 }, md: { padding: "9px 16px", fontSize: 13 }, lg: { padding: "11px 22px", fontSize: 14 } };
+  const vs = { primary: { background: C.cyan, color: "#0A0A0F" }, secondary: { background: C.surfaceAlt, color: C.text, border: `1px solid ${C.border}` }, danger: { background: C.dangerDim, color: C.danger }, ghost: { background: "transparent", color: C.textMuted } };
+  return <button onClick={disabled ? undefined : onClick} style={{ ...b, ...szs[sz], ...vs[v], ...sx }}>{children}</button>;
+}
+
+function Inp({ label, value, onChange, type = "text", placeholder, style: sx, options, disabled, min, error }) {
+  const is = { width: "100%", padding: "8px 11px", background: C.surfaceAlt, border: `1px solid ${error ? C.danger : C.border}`, borderRadius: 8, color: C.text, fontFamily: FB, fontSize: 13, outline: "none", boxSizing: "border-box", transition: "border .15s", opacity: disabled ? .6 : 1 };
+  return <div style={{ marginBottom: 12, ...sx }}>
+    {label && <label style={{ display: "block", fontSize: 11, color: error ? C.danger : C.textMuted, fontFamily: FB, marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: .5 }}>{label}</label>}
+    {options ? <select value={value} onChange={e => onChange(e.target.value)} style={{ ...is, cursor: "pointer" }} disabled={disabled}><option value="">— Seleccionar —</option>{options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
+     : type === "textarea" ? <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ ...is, minHeight: 64, resize: "vertical" }} disabled={disabled}/>
+     : <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={is} disabled={disabled} min={min} onFocus={e => { e.target.style.borderColor = C.cyan; }} onBlur={e => { e.target.style.borderColor = error ? C.danger : C.border; }}/>}
+    {error && <div style={{ fontSize: 10, color: C.danger, fontFamily: FB, marginTop: 2 }}>{error}</div>}
+  </div>;
+}
+
+function Tog({ checked, onChange, label }) {
+  return <label style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer", fontSize: 13, color: C.text, fontFamily: FB }}>
+    <div onClick={() => onChange(!checked)} style={{ width: 38, height: 20, borderRadius: 10, background: checked ? C.cyan : C.surfaceAlt, border: `1px solid ${checked ? C.cyan : C.border}`, position: "relative", transition: "all .2s", cursor: "pointer" }}>
+      <div style={{ width: 14, height: 14, borderRadius: "50%", background: checked ? "#0A0A0F" : C.textDim, position: "absolute", top: 2, left: checked ? 21 : 2, transition: "all .2s" }}/>
+    </div>{label}
+  </label>;
+}
+
+function Chk({ checked, onChange, label, disabled }) {
+  return <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: disabled ? "default" : "pointer", fontSize: 13, color: disabled ? C.textDim : C.text, fontFamily: FB }}>
+    <div onClick={() => !disabled && onChange(!checked)} style={{ width: 17, height: 17, borderRadius: 4, border: `1.5px solid ${checked ? C.cyan : C.border}`, background: checked ? C.cyan : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: disabled ? "default" : "pointer", opacity: disabled ? .5 : 1 }}>
+      {checked && <Ic d={IX.check} size={11} color="#0A0A0F"/>}
+    </div>{label}
+  </label>;
+}
+
+function Badge({ children, color = C.cyan, bg = C.cyanDim }) {
+  return <span style={{ display: "inline-flex", padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 700, fontFamily: FB, color, background: bg, letterSpacing: .3 }}>{children}</span>;
+}
+
+function Modal({ title, children, onClose }) {
+  return <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
+    <div onClick={e => e.stopPropagation()} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, width: 500, maxWidth: "95vw", maxHeight: "90vh", overflow: "auto" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 22px", borderBottom: `1px solid ${C.border}` }}>
+        <h3 style={{ margin: 0, fontFamily: FD, fontSize: 17, color: C.text, fontWeight: 700 }}>{title}</h3>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted, padding: 4 }}><Ic d={IX.x} size={17}/></button>
+      </div>
+      <div style={{ padding: 22 }}>{children}</div>
+    </div>
+  </div>;
+}
+
+function Toast({ msg, type, onClose }) {
+  if (!msg) return null;
+  const cl = { error: C.danger, success: C.success, warn: C.warn }[type] || C.danger;
+  return <div style={{ position: "fixed", top: 18, right: 18, zIndex: 2000, padding: "11px 18px", background: C.card, border: `1px solid ${cl}40`, borderRadius: 10, color: cl, fontFamily: FB, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 9, maxWidth: 400, boxShadow: "0 8px 32px rgba(0,0,0,.5)" }}>
+    <Ic d={type === "success" ? IX.check : IX.alert} size={15} color={cl}/>
+    <span style={{ flex: 1 }}>{msg}</span>
+    <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: cl, padding: 2 }}><Ic d={IX.x} size={13}/></button>
+  </div>;
+}
+
+function Tbl({ columns, data, onRowClick }) {
+  return <div style={{ overflowX: "auto", borderRadius: 12, border: `1px solid ${C.border}` }}>
+    <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FB, fontSize: 13 }}>
+      <thead><tr>{columns.map(c => <th key={c.key} style={{ padding: "11px 14px", textAlign: c.align || "left", color: C.textDim, fontWeight: 600, fontSize: 10, textTransform: "uppercase", letterSpacing: .8, background: C.surface, borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" }}>{c.label}</th>)}</tr></thead>
+      <tbody>
+        {data.map((r, i) => <tr key={r.id || i} onClick={() => onRowClick?.(r)} style={{ cursor: onRowClick ? "pointer" : "default" }}
+          onMouseEnter={e => { e.currentTarget.style.background = C.surfaceAlt; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
+          {columns.map(c => <td key={c.key} style={{ padding: "11px 14px", borderBottom: `1px solid ${C.border}`, color: C.text, textAlign: c.align || "left", whiteSpace: "nowrap" }}>{c.render ? c.render(r) : r[c.key]}</td>)}
+        </tr>)}
+        {data.length === 0 && <tr><td colSpan={columns.length} style={{ padding: 36, textAlign: "center", color: C.textDim }}>Sin datos</td></tr>}
+      </tbody>
+    </table>
+  </div>;
+}
+
+function MiniBar({ value, max, color = C.cyan }) {
+  const pct = max > 0 ? Math.min(value / max * 100, 100) : 0;
+  return <div style={{ width: 70, height: 5, borderRadius: 3, background: C.surfaceAlt }}><div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: color }}/></div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════════════════════════
+function Sidebar({ role, view, setView, onLogout }) {
+  const aItems = [
+    { id: "dashboard", icon: IX.home, label: "Dashboard" },
+    { id: "shows", icon: IX.list, label: "Funciones" },
+    { id: "newshow", icon: IX.plus, label: "Nueva Función" },
+    { id: "summary", icon: IX.summary, label: "Resumen Mensual" },
+    { id: "reports", icon: IX.chart, label: "Informes" },
+    { id: "admin", icon: IX.gear, label: "Administración" },
+  ];
+  const uItems = [
+    { id: "dashboard", icon: IX.home, label: "Dashboard" },
+    { id: "shows", icon: IX.list, label: "Funciones" },
+    { id: "newshow", icon: IX.plus, label: "Registrar Ingreso" },
+  ];
+  const items = role === "admin" ? aItems : uItems;
+  return <div style={{ width: 230, minHeight: "100vh", background: C.surface, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", position: "fixed", left: 0, top: 0, zIndex: 100 }}>
+    <div style={{ padding: "18px 10px 14px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <LogoSVG size={200}/>
+    </div>
+    <nav style={{ flex: 1, padding: "10px 8px" }}>
+      {items.map(it => {
+        const on = view === it.id;
+        return <button key={it.id} onClick={() => setView(it.id)} style={{ display: "flex", alignItems: "center", gap: 11, width: "100%", padding: "10px 13px", marginBottom: 1, border: "none", borderRadius: 8, cursor: "pointer", background: on ? C.cyanDim : "transparent", color: on ? C.cyan : C.textMuted, fontFamily: FB, fontSize: 13, fontWeight: on ? 700 : 400, transition: "all .15s" }}
+          onMouseEnter={e => { if (!on) e.currentTarget.style.background = C.surfaceAlt; }}
+          onMouseLeave={e => { e.currentTarget.style.background = on ? C.cyanDim : "transparent"; }}>
+          <Ic d={it.icon} size={17}/>{it.label}
+        </button>;
+      })}
+    </nav>
+    <div style={{ padding: 14, borderTop: `1px solid ${C.border}` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
+        <div style={{ width: 30, height: 30, borderRadius: "50%", background: role === "admin" ? C.pinkDim : C.cyanDim, display: "flex", alignItems: "center", justifyContent: "center", color: role === "admin" ? C.pink : C.cyan, fontFamily: FB, fontWeight: 800, fontSize: 12 }}>{role === "admin" ? "A" : "U"}</div>
+        <div><div style={{ fontSize: 12, color: C.text, fontFamily: FB, fontWeight: 600 }}>{role === "admin" ? "Admin" : "Usuario"}</div><div style={{ fontSize: 10, color: C.textDim, fontFamily: FB }}>{role === "admin" ? "Control total" : "Registro"}</div></div>
+      </div>
+      <button onClick={onLogout} style={{ display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "7px 10px", border: `1px solid ${C.border}`, borderRadius: 6, background: "transparent", color: C.textMuted, cursor: "pointer", fontFamily: FB, fontSize: 11, transition: "all .15s" }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = C.danger; e.currentTarget.style.color = C.danger; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMuted; }}>
+        <Ic d={IX.out} size={13}/>Cerrar sesión
+      </button>
+    </div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════
+function Dashboard({ shows, onView }) {
+  const cs = shows.map(s => ({ ...s, c: calcShow(s) }));
+  const t = cs.reduce((a, s) => ({ vb: a.vb + s.c.ventaBruta, vn: a.vn + s.c.ventaNeta, g: a.g + s.c.totalGastos, tn: a.tn + s.c.totalNeto, ca: a.ca + s.c.cache, ro: a.ro + s.c.restanteOpcion, com: a.com + s.c.totalCommission }), { vb: 0, vn: 0, g: 0, tn: 0, ca: 0, ro: 0, com: 0 });
+
+  const pm = {}; cs.forEach(s => s.c.commissions.forEach(c => { pm[c.name] = (pm[c.name] || 0) + c.income; }));
+  const taq = cs.reduce((s, sh) => s + sh.c.cashBox + sh.c.cardBox, 0);
+  const pe = Object.entries(pm).sort(([,a],[,b]) => b - a);
+  const mx = Math.max(...pe.map(([,v]) => v), taq, 1);
+
+  const mo = {}; cs.forEach(s => { const m = s.date?.slice(0, 7) || "?"; if (!mo[m]) mo[m] = { vb: 0, ro: 0, n: 0 }; mo[m].vb += s.c.ventaBruta; mo[m].ro += s.c.restanteOpcion; mo[m].n++; });
+
+  return <div>
+    <div style={{ marginBottom: 24 }}><h1 style={{ fontFamily: FD, fontSize: 26, color: C.text, margin: 0, fontWeight: 800 }}>Dashboard</h1><p style={{ fontFamily: FB, fontSize: 13, color: C.textMuted, margin: "4px 0 0" }}>Resumen financiero · La Opción Producciones</p></div>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 24 }}>
+      <KPI label="Venta Bruta" value={fmt(t.vb)} icon={IX.chart} sub={`${shows.length} funciones`}/>
+      <KPI label="Venta Neta" value={fmt(t.vn)} color={C.purple} dim={C.purpleDim}/>
+      <KPI label="Total Gastos" value={fmt(t.g)} color={C.danger} dim={C.dangerDim}/>
+      <KPI label="Total Neto" value={fmt(t.tn)} color={C.yellow} dim={C.yellowDim}/>
+      <KPI label="Caché Salas" value={fmt(t.ca)} color={C.pink} dim={C.pinkDim}/>
+      <KPI label="Restante La Opción" value={fmt(t.ro)} color={C.success} dim={C.successDim} icon={IX.home}/>
+    </div>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 24 }}>
+      <Card>
+        <h3 style={{ fontFamily: FD, fontSize: 15, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Ventas por plataforma</h3>
+        {pe.map(([n, total]) => <div key={n} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <span style={{ width: 85, fontSize: 11, color: C.textMuted, fontFamily: FB, flexShrink: 0 }}>{n}</span>
+          <MiniBar value={total} max={mx}/>
+          <span style={{ fontSize: 12, color: C.text, fontFamily: FB, fontWeight: 700, minWidth: 70, textAlign: "right" }}>{fmt(total)}</span>
+        </div>)}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
+          <span style={{ width: 85, fontSize: 11, color: C.textMuted, fontFamily: FB }}>Taquilla</span>
+          <MiniBar value={taq} max={mx} color={C.success}/>
+          <span style={{ fontSize: 12, color: C.text, fontFamily: FB, fontWeight: 700, minWidth: 70, textAlign: "right" }}>{fmt(taq)}</span>
+        </div>
+      </Card>
+      <Card>
+        <h3 style={{ fontFamily: FD, fontSize: 15, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Resumen mensual</h3>
+        {Object.entries(mo).sort(([a],[b]) => b.localeCompare(a)).map(([m, d]) => <div key={m} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: `1px solid ${C.border}` }}>
+          <div><div style={{ fontSize: 13, color: C.text, fontFamily: FB, fontWeight: 600 }}>{m}</div><div style={{ fontSize: 10, color: C.textDim, fontFamily: FB }}>{d.n} función{d.n > 1 ? "es" : ""}</div></div>
+          <div style={{ textAlign: "right" }}><div style={{ fontSize: 14, color: C.success, fontFamily: FB, fontWeight: 700 }}>{fmt(d.ro)}</div><div style={{ fontSize: 10, color: C.textDim }}>de {fmt(d.vb)} brutos</div></div>
+        </div>)}
+      </Card>
+    </div>
+    <Card><h3 style={{ fontFamily: FD, fontSize: 15, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Últimas funciones</h3>
+      <Tbl columns={[
+        { key: "date", label: "Fecha" }, { key: "workName", label: "Obra" }, { key: "venueName", label: "Sala" },
+        { key: "vb", label: "V.Bruta", align: "right", render: r => fmt(r.c.ventaBruta) },
+        { key: "tn", label: "T.Neto", align: "right", render: r => fmt(r.c.totalNeto) },
+        { key: "ro", label: "Restante", align: "right", render: r => <span style={{ color: r.c.restanteOpcion >= 0 ? C.success : C.danger, fontWeight: 700 }}>{fmt(r.c.restanteOpcion)}</span> },
+        { key: "st", label: "Estado", render: r => { const d = [r.status?.ticketsSent, r.status?.emailSent, r.status?.invoiceSent, r.status?.sentToAdmin].filter(Boolean).length; return <Badge color={d === 4 ? C.success : C.cyan} bg={d === 4 ? C.successDim : C.cyanDim}>{d}/4</Badge>; } },
+      ]} data={cs.sort((a, b) => (b.date || "").localeCompare(a.date || ""))} onRowClick={r => onView(r.id)}/>
+    </Card>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// SHOW LIST
+// ══════════════════════════════════════════════════════════════
+function ShowList({ shows, onView, onNew }) {
+  const [q, setQ] = useState("");
+  const cs = shows.map(s => ({ ...s, c: calcShow(s) }));
+  const f = cs.filter(s => { const t = q.toLowerCase(); return (s.workName||"").toLowerCase().includes(t) || (s.venueName||"").toLowerCase().includes(t) || (s.date||"").includes(t); });
+  return <div>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      <div><h1 style={{ fontFamily: FD, fontSize: 26, color: C.text, margin: 0, fontWeight: 800 }}>Funciones</h1><p style={{ fontFamily: FB, fontSize: 13, color: C.textMuted, margin: "3px 0 0" }}>{shows.length} registradas</p></div>
+      <Btn onClick={onNew}><Ic d={IX.plus} size={15}/> Nueva</Btn>
+    </div>
+    <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
+      <Ic d={IX.search} size={15} color={C.textDim}/>
+      <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar..." style={{ padding: "9px 12px", width: 280, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontFamily: FB, fontSize: 13, outline: "none" }}/>
+    </div>
+    <Tbl columns={[
+      { key: "date", label: "Fecha" }, { key: "time", label: "Hora" }, { key: "workName", label: "Obra" }, { key: "venueName", label: "Sala" },
+      { key: "agr", label: "Acuerdo", render: r => r.agreementSnapshot?.name || "—" },
+      { key: "vb", label: "V.Bruta", align: "right", render: r => fmt(r.c.ventaBruta) },
+      { key: "vn", label: "V.Neta", align: "right", render: r => fmt(r.c.ventaNeta) },
+      { key: "ro", label: "Restante", align: "right", render: r => <span style={{ color: r.c.restanteOpcion >= 0 ? C.success : C.danger, fontWeight: 700 }}>{fmt(r.c.restanteOpcion)}</span> },
+    ]} data={f.sort((a, b) => (b.date||"").localeCompare(a.date||""))} onRowClick={r => onView(r.id)}/>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// SHOW DETAIL (role-aware)
+// ══════════════════════════════════════════════════════════════
+function ShowDetail({ show, platforms, agreements, venues, works, expenseTypes, onUpdate, onBack, role }) {
+  const c = calcShow(show);
+  const [editing, setEditing] = useState(false);
+  const [ed, setEd] = useState({ ...show });
+  const isA = role === "admin";
+
+  const handleSave = () => {
+    const inc = { ...ed.income }; platforms.forEach(pl => { inc[pl.id] = parseFloat(inc[pl.id]) || 0; }); inc.cashBox = parseFloat(inc.cashBox) || 0; inc.cardBox = parseFloat(inc.cardBox) || 0;
+    const exps = (ed.expenses||[]).map(e => ({ ...e, amount: parseFloat(e.amount) || 0, typeName: expenseTypes.find(t => t.id === e.typeId)?.name || e.typeName || "Gasto" }));
+    const v = venues.find(x => x.id === ed.venueId); const w = works.find(x => x.id === ed.workId); const ag = agreements.find(x => x.id === ed.agreementId);
+    onUpdate({ ...ed, income: inc, expenses: exps, venueName: v?.name || ed.venueName, workName: w?.name || ed.workName, agreementSnapshot: snapAgreement(ag) || ed.agreementSnapshot, platformSnapshots: snapPlatforms(platforms, inc) });
+    setEditing(false);
+  };
+
+  if (editing && isA) {
+    const vp = platforms.filter(pl => pl.active || (ed.income?.[pl.id] > 0));
+    return <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22 }}><Btn v="ghost" onClick={() => setEditing(false)}>← Cancelar</Btn><h2 style={{ fontFamily: FD, fontSize: 20, color: C.text, margin: 0, fontWeight: 700 }}>Editar: {show.workName}</h2></div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 22 }}>
+        <Card>
+          <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Datos</h3>
+          <Inp label="Obra" value={ed.workId} onChange={v => setEd({ ...ed, workId: v })} options={works.filter(w => w.active || w.id === ed.workId).map(w => ({ value: w.id, label: w.name }))}/>
+          <Inp label="Sala" value={ed.venueId} onChange={v => setEd({ ...ed, venueId: v })} options={venues.filter(v => v.active || v.id === ed.venueId).map(v => ({ value: v.id, label: v.name }))}/>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Inp label="Fecha" type="date" value={ed.date} onChange={v => setEd({ ...ed, date: v })}/><Inp label="Hora" type="time" value={ed.time} onChange={v => setEd({ ...ed, time: v })}/></div>
+          <Inp label="Acuerdo" value={ed.agreementId} onChange={v => setEd({ ...ed, agreementId: v })} options={agreements.filter(a => a.active || a.id === ed.agreementId).map(a => ({ value: a.id, label: a.name }))}/>
+          <Inp label="Observaciones" type="textarea" value={ed.notes || ""} onChange={v => setEd({ ...ed, notes: v })}/>
+        </Card>
+        <Card>
+          <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Ingresos</h3>
+          {vp.map(pl => <Inp key={pl.id} label={`${pl.name} (${pl.commission}%${pl.ivaOnCommission ? " +IVA" : ""})${!pl.active ? " [INACT]" : ""}`} type="number" min="0" value={ed.income?.[pl.id] || ""} onChange={v => setEd({ ...ed, income: { ...ed.income, [pl.id]: v } })}/>)}
+          <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 10, marginTop: 6 }}>
+            <Inp label="Taquilla efectivo" type="number" min="0" value={ed.income?.cashBox || ""} onChange={v => setEd({ ...ed, income: { ...ed.income, cashBox: v } })}/>
+            <Inp label="Taquilla tarjeta" type="number" min="0" value={ed.income?.cardBox || ""} onChange={v => setEd({ ...ed, income: { ...ed.income, cardBox: v } })}/>
+          </div>
+        </Card>
+      </div>
+      <Card style={{ marginBottom: 22 }}>
+        <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Gastos manuales</h3>
+        {(ed.expenses||[]).map((exp, i) => <div key={i} style={{ display: "flex", gap: 10, alignItems: "end", marginBottom: 6 }}>
+          <Inp label={i===0?"Tipo":""} value={exp.typeId} style={{ flex: 1, marginBottom: 0 }} options={expenseTypes.filter(et => et.active || et.id === exp.typeId).map(et => ({ value: et.id, label: et.name }))} onChange={v => { const e=[...ed.expenses]; e[i]={...e[i],typeId:v}; setEd({...ed,expenses:e}); }}/>
+          <Inp label={i===0?"€":""} type="number" min="0" value={exp.amount||""} style={{ width: 110, marginBottom: 0 }} onChange={v => { const e=[...ed.expenses]; e[i]={...e[i],amount:v}; setEd({...ed,expenses:e}); }}/>
+          <Btn v="danger" sz="sm" onClick={() => setEd({...ed,expenses:ed.expenses.filter((_,j)=>j!==i)})}><Ic d={IX.trash} size={13}/></Btn>
+        </div>)}
+        <Btn v="secondary" sz="sm" onClick={() => setEd({...ed,expenses:[...(ed.expenses||[]),{typeId:"",amount:0}]})}><Ic d={IX.plus} size={13}/> Añadir</Btn>
+      </Card>
+      <div style={{ display: "flex", gap: 10 }}><Btn onClick={handleSave}>Guardar</Btn><Btn v="secondary" onClick={() => setEditing(false)}>Cancelar</Btn></div>
+    </div>;
+  }
+
+  // READ VIEW
+  return <div>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <Btn v="ghost" onClick={onBack}>←</Btn>
+        <div><h1 style={{ fontFamily: FD, fontSize: 22, color: C.text, margin: 0, fontWeight: 800 }}>{show.workName}</h1><p style={{ fontFamily: FB, fontSize: 12, color: C.textMuted, margin: "3px 0 0" }}>{show.venueName} · {show.date} · {show.time}</p></div>
+      </div>
+      {isA && <Btn onClick={() => { setEd({...show}); setEditing(true); }}><Ic d={IX.pen} size={13}/> Editar</Btn>}
+    </div>
+
+    {/* KPIs */}
+    <div style={{ display: "grid", gridTemplateColumns: isA ? "repeat(6,1fr)" : "repeat(3,1fr)", gap: 10, marginBottom: 22 }}>
+      <KPI label="V. Bruta" value={fmt(c.ventaBruta)} color={C.cyan}/>
+      {isA && <KPI label="V. Neta" value={fmt(c.ventaNeta)} color={C.purple} dim={C.purpleDim}/>}
+      {isA && <KPI label="Gastos" value={fmt(c.totalGastos)} color={C.danger} dim={C.dangerDim}/>}
+      <KPI label="Total Neto" value={fmt(c.totalNeto)} color={C.yellow} dim={C.yellowDim}/>
+      {isA && <KPI label="Caché" value={fmt(c.cache)} color={C.pink} dim={C.pinkDim} sub={c.agreement?.name}/>}
+      <KPI label="Restante La Opción" value={fmt(c.restanteOpcion)} color={c.restanteOpcion >= 0 ? C.success : C.danger} dim={c.restanteOpcion >= 0 ? C.successDim : C.dangerDim}/>
+    </div>
+
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 22 }}>
+      <Card>
+        <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Ingresos por plataforma</h3>
+        {c.commissions.filter(x => x.income > 0).map(x => <div key={x.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: `1px solid ${C.border}` }}>
+          <div><div style={{ fontSize: 13, color: C.text, fontFamily: FB }}>{x.name}</div>{isA && <div style={{ fontSize: 10, color: C.textDim }}>Com: {fmt(x.commBase)}{x.commIva > 0 ? ` +IVA ${fmt(x.commIva)}` : ""} = {fmt(x.commTotal)}</div>}</div>
+          <div style={{ textAlign: "right" }}><div style={{ fontSize: 13, color: C.cyan, fontFamily: FB, fontWeight: 700 }}>{fmt(x.income)}</div>{isA && <div style={{ fontSize: 10, color: C.danger }}>-{fmt(x.commTotal)}</div>}</div>
+        </div>)}
+        {(c.cashBox > 0 || c.cardBox > 0) && <div style={{ paddingTop: 6 }}>
+          {c.cashBox > 0 && <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 12, fontFamily: FB, color: C.text }}><span>Taquilla efectivo</span><span style={{ fontWeight: 700, color: C.success }}>{fmt(c.cashBox)}</span></div>}
+          {c.cardBox > 0 && <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 12, fontFamily: FB, color: C.text }}><span>Taquilla tarjeta</span><span style={{ fontWeight: 700, color: C.success }}>{fmt(c.cardBox)}</span></div>}
+        </div>}
+      </Card>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {isA && <Card>
+          <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 12px", fontWeight: 700 }}>Desglose financiero</h3>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 12, fontFamily: FB }}><span style={{ color: C.textMuted }}>Venta Bruta</span><span style={{ color: C.text, fontWeight: 600 }}>{fmt(c.ventaBruta)}</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 12, fontFamily: FB }}><span style={{ color: C.textMuted }}>Venta Neta (÷1.10)</span><span style={{ color: C.purple, fontWeight: 600 }}>{fmt(c.ventaNeta)}</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 12, fontFamily: FB }}><span style={{ color: C.textMuted }}>Comisiones plataformas</span><span style={{ color: C.danger }}>{fmt(c.totalCommission)}</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 12, fontFamily: FB }}><span style={{ color: C.textMuted }}>Gastos manuales</span><span style={{ color: C.danger }}>{fmt(c.manualExp)}</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 12, fontFamily: FB, borderTop: `1px solid ${C.border}`, marginTop: 4 }}><span style={{ color: C.text, fontWeight: 700 }}>Total Gastos</span><span style={{ color: C.danger, fontWeight: 700 }}>{fmt(c.totalGastos)}</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 12, fontFamily: FB }}><span style={{ color: C.text, fontWeight: 700 }}>Total Neto</span><span style={{ color: C.yellow, fontWeight: 700 }}>{fmt(c.totalNeto)}</span></div>
+        </Card>}
+        <Card>
+          <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 10px", fontWeight: 700 }}>Reparto ({c.agreement?.name || "—"})</h3>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: 13, fontFamily: FB }}><span style={{ color: C.textMuted }}>Total Neto</span><span style={{ color: C.text, fontWeight: 600 }}>{fmt(c.totalNeto)}</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: 13, fontFamily: FB }}><span style={{ color: C.textMuted }}>Caché sala</span><span style={{ color: C.pink, fontWeight: 700 }}>{fmt(c.cache)}</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: 15, fontFamily: FD, fontWeight: 800, borderTop: `1px solid ${C.border}`, marginTop: 4 }}><span style={{ color: C.text }}>Restante La Opción</span><span style={{ color: c.restanteOpcion >= 0 ? C.success : C.danger }}>{fmt(c.restanteOpcion)}</span></div>
+        </Card>
+      </div>
+    </div>
+
+    {isA && <Card>
+      <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Estado administrativo <Badge color={C.pink} bg={C.pinkDim}>Solo admin</Badge></h3>
+      <div style={{ display: "flex", gap: 22, flexWrap: "wrap", alignItems: "end" }}>
+        <Chk checked={show.status?.ticketsSent} label="Taquilla enviada" onChange={v => onUpdate({...show,status:{...show.status,ticketsSent:v}})}/>
+        <Chk checked={show.status?.emailSent} label="Email envío" onChange={v => onUpdate({...show,status:{...show.status,emailSent:v}})}/>
+        <Chk checked={show.status?.invoiceSent} label="Factura" onChange={v => onUpdate({...show,status:{...show.status,invoiceSent:v}})}/>
+        <Chk checked={show.status?.sentToAdmin} label="Enviada admin" onChange={v => onUpdate({...show,status:{...show.status,sentToAdmin:v}})}/>
+        <Inp label="Fecha pago" type="date" value={show.status?.paymentDate||""} style={{ marginBottom: 0, width: 160 }} onChange={v => onUpdate({...show,status:{...show.status,paymentDate:v}})}/>
+      </div>
+    </Card>}
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// NEW SHOW (role-aware)
+// ══════════════════════════════════════════════════════════════
+function NewShow({ platforms, agreements, venues, works, expenseTypes, onSave, onCancel, role, toast }) {
+  const [d, setD] = useState({ id: gid(), venueId: "", workId: "", date: "", time: "", agreementId: "", notes: "", income: {}, expenses: [], status: { ticketsSent: false, emailSent: false, invoiceSent: false, sentToAdmin: false, paymentDate: "" } });
+  const [errs, setErrs] = useState({});
+  const isU = role === "user";
+
+  const validate = () => {
+    const e = {};
+    if (!d.workId) e.workId = "Selecciona una obra";
+    if (!d.venueId) e.venueId = "Selecciona una sala";
+    if (!d.date) e.date = "Introduce una fecha";
+    const vals = [...platforms.map(p => parseFloat(d.income?.[p.id]) || 0), parseFloat(d.income?.cashBox) || 0, parseFloat(d.income?.cardBox) || 0];
+    if (vals.some(v => v < 0)) e.income = "No se admiten importes negativos";
+    if ((d.expenses||[]).some(x => (parseFloat(x.amount)||0) < 0)) e.expenses = "Gastos negativos no válidos";
+    if (d.expenses?.some(x => x.amount > 0 && !x.typeId)) e.expType = "Selecciona tipo de gasto";
+    setErrs(e); return Object.keys(e).length === 0;
+  };
+
+  const save = () => {
+    if (!validate()) { toast({ message: "Corrige los errores", type: "error" }); return; }
+    const inc = { ...d.income }; platforms.forEach(p => { inc[p.id] = parseFloat(inc[p.id]) || 0; }); inc.cashBox = parseFloat(inc.cashBox) || 0; inc.cardBox = parseFloat(inc.cardBox) || 0;
+    const v = venues.find(x => x.id === d.venueId); const w = works.find(x => x.id === d.workId); const ag = agreements.find(x => x.id === d.agreementId);
+    const exps = (d.expenses||[]).filter(x => x.typeId && x.amount > 0).map(x => ({ ...x, amount: parseFloat(x.amount) || 0, typeName: expenseTypes.find(t => t.id === x.typeId)?.name || "Gasto" }));
+    onSave({ ...d, income: inc, expenses: exps, venueName: v?.name || "", workName: w?.name || "", agreementSnapshot: snapAgreement(ag), platformSnapshots: snapPlatforms(platforms, inc) });
+  };
+
+  const ap = platforms.filter(p => p.active);
+  return <div>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22 }}><Btn v="ghost" onClick={onCancel}>← Volver</Btn><h1 style={{ fontFamily: FD, fontSize: 22, color: C.text, margin: 0, fontWeight: 800 }}>{isU ? "Registrar ingreso" : "Nueva función"}</h1>{isU && <Badge color={C.cyan}>Usuario</Badge>}</div>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 22 }}>
+      <Card>
+        <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Datos</h3>
+        <Inp label="Obra *" value={d.workId} onChange={v => setD({...d,workId:v})} options={works.filter(w=>w.active).map(w=>({value:w.id,label:w.name}))} error={errs.workId}/>
+        <Inp label="Sala *" value={d.venueId} onChange={v => setD({...d,venueId:v})} options={venues.filter(v=>v.active).map(v=>({value:v.id,label:v.name}))} error={errs.venueId}/>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><Inp label="Fecha *" type="date" value={d.date} onChange={v => setD({...d,date:v})} error={errs.date}/><Inp label="Hora" type="time" value={d.time} onChange={v => setD({...d,time:v})}/></div>
+        {!isU && <Inp label="Acuerdo" value={d.agreementId} onChange={v => setD({...d,agreementId:v})} options={agreements.filter(a=>a.active).map(a=>({value:a.id,label:a.name}))}/>}
+        <Inp label="Observaciones" type="textarea" value={d.notes} onChange={v => setD({...d,notes:v})}/>
+      </Card>
+      <Card>
+        <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Ingresos</h3>
+        {errs.income && <div style={{ fontSize: 11, color: C.danger, fontFamily: FB, marginBottom: 8 }}>{errs.income}</div>}
+        {ap.map(p => <Inp key={p.id} label={isU ? p.name : `${p.name} (${p.commission}%${p.ivaOnCommission?" +IVA":""})`} type="number" min="0" value={d.income?.[p.id]||""} placeholder="0" onChange={v => setD({...d,income:{...d.income,[p.id]:v}})}/>)}
+        <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 10, marginTop: 6 }}>
+          <Inp label="Taquilla efectivo" type="number" min="0" value={d.income?.cashBox||""} placeholder="0" onChange={v => setD({...d,income:{...d.income,cashBox:v}})}/>
+          <Inp label="Taquilla tarjeta" type="number" min="0" value={d.income?.cardBox||""} placeholder="0" onChange={v => setD({...d,income:{...d.income,cardBox:v}})}/>
+        </div>
+      </Card>
+    </div>
+    <Card style={{ marginBottom: 22 }}>
+      <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Gastos</h3>
+      {errs.expenses && <div style={{ fontSize: 11, color: C.danger, marginBottom: 8 }}>{errs.expenses}</div>}
+      {d.expenses.map((e, i) => <div key={i} style={{ display: "flex", gap: 10, alignItems: "end", marginBottom: 6 }}>
+        <Inp label={i===0?"Tipo":""} value={e.typeId} style={{ flex: 1, marginBottom: 0 }} options={expenseTypes.filter(t=>t.active).map(t=>({value:t.id,label:t.name}))} onChange={v => { const x=[...d.expenses]; x[i]={...x[i],typeId:v}; setD({...d,expenses:x}); }}/>
+        <Inp label={i===0?"€":""} type="number" min="0" value={e.amount||""} style={{ width: 110, marginBottom: 0 }} onChange={v => { const x=[...d.expenses]; x[i]={...x[i],amount:v}; setD({...d,expenses:x}); }}/>
+        <Btn v="danger" sz="sm" onClick={() => setD({...d,expenses:d.expenses.filter((_,j)=>j!==i)})}><Ic d={IX.trash} size={13}/></Btn>
+      </div>)}
+      <Btn v="secondary" sz="sm" onClick={() => setD({...d,expenses:[...d.expenses,{typeId:"",amount:0}]})}><Ic d={IX.plus} size={13}/> Añadir</Btn>
+    </Card>
+    <div style={{ display: "flex", gap: 10 }}><Btn onClick={save}>Guardar</Btn><Btn v="secondary" onClick={onCancel}>Cancelar</Btn></div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// MONTHLY SUMMARY (replicates spreadsheet)
+// ══════════════════════════════════════════════════════════════
+function MonthlySummary({ shows }) {
+  const cs = shows.map(s => ({ ...s, c: calcShow(s) }));
+  const months = [...new Set(cs.map(s => s.date?.slice(0, 7)).filter(Boolean))].sort((a, b) => b.localeCompare(a));
+  const [selMonth, setSelMonth] = useState(months[0] || "");
+
+  const filtered = cs.filter(s => s.date?.startsWith(selMonth));
+
+  // Group by work
+  const byWork = {};
+  filtered.forEach(s => {
+    const k = s.workName || "Sin obra";
+    if (!byWork[k]) byWork[k] = { work: k, venue: s.venueName, ingreso: 0, coste: 0, beneficio: 0 };
+    byWork[k].ingreso += s.c.totalNeto;
+    byWork[k].coste += s.c.cache;
+    byWork[k].beneficio += s.c.restanteOpcion;
+  });
+  const rows = Object.values(byWork);
+  const totI = rows.reduce((s, r) => s + r.ingreso, 0);
+  const totC = rows.reduce((s, r) => s + r.coste, 0);
+  const totB = rows.reduce((s, r) => s + r.beneficio, 0);
+  rows.forEach(r => { r.pct = totB !== 0 ? r2(r.beneficio / totB * 100) : 0; });
+  const totPct = totI !== 0 ? r2(totB / totI * 100) : 0;
+
+  // Platform summary
+  const platTotals = {};
+  filtered.forEach(s => {
+    s.c.commissions.forEach(c => { platTotals[c.name] = (platTotals[c.name] || 0) + c.income; });
+    platTotals["Taq. Efectivo"] = (platTotals["Taq. Efectivo"] || 0) + s.c.cashBox;
+    platTotals["Taq. Tarjeta"] = (platTotals["Taq. Tarjeta"] || 0) + s.c.cardBox;
+  });
+
+  return <div>
+    <h1 style={{ fontFamily: FD, fontSize: 26, color: C.text, margin: "0 0 6px", fontWeight: 800 }}>Resumen Mensual</h1>
+    <p style={{ fontFamily: FB, fontSize: 13, color: C.textMuted, margin: "0 0 20px" }}>Visión por obra y plataforma del periodo</p>
+
+    <div style={{ display: "flex", gap: 8, marginBottom: 20, alignItems: "center" }}>
+      <Ic d={IX.cal} size={15} color={C.textDim}/>
+      <select value={selMonth} onChange={e => setSelMonth(e.target.value)} style={{ padding: "8px 12px", background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontFamily: FB, fontSize: 13 }}>
+        {months.map(m => <option key={m} value={m}>{m}</option>)}
+      </select>
+      <span style={{ fontSize: 12, color: C.textDim, fontFamily: FB }}>{filtered.length} funciones</span>
+    </div>
+
+    <Card style={{ marginBottom: 20 }}>
+      <h3 style={{ fontFamily: FD, fontSize: 15, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Resumen por obra</h3>
+      <Tbl columns={[
+        { key: "venue", label: "Sala" }, { key: "work", label: "Obra" },
+        { key: "ingreso", label: "Ingreso", align: "right", render: r => fmt(r.ingreso) },
+        { key: "coste", label: "Coste CIA", align: "right", render: r => fmt(r.coste) },
+        { key: "beneficio", label: "Beneficios", align: "right", render: r => <span style={{ color: r.beneficio >= 0 ? C.success : C.danger, fontWeight: 700 }}>{fmt(r.beneficio)}</span> },
+        { key: "pct", label: "%", align: "right", render: r => fmtPct(r.pct) },
+      ]} data={rows}/>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 30, padding: "12px 14px 0", borderTop: `2px solid ${C.cyan}30`, marginTop: 10 }}>
+        <span style={{ fontSize: 12, color: C.textMuted, fontFamily: FB }}>TOTAL</span>
+        <span style={{ fontSize: 12, color: C.text, fontFamily: FB, fontWeight: 700, minWidth: 85, textAlign: "right" }}>{fmt(totI)}</span>
+        <span style={{ fontSize: 12, color: C.text, fontFamily: FB, fontWeight: 700, minWidth: 85, textAlign: "right" }}>{fmt(totC)}</span>
+        <span style={{ fontSize: 12, color: C.success, fontFamily: FB, fontWeight: 700, minWidth: 85, textAlign: "right" }}>{fmt(totB)}</span>
+        <span style={{ fontSize: 12, color: C.cyan, fontFamily: FB, fontWeight: 700, minWidth: 50, textAlign: "right" }}>{fmtPct(totPct)}</span>
+      </div>
+    </Card>
+
+    <Card>
+      <h3 style={{ fontFamily: FD, fontSize: 15, color: C.text, margin: "0 0 14px", fontWeight: 700 }}>Resumen por plataforma</h3>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
+        {Object.entries(platTotals).sort(([,a],[,b]) => b - a).map(([name, total]) => <div key={name} style={{ background: C.surfaceAlt, borderRadius: 10, padding: "14px 16px", border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 10, color: C.textMuted, fontFamily: FB, textTransform: "uppercase", letterSpacing: .5, marginBottom: 4, fontWeight: 600 }}>{name}</div>
+          <div style={{ fontSize: 18, fontFamily: FD, fontWeight: 800, color: C.cyan }}>{fmt(total)}</div>
+        </div>)}
+      </div>
+    </Card>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// REPORTS (advanced, filtered, with charts)
+// ══════════════════════════════════════════════════════════════
+function Reports({ shows, works, venues }) {
+  const [fWork, setFWork] = useState("");
+  const [fVenue, setFVenue] = useState("");
+  const [fFrom, setFFrom] = useState("");
+  const [fTo, setFTo] = useState("");
+  const [tab, setTab] = useState("overview");
+
+  const cs = shows.map(s => ({ ...s, c: calcShow(s) })).filter(s => {
+    if (fWork && s.workId !== fWork) return false;
+    if (fVenue && s.venueId !== fVenue) return false;
+    if (fFrom && s.date < fFrom) return false;
+    if (fTo && s.date > fTo) return false;
+    return true;
+  });
+
+  const t = cs.reduce((a, s) => ({ vb: a.vb+s.c.ventaBruta, vn: a.vn+s.c.ventaNeta, g: a.g+s.c.totalGastos, tn: a.tn+s.c.totalNeto, ca: a.ca+s.c.cache, ro: a.ro+s.c.restanteOpcion, n: a.n+1 }), { vb:0, vn:0, g:0, tn:0, ca:0, ro:0, n:0 });
+
+  // By work
+  const bw = {}; cs.forEach(s => { const k = s.workName||"?"; if (!bw[k]) bw[k] = { name: k, vb: 0, ro: 0, n: 0 }; bw[k].vb += s.c.ventaBruta; bw[k].ro += s.c.restanteOpcion; bw[k].n++; });
+  const workData = Object.values(bw).sort((a,b) => b.vb - a.vb);
+
+  // By venue
+  const bv = {}; cs.forEach(s => { const k = s.venueName||"?"; if (!bv[k]) bv[k] = { name: k, vb: 0, ro: 0, n: 0 }; bv[k].vb += s.c.ventaBruta; bv[k].ro += s.c.restanteOpcion; bv[k].n++; });
+  const venueData = Object.values(bv).sort((a,b) => b.vb - a.vb);
+
+  // Monthly evolution
+  const bm = {}; cs.forEach(s => { const m = s.date?.slice(0,7)||"?"; if (!bm[m]) bm[m] = { name: m, vb: 0, g: 0, ro: 0 }; bm[m].vb += s.c.ventaBruta; bm[m].g += s.c.totalGastos; bm[m].ro += s.c.restanteOpcion; });
+  const monthData = Object.values(bm).sort((a,b) => a.name.localeCompare(b.name));
+
+  // Platform pie
+  const pp = {}; cs.forEach(s => { s.c.commissions.forEach(c => { pp[c.name] = (pp[c.name]||0) + c.income; }); pp["Taquilla"] = (pp["Taquilla"]||0) + s.c.cashBox + s.c.cardBox; });
+  const pieData = Object.entries(pp).map(([name, value]) => ({ name, value: r2(value) })).sort((a,b) => b.value - a.value);
+
+  const tabs = [{ id: "overview", l: "Resumen" }, { id: "works", l: "Por obra" }, { id: "venues", l: "Por sala" }, { id: "evolution", l: "Evolución" }];
+
+  return <div>
+    <h1 style={{ fontFamily: FD, fontSize: 26, color: C.text, margin: "0 0 6px", fontWeight: 800 }}>Informes</h1>
+    <p style={{ fontFamily: FB, fontSize: 13, color: C.textMuted, margin: "0 0 18px" }}>Análisis financiero con filtros</p>
+
+    {/* FILTERS */}
+    <Card style={{ marginBottom: 18, padding: 16 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "end" }}>
+        <Inp label="Obra" value={fWork} onChange={setFWork} options={works.map(w => ({ value: w.id, label: w.name }))} style={{ width: 180, marginBottom: 0 }}/>
+        <Inp label="Sala" value={fVenue} onChange={setFVenue} options={venues.map(v => ({ value: v.id, label: v.name }))} style={{ width: 170, marginBottom: 0 }}/>
+        <Inp label="Desde" type="date" value={fFrom} onChange={setFFrom} style={{ width: 150, marginBottom: 0 }}/>
+        <Inp label="Hasta" type="date" value={fTo} onChange={setFTo} style={{ width: 150, marginBottom: 0 }}/>
+        <Btn v="ghost" sz="sm" onClick={() => { setFWork(""); setFVenue(""); setFFrom(""); setFTo(""); }}><Ic d={IX.x} size={13}/> Limpiar</Btn>
+      </div>
+    </Card>
+
+    {/* KPIs */}
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 20 }}>
+      <KPI label="Funciones" value={t.n} color={C.cyan}/>
+      <KPI label="V. Bruta" value={fmt(t.vb)} color={C.purple} dim={C.purpleDim}/>
+      <KPI label="V. Neta" value={fmt(t.vn)} color={C.yellow} dim={C.yellowDim}/>
+      <KPI label="Total Gastos" value={fmt(t.g)} color={C.danger} dim={C.dangerDim}/>
+      <KPI label="Total Neto" value={fmt(t.tn)} color={C.cyan}/>
+      <KPI label="Caché" value={fmt(t.ca)} color={C.pink} dim={C.pinkDim}/>
+      <KPI label="Restante" value={fmt(t.ro)} color={C.success} dim={C.successDim}/>
+    </div>
+
+    {/* TABS */}
+    <div style={{ display: "flex", gap: 3, marginBottom: 18, background: C.surface, borderRadius: 8, padding: 3, width: "fit-content", border: `1px solid ${C.border}` }}>
+      {tabs.map(t => <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "7px 14px", border: "none", borderRadius: 6, cursor: "pointer", fontFamily: FB, fontSize: 12, fontWeight: 600, background: tab === t.id ? C.cyanDim : "transparent", color: tab === t.id ? C.cyan : C.textMuted }}>{t.l}</button>)}
+    </div>
+
+    {tab === "overview" && <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <Card>
+        <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 12px", fontWeight: 700 }}>Ingresos vs Gastos vs Beneficio por obra</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <BarChart data={workData}><XAxis dataKey="name" tick={{ fill: C.textDim, fontSize: 10 }} axisLine={false} tickLine={false}/><YAxis tick={{ fill: C.textDim, fontSize: 10 }} axisLine={false} tickLine={false}/><Tooltip contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: FB, fontSize: 12 }} formatter={v => fmt(v)}/><Bar dataKey="vb" name="V.Bruta" fill={C.cyan} radius={[4,4,0,0]}/><Bar dataKey="ro" name="Restante" fill={C.success} radius={[4,4,0,0]}/></BarChart>
+        </ResponsiveContainer>
+      </Card>
+      <Card>
+        <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 12px", fontWeight: 700 }}>Reparto por plataforma</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <PieChart><Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={50} paddingAngle={2} label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`} labelLine={false}>
+            {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]}/>)}
+          </Pie><Tooltip formatter={v => fmt(v)} contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: FB, fontSize: 12 }}/></PieChart>
+        </ResponsiveContainer>
+      </Card>
+    </div>}
+
+    {tab === "works" && <Tbl columns={[
+      { key: "name", label: "Obra" }, { key: "n", label: "Func.", align: "center" },
+      { key: "vb", label: "V.Bruta", align: "right", render: r => fmt(r.vb) },
+      { key: "ro", label: "Restante", align: "right", render: r => <span style={{ color: r.ro >= 0 ? C.success : C.danger, fontWeight: 700 }}>{fmt(r.ro)}</span> },
+    ]} data={workData}/>}
+
+    {tab === "venues" && <Tbl columns={[
+      { key: "name", label: "Sala" }, { key: "n", label: "Func.", align: "center" },
+      { key: "vb", label: "V.Bruta", align: "right", render: r => fmt(r.vb) },
+      { key: "ro", label: "Restante", align: "right", render: r => <span style={{ color: r.ro >= 0 ? C.success : C.danger, fontWeight: 700 }}>{fmt(r.ro)}</span> },
+    ]} data={venueData}/>}
+
+    {tab === "evolution" && <Card>
+      <h3 style={{ fontFamily: FD, fontSize: 14, color: C.text, margin: "0 0 12px", fontWeight: 700 }}>Evolución mensual</h3>
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={monthData}><XAxis dataKey="name" tick={{ fill: C.textDim, fontSize: 10 }} axisLine={false} tickLine={false}/><YAxis tick={{ fill: C.textDim, fontSize: 10 }} axisLine={false} tickLine={false}/><Tooltip contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8 }} formatter={v => fmt(v)}/><Legend/><Bar dataKey="vb" name="V.Bruta" fill={C.cyan} radius={[4,4,0,0]}/><Bar dataKey="g" name="Gastos" fill={C.danger} radius={[4,4,0,0]}/><Bar dataKey="ro" name="Restante" fill={C.success} radius={[4,4,0,0]}/></BarChart>
+      </ResponsiveContainer>
+    </Card>}
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN
+// ══════════════════════════════════════════════════════════════
+function Admin({ platforms, setPlatforms, venues, setVenues, works, setWorks, expenseTypes, setExpenseTypes, agreements, setAgreements, shows, toast }) {
+  const [tab, setTab] = useState("platforms");
+  const [modal, setModal] = useState(null);
+  const [confirm, setConfirm] = useState(null);
+
+  const tabs = [{ id: "platforms", l: "Plataformas" },{ id: "venues", l: "Salas" },{ id: "works", l: "Obras" },{ id: "expenses", l: "Gastos" },{ id: "agreements", l: "Acuerdos" },{ id: "sync", l: "Sync" }];
+  const isDup = (list, name, exId) => list.some(x => x.id !== exId && x.name.toLowerCase().trim() === name.toLowerCase().trim());
+
+  const save = (type, item, list, setList, label) => {
+    if (isDup(list, item.name, item._new ? null : item.id)) { toast({ message: `"${item.name}" ya existe`, type: "error" }); return; }
+    if (type === "platform" && (item.commission < 0 || item.commission > 100)) { toast({ message: "Comisión 0-100%", type: "error" }); return; }
+    if (item._new) { const { _new, ...r } = item; setList([...list, { ...r, id: gid() }]); } else setList(list.map(x => x.id === item.id ? item : x));
+    setModal(null); toast({ message: `${label} guardada`, type: "success" });
+  };
+
+  const tryDel = (etype, id, list, setList, label) => {
+    if (isInUse(etype, id, shows)) { toast({ message: `"${label}" en uso. Desactívala.`, type: "warn" }); return; }
+    setConfirm({ msg: `¿Eliminar "${label}"?`, fn: () => { setList(list.filter(x => x.id !== id)); setConfirm(null); toast({ message: "Eliminada", type: "success" }); } });
+  };
+
+  const mkTable = (etype, list, setList, label, extra = []) => <>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+      <p style={{ fontFamily: FB, fontSize: 13, color: C.textMuted, margin: 0 }}>{label}</p>
+      <Btn onClick={() => setModal({ type: etype, item: { name: "", active: true, _new: true, ...(etype==="platform"?{commission:0,ivaOnCommission:false}:{}), ...(etype==="agreement"?{mode:"percentage",value:50}:{}) } })}><Ic d={IX.plus} size={13}/> Nuevo</Btn>
+    </div>
+    <Tbl columns={[{ key: "name", label: "Nombre" }, ...extra,
+      { key: "active", label: "Estado", render: r => r.active !== false ? <Badge color={C.success} bg={C.successDim}>Activa</Badge> : <Badge color={C.textDim} bg={C.surfaceAlt}>Inactiva</Badge> },
+      { key: "used", label: "Uso", align: "center", render: r => isInUse(etype, r.id, shows) ? <Badge color={C.cyan}>Sí</Badge> : "—" },
+      { key: "act", label: "", align: "right", render: r => <div style={{ display: "flex", gap: 3, justifyContent: "flex-end" }}>
+        <Btn v="ghost" sz="sm" onClick={e => { e.stopPropagation(); setModal({ type: etype, item: r }); }}><Ic d={IX.pen} size={13}/></Btn>
+        <Btn v="ghost" sz="sm" onClick={e => { e.stopPropagation(); tryDel(etype, r.id, list, setList, r.name); }}><Ic d={IX.trash} size={13} color={C.danger}/></Btn>
+      </div> },
+    ]} data={list}/>
+  </>;
+
+  return <div>
+    <h1 style={{ fontFamily: FD, fontSize: 26, color: C.text, margin: "0 0 20px", fontWeight: 800 }}>Administración</h1>
+    <div style={{ display: "flex", gap: 3, marginBottom: 18, background: C.surface, borderRadius: 8, padding: 3, border: `1px solid ${C.border}`, flexWrap: "wrap" }}>
+      {tabs.map(t => <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "7px 14px", border: "none", borderRadius: 6, cursor: "pointer", fontFamily: FB, fontSize: 12, fontWeight: 600, background: tab === t.id ? C.cyanDim : "transparent", color: tab === t.id ? C.cyan : C.textMuted }}>{t.l}</button>)}
+    </div>
+
+    {tab === "platforms" && mkTable("platform", platforms, setPlatforms, "Plataformas", [
+      { key: "comm", label: "Com.", render: r => `${r.commission}%` },
+      { key: "iva", label: "IVA", render: r => r.ivaOnCommission ? <Badge color={C.pink} bg={C.pinkDim}>Sí</Badge> : "No" },
+    ])}
+    {tab === "venues" && mkTable("venue", venues, setVenues, "Salas")}
+    {tab === "works" && mkTable("work", works, setWorks, "Obras", [{ key: "cnt", label: "Func.", align: "center", render: r => shows.filter(s => s.workId === r.id).length || "—" }])}
+    {tab === "expenses" && mkTable("expenseType", expenseTypes, setExpenseTypes, "Tipos de gasto")}
+    {tab === "agreements" && mkTable("agreement", agreements, setAgreements, "Acuerdos", [
+      { key: "mode", label: "Tipo", render: r => r.mode === "percentage" ? <Badge color={C.cyan}>%</Badge> : <Badge color={C.pink} bg={C.pinkDim}>Fijo</Badge> },
+      { key: "val", label: "Valor", render: r => r.mode === "percentage" ? `${r.value}%` : fmt(r.value) },
+    ])}
+    {tab === "sync" && <Card><div style={{ textAlign: "center", padding: "36px 18px" }}>
+      <LogoSVG size={100}/><h3 style={{ fontFamily: FD, fontSize: 18, color: C.text, margin: "16px 0 6px", fontWeight: 700 }}>Google Sheets</h3>
+      <p style={{ fontFamily: FB, fontSize: 13, color: C.textMuted, margin: "0 0 10px" }}>Exportación de datos para backup</p>
+      <Badge color={C.warn} bg={C.warnDim}>Próximamente</Badge>
+    </div></Card>}
+
+    {modal?.type === "platform" && <Modal title={modal.item._new ? "Nueva plataforma" : "Editar plataforma"} onClose={() => setModal(null)}>
+      <PlatformForm item={modal.item} onSave={i => save("platform", i, platforms, setPlatforms, "Plataforma")} onCancel={() => setModal(null)}/>
+    </Modal>}
+    {modal?.type === "venue" && <Modal title={modal.item._new ? "Nueva sala" : "Editar sala"} onClose={() => setModal(null)}><NAForm item={modal.item} onSave={i => save("venue", i, venues, setVenues, "Sala")} onCancel={() => setModal(null)} label="Sala"/></Modal>}
+    {modal?.type === "work" && <Modal title={modal.item._new ? "Nueva obra" : "Editar obra"} onClose={() => setModal(null)}><NAForm item={modal.item} onSave={i => save("work", i, works, setWorks, "Obra")} onCancel={() => setModal(null)} label="Obra"/></Modal>}
+    {modal?.type === "expenseType" && <Modal title={modal.item._new ? "Nuevo tipo" : "Editar tipo"} onClose={() => setModal(null)}><NAForm item={modal.item} onSave={i => save("expenseType", i, expenseTypes, setExpenseTypes, "Tipo")} onCancel={() => setModal(null)} label="Nombre"/></Modal>}
+    {modal?.type === "agreement" && <Modal title={modal.item._new ? "Nuevo acuerdo" : "Editar acuerdo"} onClose={() => setModal(null)}><AgrForm item={modal.item} onSave={i => save("agreement", i, agreements, setAgreements, "Acuerdo")} onCancel={() => setModal(null)}/></Modal>}
+
+    {confirm && <Modal title="Confirmar" onClose={() => setConfirm(null)}><p style={{ fontFamily: FB, fontSize: 13, color: C.text, marginBottom: 18 }}>{confirm.msg}</p><div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}><Btn v="secondary" onClick={() => setConfirm(null)}>Cancelar</Btn><Btn v="danger" onClick={confirm.fn}>Eliminar</Btn></div></Modal>}
+  </div>;
+}
+
+// FORMS
+function PlatformForm({ item, onSave, onCancel }) {
+  const [d, setD] = useState({ ...item });
+  return <div>
+    <Inp label="Nombre *" value={d.name} onChange={v => setD({...d,name:v})}/>
+    <Inp label="Comisión (%)" type="number" min="0" value={d.commission} onChange={v => setD({...d,commission:parseFloat(v)||0})} error={d.commission>100?"Max 100%":d.commission<0?"Min 0%":""}/>
+    <div style={{ marginBottom: 12 }}><Tog checked={d.ivaOnCommission} onChange={v => setD({...d,ivaOnCommission:v})} label="IVA sobre comisión (21%)"/></div>
+    <div style={{ marginBottom: 18 }}><Tog checked={d.active} onChange={v => setD({...d,active:v})} label="Activa"/></div>
+    <div style={{ display: "flex", gap: 10 }}><Btn onClick={() => onSave(d)} disabled={!d.name.trim()}>Guardar</Btn><Btn v="secondary" onClick={onCancel}>Cancelar</Btn></div>
+  </div>;
+}
+function NAForm({ item, onSave, onCancel, label }) {
+  const [d, setD] = useState({ ...item });
+  return <div><Inp label={`${label} *`} value={d.name} onChange={v => setD({...d,name:v})}/><div style={{ marginBottom: 18 }}><Tog checked={d.active!==false} onChange={v => setD({...d,active:v})} label="Activo/a"/></div><div style={{ display: "flex", gap: 10 }}><Btn onClick={() => onSave(d)} disabled={!d.name.trim()}>Guardar</Btn><Btn v="secondary" onClick={onCancel}>Cancelar</Btn></div></div>;
+}
+function AgrForm({ item, onSave, onCancel }) {
+  const [d, setD] = useState({ ...item });
+  return <div>
+    <Inp label="Nombre *" value={d.name} onChange={v => setD({...d,name:v})}/>
+    <Inp label="Tipo" value={d.mode} onChange={v => setD({...d,mode:v})} options={[{value:"percentage",label:"Porcentaje"},{value:"fixed",label:"Caché fijo"}]}/>
+    <Inp label={d.mode==="percentage"?"Porcentaje (%)":"Importe (€)"} type="number" min="0" value={d.value} onChange={v => setD({...d,value:parseFloat(v)||0})} error={d.mode==="percentage"&&d.value>100?"Max 100%":""}/>
+    <div style={{ marginBottom: 18 }}><Tog checked={d.active!==false} onChange={v => setD({...d,active:v})} label="Activo"/></div>
+    <div style={{ display: "flex", gap: 10 }}><Btn onClick={() => onSave(d)} disabled={!d.name.trim()}>Guardar</Btn><Btn v="secondary" onClick={onCancel}>Cancelar</Btn></div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════════════
+function Login({ onLogin }) {
+  return <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: `radial-gradient(ellipse at 30% 20%, ${C.cyanDim} 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, ${C.pinkDim} 0%, transparent 50%), ${C.bg}`, fontFamily: FB }}>
+    <div style={{ textAlign: "center", maxWidth: 420 }}>
+      <div style={{ marginBottom: 40 }}><LogoSVG size={220}/></div>
+      <Card style={{ padding: 30 }}>
+        <p style={{ fontSize: 13, color: C.textMuted, margin: "0 0 22px" }}>Gestión financiera de espectáculos</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button onClick={() => onLogin("admin")} style={{ padding: "15px 22px", background: C.pinkDim, border: `1px solid ${C.pink}30`, borderRadius: 10, cursor: "pointer", textAlign: "left", transition: "all .15s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${C.pink}25`; }} onMouseLeave={e => { e.currentTarget.style.background = C.pinkDim; }}>
+            <div style={{ fontSize: 14, color: C.pink, fontWeight: 700, marginBottom: 3 }}>Administrador</div>
+            <div style={{ fontSize: 11, color: C.textMuted }}>Control total: obras, plataformas, comisiones, informes</div>
+          </button>
+          <button onClick={() => onLogin("user")} style={{ padding: "15px 22px", background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, cursor: "pointer", textAlign: "left", transition: "all .15s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = C.cyan; }} onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; }}>
+            <div style={{ fontSize: 14, color: C.cyan, fontWeight: 700, marginBottom: 3 }}>Usuario</div>
+            <div style={{ fontSize: 11, color: C.textMuted }}>Registro simplificado de ingresos</div>
+          </button>
+        </div>
+      </Card>
+    </div>
+  </div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// APP
+// ══════════════════════════════════════════════════════════════
+export default function App() {
+  const [role, setRole] = useState(null);
+  const [view, setView] = useState("dashboard");
+  const [selId, setSelId] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [tTimer, setTTimer] = useState(null);
+
+  const [platforms, setPlatforms] = useState(DEF_PLATFORMS);
+  const [venues, setVenues] = useState(DEF_VENUES);
+  const [works, setWorks] = useState(DEF_WORKS);
+  const [expenseTypes, setExpenseTypes] = useState(DEF_EXPENSE_TYPES);
+  const [agreements, setAgreements] = useState(DEF_AGREEMENTS);
+  const [shows, setShows] = useState(SAMPLE_SHOWS);
+
+  const showToast = t => { setToast(t); if (tTimer) clearTimeout(tTimer); setTTimer(setTimeout(() => setToast(null), 4000)); };
+
+  if (!role) return <Login onLogin={r => { setRole(r); setView("dashboard"); }}/>;
+
+  const onView = id => { setSelId(id); setView("detail"); };
+  const onUpdate = u => setShows(shows.map(s => s.id === u.id ? u : s));
+  const onNew = n => { setShows([...shows, n]); setView("shows"); showToast({ message: "Función guardada", type: "success" }); };
+  const onLogout = () => { setRole(null); setView("dashboard"); setSelId(null); };
+
+  const sel = shows.find(s => s.id === selId);
+
+  const rv = () => {
+    switch (view) {
+      case "dashboard": return <Dashboard shows={shows} onView={onView}/>;
+      case "shows": return <ShowList shows={shows} onView={onView} onNew={() => setView("newshow")}/>;
+      case "newshow": return <NewShow platforms={platforms} agreements={agreements} venues={venues} works={works} expenseTypes={expenseTypes} onSave={onNew} onCancel={() => setView("shows")} role={role} toast={showToast}/>;
+      case "detail": return sel ? <ShowDetail show={sel} platforms={platforms} agreements={agreements} venues={venues} works={works} expenseTypes={expenseTypes} onUpdate={onUpdate} onBack={() => setView("shows")} role={role}/> : <p style={{ color: C.textMuted }}>No encontrado</p>;
+      case "summary": return role === "admin" ? <MonthlySummary shows={shows}/> : null;
+      case "reports": return role === "admin" ? <Reports shows={shows} works={works} venues={venues}/> : null;
+      case "admin": return role === "admin" ? <Admin platforms={platforms} setPlatforms={setPlatforms} venues={venues} setVenues={setVenues} works={works} setWorks={setWorks} expenseTypes={expenseTypes} setExpenseTypes={setExpenseTypes} agreements={agreements} setAgreements={setAgreements} shows={shows} toast={showToast}/> : null;
+      default: return null;
+    }
+  };
+
+  return <>
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: ${C.bg}; }
+      ::-webkit-scrollbar { width: 5px; }
+      ::-webkit-scrollbar-track { background: ${C.bg}; }
+      ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 3px; }
+      ::selection { background: ${C.cyan}40; color: ${C.text}; }
+      input[type="number"]::-webkit-inner-spin-button { opacity: .5; }
+      select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239090AA' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+    `}</style>
+    <div style={{ display: "flex", minHeight: "100vh" }}>
+      <Sidebar role={role} view={view} setView={setView} onLogout={onLogout}/>
+      <main style={{ marginLeft: 230, flex: 1, padding: "28px 36px", minHeight: "100vh" }}>{rv()}</main>
+    </div>
+    {toast && <Toast msg={toast.message} type={toast.type} onClose={() => setToast(null)}/>}
+  </>;
+}
