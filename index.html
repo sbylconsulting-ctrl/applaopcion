@@ -200,6 +200,81 @@
     .summary-box { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
     .small { font-size: 12px; }
 
+    /* Date/Time Input Improvements */
+    .datetime-wrapper { position: relative; display: flex; gap: 6px; align-items: stretch; }
+    .datetime-input { 
+      flex: 1; 
+      padding: 9px 11px; 
+      background: var(--surface-alt); 
+      color: var(--text);
+      border: 1px solid var(--border); 
+      border-radius: 8px; 
+      outline: none;
+      font-family: inherit;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    .datetime-input:focus { 
+      border-color: var(--cyan); 
+      background: var(--surface);
+      box-shadow: 0 0 0 3px var(--cyan-dim);
+    }
+    .datetime-input:hover:not(:focus) {
+      border-color: var(--border-light);
+    }
+    /* Mejorar el selector de fecha nativo */
+    .datetime-input::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+      opacity: 0.7;
+      padding: 4px;
+      margin-left: 4px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .datetime-input::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+      background: var(--cyan-dim);
+    }
+    /* Estilos para el selector de fecha en Firefox */
+    .datetime-input::-moz-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+      opacity: 0.7;
+    }
+    /* Botones rápidos */
+    .quick-btn {
+      padding: 6px 12px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--cyan);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: all 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .quick-btn:hover {
+      background: var(--cyan-dim);
+      border-color: var(--cyan);
+      transform: translateY(-1px);
+    }
+    .quick-btn:active {
+      transform: scale(0.95);
+    }
+    /* Mejor visualización en móvil */
+    @media (max-width: 600px) {
+      .datetime-wrapper {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .quick-btn {
+        width: 100%;
+      }
+    }
+
     @media (max-width: 1100px) {
       .grid-2, .grid-3 { grid-template-columns: 1fr; }
     }
@@ -557,11 +632,96 @@
     }
 
     function defaultNewShow() {
+      const now = new Date();
       return {
-        id: gid(), venueId: '', workId: '', date: '', time: '', agreementId: '', notes: '',
-        income: {}, expenses: [],
+        id: gid(), 
+        venueId: '', 
+        workId: '', 
+        date: formatDateValue(now), // Fecha actual por defecto
+        time: formatTimeValue(now), // Hora actual por defecto
+        agreementId: '', 
+        notes: '',
+        income: {}, 
+        expenses: [],
         status: { ticketsSent: false, emailSent: false, invoiceSent: false, sentToAdmin: false, paymentDate: '' }
       };
+    }
+
+    // Helper para formatear fecha como YYYY-MM-DD
+    function formatDateValue(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // Helper para formatear hora como HH:MM
+    function formatTimeValue(time) {
+      if (!time) return '';
+      // Si ya está en formato HH:MM, devolverlo
+      if (/^\d{2}:\d{2}$/.test(time)) return time;
+      // Si es Date, extraer hora
+      const d = new Date(time);
+      if (!isNaN(d.getTime())) {
+        return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      }
+      return '';
+    }
+
+    // Obtener fecha actual en formato YYYY-MM-DD
+    function getTodayDate() {
+      return formatDateValue(new Date());
+    }
+
+    // Obtener hora actual en formato HH:MM
+    function getCurrentTime() {
+      return formatTimeValue(new Date());
+    }
+
+    // Campo de fecha mejorado con botón "Hoy"
+    function dateField(value, onchangeAction, showTodayBtn = true) {
+      const inputId = 'date_' + Math.random().toString(36).substr(2, 9);
+      const formattedValue = formatDateValue(value) || '';
+      
+      return `
+        <div class="datetime-wrapper">
+          <input 
+            type="date" 
+            id="${inputId}"
+            class="datetime-input" 
+            value="${esc(formattedValue)}" 
+            onchange="${onchangeAction}"
+            placeholder="dd/mm/aaaa"
+            title="Selecciona una fecha del calendario o escribe en formato dd/mm/aaaa"
+          />
+          ${showTodayBtn ? `<button type="button" class="quick-btn" onclick="document.getElementById('${inputId}').value='${getTodayDate()}';document.getElementById('${inputId}').dispatchEvent(new Event('change'))" title="Usar fecha de hoy">Hoy</button>` : ''}
+        </div>
+      `;
+    }
+
+    // Campo de hora mejorado con botón "Ahora"
+    function timeField(value, onchangeAction, showNowBtn = true) {
+      const inputId = 'time_' + Math.random().toString(36).substr(2, 9);
+      const formattedValue = formatTimeValue(value) || '';
+      
+      return `
+        <div class="datetime-wrapper">
+          <input 
+            type="time" 
+            id="${inputId}"
+            class="datetime-input" 
+            value="${esc(formattedValue)}" 
+            onchange="${onchangeAction}"
+            placeholder="hh:mm"
+            title="Selecciona la hora o escribe en formato hh:mm (24h)"
+            step="60"
+          />
+          ${showNowBtn ? `<button type="button" class="quick-btn" onclick="document.getElementById('${inputId}').value='${getCurrentTime()}';document.getElementById('${inputId}').dispatchEvent(new Event('change'))" title="Usar hora actual">Ahora</button>` : ''}
+        </div>
+      `;
     }
 
     function formField(label, html, error = '') {
@@ -598,8 +758,8 @@
               ${formField('Obra *', `<select onchange="actions.updateNewShow('workId', this.value)">${optionsFrom(works, 'id', 'name', d.workId)}</select>`)}
               ${formField('Sala *', `<select onchange="actions.updateNewShow('venueId', this.value)">${optionsFrom(venues, 'id', 'name', d.venueId)}</select>`)}
               <div class="row">
-                ${formField('Fecha *', `<input type="date" value="${esc(d.date)}" onchange="actions.updateNewShow('date', this.value)" />`)}
-                ${formField('Hora', `<input type="time" value="${esc(d.time)}" onchange="actions.updateNewShow('time', this.value)" />`)}
+                ${formField('Fecha *', dateField(d.date, "actions.updateNewShow('date', this.value)"))}
+                ${formField('Hora', timeField(d.time, "actions.updateNewShow('time', this.value)"))}
               </div>
               ${!isUser ? formField('Acuerdo', `<select onchange="actions.updateNewShow('agreementId', this.value)">${optionsFrom(agreements, 'id', 'name', d.agreementId)}</select>`) : ''}
               ${formField('Observaciones', `<textarea onchange="actions.updateNewShow('notes', this.value)">${esc(d.notes || '')}</textarea>`)}
@@ -714,7 +874,7 @@
                 ${checkboxCard('Email envío', show.status?.emailSent, `actions.toggleStatus('${show.id}','emailSent')`)}
                 ${checkboxCard('Factura', show.status?.invoiceSent, `actions.toggleStatus('${show.id}','invoiceSent')`)}
                 ${checkboxCard('Enviada admin', show.status?.sentToAdmin, `actions.toggleStatus('${show.id}','sentToAdmin')`)}
-                <div class="summary-box">${formField('Fecha pago', `<input type="date" value="${esc(show.status?.paymentDate || '')}" onchange="actions.updatePaymentDate('${show.id}', this.value)" />`)}</div>
+                <div class="summary-box">${formField('Fecha pago', dateField(show.status?.paymentDate || '', "actions.updatePaymentDate('" + show.id + "', this.value)", false))}</div>
               </div>
             </div>
           ` : ''}
@@ -749,8 +909,8 @@
               ${formField('Obra', `<select onchange="actions.updateEditShow('workId', this.value)">${optionsFrom(works, 'id', 'name', show.workId)}</select>`)}
               ${formField('Sala', `<select onchange="actions.updateEditShow('venueId', this.value)">${optionsFrom(venues, 'id', 'name', show.venueId)}</select>`)}
               <div class="row">
-                ${formField('Fecha', `<input type="date" value="${esc(show.date)}" onchange="actions.updateEditShow('date', this.value)" />`)}
-                ${formField('Hora', `<input type="time" value="${esc(show.time)}" onchange="actions.updateEditShow('time', this.value)" />`)}
+                ${formField('Fecha', dateField(show.date, "actions.updateEditShow('date', this.value)"))}
+                ${formField('Hora', timeField(show.time, "actions.updateEditShow('time', this.value)"))}
               </div>
               ${formField('Acuerdo', `<select onchange="actions.updateEditShow('agreementId', this.value)">${optionsFrom(agreements, 'id', 'name', show.agreementId)}</select>`)}
               ${formField('Observaciones', `<textarea onchange="actions.updateEditShow('notes', this.value)">${esc(show.notes || '')}</textarea>`)}
@@ -868,8 +1028,8 @@
             <div class="filters">
               <div style="width:180px">${formField('Obra', `<select onchange="actions.setReportFilter('workId', this.value)">${optionsFrom(state.data.works, 'id', 'name', f.workId)}</select>`)}</div>
               <div style="width:170px">${formField('Sala', `<select onchange="actions.setReportFilter('venueId', this.value)">${optionsFrom(state.data.venues, 'id', 'name', f.venueId)}</select>`)}</div>
-              <div style="width:150px">${formField('Desde', `<input type="date" value="${esc(f.from)}" onchange="actions.setReportFilter('from', this.value)" />`)}</div>
-              <div style="width:150px">${formField('Hasta', `<input type="date" value="${esc(f.to)}" onchange="actions.setReportFilter('to', this.value)" />`)}</div>
+              <div style="width:180px">${formField('Desde', dateField(f.from, "actions.setReportFilter('from', this.value)", false))}</div>
+              <div style="width:180px">${formField('Hasta', dateField(f.to, "actions.setReportFilter('to', this.value)", false))}</div>
               <div style="padding-bottom:12px"><button class="btn btn-ghost btn-sm" onclick="actions.clearReportFilters()">Limpiar</button></div>
             </div>
           </div>
