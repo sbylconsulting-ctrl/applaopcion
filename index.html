@@ -340,12 +340,7 @@
           { id: 'at4', name: 'Caché 100€', mode: 'fixed', value: 100, active: true },
           { id: 'at5', name: 'Caché 400€', mode: 'fixed', value: 400, active: true },
         ],
-        shows: [
-          { id: 's1', venueId: 'v1', workId: 'w1', venueName: 'Teatro Lara', workName: 'El Último Aplauso', date: '2026-02-07', time: '20:00', agreementId: 'at1', agreementSnapshot: { name: '50% Taquilla', mode: 'percentage', value: 50 }, notes: 'Estreno', income: { p1: 1200, p2: 850, p3: 400, p4: 0, p5: 300, p6: 200, cashBox: 600, cardBox: 450 }, platformSnapshots: { p1: { name: 'Atrápalo', commission: 10, ivaOnCommission: true, income: 1200 }, p2: { name: 'Fever', commission: 20, ivaOnCommission: false, income: 850 }, p3: { name: 'Kultur', commission: 13, ivaOnCommission: true, income: 400 }, p4: { name: 'Abonoteatro', commission: 0, ivaOnCommission: false, income: 0 }, p5: { name: 'Laopcion', commission: 5, ivaOnCommission: true, income: 300 }, p6: { name: 'Universe', commission: 10, ivaOnCommission: true, income: 200 } }, expenses: [{ typeId: 'et1', typeName: 'Autor', amount: 200 }, { typeId: 'et2', typeName: 'Alquiler', amount: 350 }], status: { ticketsSent: true, emailSent: true, invoiceSent: false, sentToAdmin: false, paymentDate: '' } },
-          { id: 's2', venueId: 'v2', workId: 'w2', venueName: 'Sala Mirador', workName: 'Noches de Impro', date: '2026-02-14', time: '21:30', agreementId: 'at2', agreementSnapshot: { name: '60% Taquilla', mode: 'percentage', value: 60 }, notes: '', income: { p1: 500, p2: 1600, p3: 0, p4: 200, p5: 0, p6: 100, cashBox: 300, cardBox: 250 }, platformSnapshots: { p1: { name: 'Atrápalo', commission: 10, ivaOnCommission: true, income: 500 }, p2: { name: 'Fever', commission: 20, ivaOnCommission: false, income: 1600 }, p3: { name: 'Kultur', commission: 13, ivaOnCommission: true, income: 0 }, p4: { name: 'Abonoteatro', commission: 0, ivaOnCommission: false, income: 200 }, p5: { name: 'Laopcion', commission: 5, ivaOnCommission: true, income: 0 }, p6: { name: 'Universe', commission: 10, ivaOnCommission: true, income: 100 } }, expenses: [{ typeId: 'et2', typeName: 'Alquiler', amount: 280 }], status: { ticketsSent: true, emailSent: true, invoiceSent: true, sentToAdmin: true, paymentDate: '2026-02-20' } },
-          { id: 's3', venueId: 'v3', workId: 'w3', venueName: 'Teatro Alfil', workName: 'Microteatro: Silencio', date: '2026-02-21', time: '19:00', agreementId: 'at4', agreementSnapshot: { name: 'Caché 100€', mode: 'fixed', value: 100 }, notes: 'Sesión doble', income: { p1: 0, p2: 900, p3: 600, p4: 0, p5: 150, p6: 0, cashBox: 400, cardBox: 200 }, platformSnapshots: { p1: { name: 'Atrápalo', commission: 10, ivaOnCommission: true, income: 0 }, p2: { name: 'Fever', commission: 20, ivaOnCommission: false, income: 900 }, p3: { name: 'Kultur', commission: 13, ivaOnCommission: true, income: 600 }, p4: { name: 'Abonoteatro', commission: 0, ivaOnCommission: false, income: 0 }, p5: { name: 'Laopcion', commission: 5, ivaOnCommission: true, income: 150 }, p6: { name: 'Universe', commission: 10, ivaOnCommission: true, income: 0 } }, expenses: [{ typeId: 'et1', typeName: 'Autor', amount: 150 }, { typeId: 'et3', typeName: 'Otros gastos', amount: 100 }], status: { ticketsSent: true, emailSent: false, invoiceSent: false, sentToAdmin: false, paymentDate: '' } },
-          { id: 's4', venueId: 'v4', workId: 'w4', venueName: 'La Escalera de Jacob', workName: 'Stand-up Comedy Night', date: '2026-02-28', time: '22:00', agreementId: 'at5', agreementSnapshot: { name: 'Caché 400€', mode: 'fixed', value: 400 }, notes: '', income: { p1: 300, p2: 0, p3: 200, p4: 500, p5: 0, p6: 350, cashBox: 800, cardBox: 600 }, platformSnapshots: { p1: { name: 'Atrápalo', commission: 10, ivaOnCommission: true, income: 300 }, p2: { name: 'Fever', commission: 20, ivaOnCommission: false, income: 0 }, p3: { name: 'Kultur', commission: 13, ivaOnCommission: true, income: 200 }, p4: { name: 'Abonoteatro', commission: 0, ivaOnCommission: false, income: 500 }, p5: { name: 'Laopcion', commission: 5, ivaOnCommission: true, income: 0 }, p6: { name: 'Universe', commission: 10, ivaOnCommission: true, income: 350 } }, expenses: [{ typeId: 'et2', typeName: 'Alquiler', amount: 400 }, { typeId: 'et3', typeName: 'Otros gastos', amount: 75 }], status: { ticketsSent: true, emailSent: true, invoiceSent: true, sentToAdmin: false, paymentDate: '' } }
-        ]
+        shows: []
       }
     };
 
@@ -416,10 +411,11 @@
     }
     function getShowById(id) { return state.data.shows.find(s => s.id === id) || null; }
     function saveLocal() {
-      localStorage.setItem('laopcion_app_data_v1', JSON.stringify(state.data));
+      localStorage.setItem('laopcion_app_data_v2', JSON.stringify(state.data));
     }
     function loadLocal() {
-      const raw = localStorage.getItem('laopcion_app_data_v1');
+      localStorage.removeItem('laopcion_app_data_v1');
+      const raw = localStorage.getItem('laopcion_app_data_v2');
       if (!raw) return;
       try {
         const parsed = JSON.parse(raw);
