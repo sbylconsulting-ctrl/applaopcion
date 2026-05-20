@@ -290,6 +290,8 @@
   <div id="app"></div>
 
   <script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCwwMRxy6J4l1oqF9BqgvzHZ7DKSASqytV2B7anHsokG0VTraeTBLfTHXDEwS11uQDXQ/exec";
+
     const state = {
       role: null,
       view: 'dashboard',
@@ -1167,6 +1169,72 @@
       `;
     }
 
+
+    async function guardarFuncionEnSheet(show) {
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('PEGA_AQUI')) {
+        throw new Error('Falta pegar la URL de Apps Script en GOOGLE_SCRIPT_URL');
+      }
+
+      const c = calcShow(show);
+      const expenses = show.expenses || [];
+
+      const sumExpense = (keyword) => expenses
+        .filter(e => String(e.typeName || '').toLowerCase().includes(keyword))
+        .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+      const autor = sumExpense('autor');
+      const alquiler = sumExpense('alquiler');
+      const otrosGastos = expenses
+        .filter(e => {
+          const name = String(e.typeName || '').toLowerCase();
+          return !name.includes('autor') && !name.includes('alquiler');
+        })
+        .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+      const payload = {
+        appId: show.id,
+        fecha: show.date,
+        hora: show.time || '',
+        sala: show.venueName || '',
+        obra: show.workName || '',
+
+        atrapalo: Number(show.income?.p1 || 0),
+        fever: Number(show.income?.p2 || 0),
+        kultur: Number(show.income?.p3 || 0),
+        abonoteatro: Number(show.income?.p4 || 0),
+        laopcion: Number(show.income?.p5 || 0),
+        universe: Number(show.income?.p6 || 0),
+        efectivo: Number(show.income?.cashBox || 0),
+        tarjeta: Number(show.income?.cardBox || 0),
+
+        autor,
+        alquiler,
+        otrosGastos,
+
+        ventaBruta: c.ventaBruta,
+        ventaNeta: c.ventaNeta,
+        totalGastos: c.totalGastos,
+        totalNeto: c.totalNeto,
+        cache: c.cache,
+        restanteLaOpcion: c.restanteOpcion,
+
+        acuerdo: show.agreementSnapshot?.name || '',
+        estado: show.status || {},
+        observaciones: show.notes || ''
+      };
+
+      const res = await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      if (!result.ok) {
+        throw new Error(result.error || 'Error guardando en Google Sheets');
+      }
+      return result;
+    }
+
     const actions = {
       login(role) { state.role = role; state.view = 'dashboard'; state.selectedId = null; render(); },
       logout() { state.role = null; state.view = 'dashboard'; state.selectedId = null; state.editShow = null; render(); },
@@ -1196,9 +1264,18 @@
         const payload = { ...clone(d), income: inc, expenses, venueName: venue?.name || '', workName: work?.name || '', agreementSnapshot: snapAgreement(ag), platformSnapshots: snapPlatforms(state.data.platforms, inc) };
         state.data.shows.push(payload);
         saveLocal();
-        state.newShow = null;
-        state.view = 'shows';
-        toast('Función guardada', 'success');
+
+        guardarFuncionEnSheet(payload)
+          .then(() => {
+            state.newShow = null;
+            state.view = 'shows';
+            toast('Función guardada y enviada a Google Sheets', 'success');
+          })
+          .catch((error) => {
+            state.newShow = null;
+            state.view = 'shows';
+            toast('Guardada en la app, pero NO en Sheets: ' + error.message, 'error');
+          });
       },
       startEditShow() { const show = getShowById(state.selectedId); state.editShow = clone(show); render(); },
       cancelEditShow() { state.editShow = null; render(); },
@@ -1220,8 +1297,16 @@
         const payload = { ...ed, income: inc, expenses, venueName: venue?.name || ed.venueName, workName: work?.name || ed.workName, agreementSnapshot: snapAgreement(ag) || ed.agreementSnapshot, platformSnapshots: snapPlatforms(state.data.platforms, inc) };
         state.data.shows = state.data.shows.map(s => s.id === payload.id ? payload : s);
         saveLocal();
-        state.editShow = null;
-        toast('Función actualizada', 'success');
+
+        guardarFuncionEnSheet(payload)
+          .then(() => {
+            state.editShow = null;
+            toast('Función actualizada y enviada a Google Sheets', 'success');
+          })
+          .catch((error) => {
+            state.editShow = null;
+            toast('Actualizada en la app, pero NO en Sheets: ' + error.message, 'error');
+          });
       },
       toggleStatus(id, key) {
         state.data.shows = state.data.shows.map(s => s.id === id ? { ...s, status: { ...s.status, [key]: !s.status?.[key] } } : s);
