@@ -29,594 +29,1136 @@
       --danger-dim: rgba(248, 113, 113, 0.10);
       --purple: #A78BFA;
       --purple-dim: rgba(167, 139, 250, 0.10);
-      --sidebar: 230px;
+      --warn: #FBBF24;
+      --warn-dim: rgba(251, 191, 36, 0.10);
+      --sidebar-w: 230px;
       --radius: 14px;
       --shadow: 0 18px 40px rgba(0,0,0,.35);
     }
 
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'DM Sans', 'Segoe UI', sans-serif; }
-    body { min-height: 100vh; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
     button, input, select, textarea { font: inherit; }
-    a { color: inherit; }
 
+    /* ── LAYOUT ─────────────────────────── */
     .app { display: flex; min-height: 100vh; }
     .sidebar {
-      width: var(--sidebar); background: var(--surface); border-right: 1px solid var(--border);
+      width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border);
       position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 30;
     }
-    .sidebar-header { padding: 18px 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+    .sidebar-header { padding: 18px 10px 14px; border-bottom: 1px solid var(--border); text-align: center; }
     .nav { flex: 1; padding: 10px 8px; overflow-y: auto; }
     .nav-btn {
-      width: 100%; border: none; background: transparent; color: var(--text-muted); border-radius: 8px;
-      padding: 10px 13px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: .15s; text-align: left; margin-bottom: 2px;
+      width: 100%; border: none; background: transparent; color: var(--text-muted);
+      border-radius: 8px; padding: 10px 13px; display: flex; align-items: center; gap: 10px;
+      cursor: pointer; transition: .15s; text-align: left; margin-bottom: 2px; font-size: 13px;
     }
     .nav-btn:hover { background: var(--surface-alt); }
     .nav-btn.active { background: var(--cyan-dim); color: var(--cyan); font-weight: 700; }
     .sidebar-footer { border-top: 1px solid var(--border); padding: 14px; }
-    .role-box { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
-    .role-pill { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; }
-    .main { margin-left: var(--sidebar); flex: 1; padding: 28px 36px; min-width: 0; }
+    .role-pill {
+      width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+      font-size: 12px; font-weight: 800;
+    }
+    .main { margin-left: var(--sidebar-w); flex: 1; padding: 28px 36px; min-width: 0; }
 
-    .page-title { font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 800; margin: 0; }
-    .page-subtitle { color: var(--text-muted); font-size: 13px; margin: 4px 0 0; }
+    /* ── UI COMPONENTS ──────────────────── */
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; box-shadow: var(--shadow);
+    }
+    .card h3 { margin: 0 0 14px; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; }
+
+    .page-title { font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 800; margin: 0; }
+    .page-sub { color: var(--text-muted); font-size: 13px; margin: 4px 0 0; }
     .section-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 
     .grid { display: grid; gap: 14px; }
-    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .grid-kpis { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .grid-kpis { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
 
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
-    .card h3 { margin: 0 0 14px; font-family: 'Outfit', sans-serif; font-size: 15px; }
-    
     .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; }
-    .kpi-value { margin-top: 8px; font-size: 24px; font-family: 'Outfit', sans-serif; font-weight: 800; }
+    .kpi-value { margin-top: 8px; font-size: 22px; font-family: 'Outfit', sans-serif; font-weight: 800; }
     .kpi-sub { margin-top: 4px; font-size: 11px; color: var(--text-dim); }
 
-    .btn { border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; transition: .15s; }
-    .btn:hover:not(:disabled) { transform: translateY(-1px); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn {
+      border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 16px; transition: .15s; font-size: 13px;
+    }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
     .btn-primary { background: var(--cyan); color: #0A0A0F; }
     .btn-secondary { background: var(--surface-alt); color: var(--text); border: 1px solid var(--border); }
-    
-    .field { margin-bottom: 12px; }
-    .field label { display: block; margin-bottom: 4px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
-    .field input, .field select, .field textarea { width: 100%; padding: 9px 11px; background: var(--surface-alt); color: var(--text); border: 1px solid var(--border); border-radius: 8px; outline: none; }
-    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--cyan); }
+    .btn-danger { background: var(--danger-dim); color: var(--danger); }
+    .btn-ghost { background: transparent; color: var(--text-muted); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
 
-    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+    .badge {
+      display: inline-flex; padding: 2px 9px; border-radius: 999px;
+      font-size: 10px; font-weight: 700; letter-spacing: .3px;
+    }
+
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block; margin-bottom: 4px; font-size: 11px; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .5px; font-weight: 700;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 8px 11px; background: var(--surface-alt); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 13px;
+    }
+    .field textarea { min-height: 64px; resize: vertical; }
+    .field input:focus, .field select:focus { border-color: var(--cyan); }
+    .field-error { margin-top: 3px; font-size: 10px; color: var(--danger); }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { padding: 11px 14px; text-align: left; color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; background: var(--surface); border-bottom: 1px solid var(--border); white-space: nowrap; }
+    th {
+      padding: 11px 14px; text-align: left; color: var(--text-dim);
+      font-size: 10px; text-transform: uppercase; letter-spacing: .8px;
+      background: var(--surface); border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    th.right, td.right { text-align: right; }
     td { padding: 11px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    tbody tr { cursor: pointer; transition: background .1s; }
     tbody tr:hover { background: var(--surface-alt); }
 
-    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 30% 20%, var(--cyan-dim) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, var(--pink-dim) 0%, transparent 50%), var(--bg); padding: 20px; }
-    .login-box { width: 100%; max-width: 440px; text-align: center; }
-    .login-choice { width: 100%; text-align: left; padding: 16px 18px; border-radius: 12px; cursor: pointer; transition: .15s; border: 1px solid var(--border); background: var(--surface-alt); color: var(--text); margin-bottom: 10px; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .bar-label { width: 90px; flex-shrink: 0; color: var(--text-muted); font-size: 11px; }
+    .bar-track { flex: 1; height: 6px; background: var(--surface-alt); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; }
+    .bar-value { min-width: 75px; text-align: right; font-size: 12px; font-weight: 700; }
+
+    .empty { text-align: center; color: var(--text-dim); padding: 36px 10px; }
+    .success { color: var(--success); }
+    .danger { color: var(--danger); }
+    .cyan { color: var(--cyan); }
+    .pink { color: var(--pink); }
+    .yellow { color: var(--yellow); }
+    .purple { color: var(--purple); }
+    .fw700 { font-weight: 700; }
+    .mb20 { margin-bottom: 20px; }
+    .mt10 { margin-top: 10px; }
+    .gap10 { gap: 10px; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .wrap { flex-wrap: wrap; }
+
+    /* ── LOGIN ──────────────────────────── */
+    .login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 30% 20%, var(--cyan-dim) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, var(--pink-dim) 0%, transparent 50%), var(--bg);
+      padding: 20px;
+    }
+    .login-box { width: 100%; max-width: 420px; text-align: center; }
+    .login-choice {
+      width: 100%; text-align: left; padding: 15px 18px; border-radius: 10px; cursor: pointer;
+      transition: .15s; border: 1px solid var(--border); background: var(--surface-alt); color: var(--text);
+      margin-bottom: 10px;
+    }
     .login-choice.admin { background: var(--pink-dim); border-color: rgba(232,93,160,.25); }
+    .login-choice:hover { transform: translateY(-1px); }
 
-    .toast { position: fixed; top: 18px; right: 18px; z-index: 100; padding: 12px 16px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow); font-size: 13px; transition: all 0.3s ease; }
-    .toast.success { border-color: var(--success); color: var(--success); }
-    .toast.error { border-color: var(--danger); color: var(--danger); }
-    .toast.loading { border-color: var(--purple); color: var(--purple); }
+    /* ── TOAST ──────────────────────────── */
+    .toast {
+      position: fixed; top: 18px; right: 18px; z-index: 200;
+      padding: 11px 18px; border-radius: 10px; background: var(--card);
+      border: 1px solid var(--border); box-shadow: var(--shadow); font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px; max-width: 400px;
+    }
+    .toast.success { border-color: rgba(74,222,128,.3); color: var(--success); }
+    .toast.error { border-color: rgba(248,113,113,.3); color: var(--danger); }
+    .toast.warn { border-color: rgba(251,191,36,.3); color: var(--warn); }
 
-    .empty { text-align: center; color: var(--text-dim); padding: 30px 10px; }
-    .loading-overlay { display: flex; justify-content: center; align-items: center; padding: 40px; color: var(--text-muted); font-weight: 500; }
+    /* ── LOADING ────────────────────────── */
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(10,10,15,.85); z-index: 150;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+    }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid var(--border);
+      border-top-color: var(--cyan); border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--text-muted); font-size: 14px; }
 
+    /* ── RESPONSIVE ─────────────────────── */
     @media (max-width: 1100px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
-    @media (max-width: 900px) { :root { --sidebar: 0px; } .sidebar { position: static; width: 100%; min-height: auto; } .app { flex-direction: column; } .main { margin-left: 0; padding: 20px; } }
+    @media (max-width: 900px) {
+      :root { --sidebar-w: 0px; }
+      .sidebar { position: static; width: 100%; min-height: auto; }
+      .app { flex-direction: column; }
+      .main { margin-left: 0; padding: 18px; }
+    }
   </style>
 </head>
 <body>
-  <div id="app"></div>
+<div id="app"></div>
 
-  <script>
-    // RECOMIENDO: Asegúrate de que esta URL sea exactamente tu último despliegue como "Web App"
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCwwMRxy6J4l1oqF9BqgvzHZ7DKSASqytV2B7anHsokG0VTraeTBLfTHXDEwS11uQDXQ/exec";
+<script>
+/* ════════════════════════════════════════════════════════════════
+   LA OPCIÓN PRODUCCIONES — GESTIÓN FINANCIERA
+   HTML + JS puro · Google Sheets como fuente de verdad
+   ════════════════════════════════════════════════════════════════ */
 
-    // --- ESTADO CENTRALIZADO ---
-    const state = {
-      role: null, 
-      view: 'dashboard', 
-      isLoading: false,
-      isSaving: false,
-      toast: null,
-      toastTimer: null,
-      
-      config: {
-        platforms: [],
-        venues: [],
-        works: [],
-        expenseTypes: [],
-        agreements: []
-      },
-      shows: [], 
+const API_URL = "https://script.google.com/macros/s/AKfycbyCwwMRxy6J4l1oqF9BqgvzHZ7DKSASqytV2B7anHsokG0VTraeTBLfTHXDEwS11uQDXQ/exec";
 
-      formData: {
-        appId: '',
-        fecha: new Date().toISOString().split('T')[0],
-        sala: '', obra: '', acuerdo: '', observaciones: '',
-        atrapalo: 0, fever: 0, kultur: 0, abonoteatro: 0, laopcion: 0, universe: 0, efectivo: 0, tarjeta: 0,
-        autor: 0, alquiler: 0, otrosGastos: 0
-      }
-    };
+// ── STATE ────────────────────────────────────────────────────
+const S = {
+  role: null,
+  view: 'dashboard',
+  selectedId: null,
+  search: '',
+  toast: null,
+  toastTimer: null,
+  adminTab: 'platforms',
+  summaryMonth: '',
+  isLoading: false,
+  isSaving: false,
+  loadError: null,
+  // Form states
+  newShowDraft: null,
+  editShowDraft: null,
+  // Data from Google Sheets
+  config: {
+    platforms: [],
+    venues: [],
+    works: [],
+    expenseTypes: [],
+    agreements: [],
+  },
+  shows: [],
+};
 
-    // --- DATA ADAPTERS ---
-    const DataAdapter = {
-      sheetShowToApp(sheetShow) {
-        return {
-          id: sheetShow.appId || sheetShow.id,
-          appId: sheetShow.appId || sheetShow.id,
-          venueName: sheetShow.sala || 'Sala Desconocida',
-          workName: sheetShow.obra || 'Obra Desconocida',
-          fecha: sheetShow.fecha || '',
-          income: {
-            atrapalo: Number(sheetShow.atrapalo || 0),
-            fever: Number(sheetShow.fever || 0),
-            kultur: Number(sheetShow.kultur || 0),
-            abonoteatro: Number(sheetShow.abonoteatro || 0),
-            laopcion: Number(sheetShow.laopcion || 0),
-            universe: Number(sheetShow.universe || 0),
-            efectivo: Number(sheetShow.efectivo || 0),
-            tarjeta: Number(sheetShow.tarjeta || 0)
-          },
-          expenses: {
-            autor: Number(sheetShow.autor || 0),
-            alquiler: Number(sheetShow.alquiler || 0),
-            otrosGastos: Number(sheetShow.otrosGastos || 0)
-          },
-          metrics: {
-            ventaBruta: Number(sheetShow.ventaBruta || 0),
-            ventaNeta: Number(sheetShow.ventaNeta || 0),
-            totalGastos: Number(sheetShow.totalGastos || 0),
-            totalNeto: Number(sheetShow.totalNeto || 0),
-            cache: Number(sheetShow.cache || 0),
-            restanteLaOpcion: Number(sheetShow.restanteLaOpcion || 0)
-          },
-          agreementName: sheetShow.acuerdo || '',
-          observaciones: sheetShow.observaciones || ''
-        };
-      },
+const $app = document.getElementById('app');
 
-      appFormToSheetPayload(form) {
-        return {
-          action: "saveShow",
-          appId: form.appId || 'op-' + Math.random().toString(36).slice(2, 10) + '-' + Date.now(),
-          fecha: form.fecha,
-          sala: form.sala,
-          obra: form.obra,
-          acuerdo: form.acuerdo,
-          observaciones: form.observaciones,
-          atrapalo: Number(form.atrapalo || 0),
-          fever: Number(form.fever || 0),
-          kultur: Number(form.kultur || 0),
-          abonoteatro: Number(form.abonoteatro || 0),
-          laopcion: Number(form.laopcion || 0),
-          universe: Number(form.universe || 0),
-          efectivo: Number(form.efectivo || 0),
-          tarjeta: Number(form.tarjeta || 0),
-          autor: Number(form.autor || 0),
-          alquiler: Number(form.alquiler || 0),
-          otrosGastos: Number(form.otrosGastos || 0)
-        };
-      }
-    };
+// ── UTILS ────────────────────────────────────────────────────
+function gid() { return (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)).slice(0, 8); }
+function fmt(n) { return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(Number(n || 0)); }
+function fmtPct(n) { return `${Number(n || 0).toFixed(2)}%`; }
+function r2(n) { return Math.round(Number(n || 0) * 100) / 100; }
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-    // --- CONEXIÓN HTTP ---
-    async function apiFetch(params = '') {
-      const url = `${GOOGLE_SCRIPT_URL}${params ? '?' + params : ''}`;
-      console.log(`🌐 Realizando consulta GET a la API: ${url}`);
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-      
-      const resData = await response.json();
-      console.log("📦 JSON Crudo recibido desde Apps Script:", resData);
-      
-      if (!resData.ok) throw new Error(resData.error || "Error interno devuelto por Apps Script");
-      return resData;
-    }
+function showToast(message, type = 'success') {
+  S.toast = { message, type };
+  clearTimeout(S.toastTimer);
+  S.toastTimer = setTimeout(() => { S.toast = null; render(); }, 3500);
+  render();
+}
 
-    async function apiPost(payload) {
-      console.log("📤 Enviando datos POST a Apps Script:", payload);
-      const response = await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      });
-      if (!response.ok) throw new Error(`HTTP Post Error: ${response.status}`);
-      const resData = await response.json();
-      if (!resData.ok) throw new Error(resData.error || "Error al procesar escritura");
-      return resData;
-    }
+function normalize(text) {
+  return String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
 
-    // --- ACCIONES CORE ---
-    async function sincronizarTodo() {
-      if (state.isLoading) return;
-      state.isLoading = true;
-      showToast("Sincronizando con Google Sheets...", "loading");
-      render();
+// ── LOGO SVG ─────────────────────────────────────────────────
+function logoSVG(w = 150) {
+  const h = w * 0.55;
+  return `<svg width="${w}" height="${h}" viewBox="0 0 280 154" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <text x="140" y="68" text-anchor="middle" font-family="'Outfit','Arial Black',sans-serif" font-size="52" font-weight="900" letter-spacing="6" fill="var(--text)">LA OPCIÓN</text>
+    <line x1="10" y1="82" x2="270" y2="82" stroke="var(--cyan)" stroke-width="4"/>
+    <line x1="10" y1="92" x2="270" y2="92" stroke="var(--pink)" stroke-width="4"/>
+    <line x1="10" y1="102" x2="270" y2="102" stroke="var(--yellow)" stroke-width="4"/>
+    <text x="140" y="132" text-anchor="middle" font-family="'Outfit','Arial',sans-serif" font-size="22" font-weight="300" letter-spacing="12" fill="var(--text-muted)">PRODUCCIONES</text>
+  </svg>`;
+}
 
-      try {
-        const data = await apiFetch("action=getAll");
-        
-        // Carga de configuración
-        state.config.platforms = data.config?.platforms || [];
-        state.config.venues = data.config?.venues || [];
-        state.config.works = data.config?.works || [];
-        state.config.expenseTypes = data.config?.expenseTypes || [];
-        state.config.agreements = data.config?.agreements || [];
+// ══════════════════════════════════════════════════════════════
+// DATA ADAPTER: Sheet format → App format
+// This is the KEY piece that was missing
+// ══════════════════════════════════════════════════════════════
+function sheetShowToAppShow(raw, config) {
+  // The Sheet returns: { id, sala, obra, fecha, atrapalo, fever, kultur, abonoteatro,
+  //   laopcion, universe, efectivo, tarjeta, ventaBruta, ventaNeta, totalGastos,
+  //   totalNeto, cache, restanteLaOpcion, acuerdo, observaciones }
 
-        // Procesamiento adaptado de las funciones/shows
-        if (data.shows && Array.isArray(data.shows)) {
-          state.shows = data.shows.map(show => DataAdapter.sheetShowToApp(show));
-          console.log("✅ Funciones parseadas y mapeadas en el Estado local de la App:", state.shows);
-        } else {
-          state.shows = [];
-          console.warn("⚠️ No se detectó ninguna lista de funciones ('shows') válida en la respuesta.");
-        }
+  // Find matching config entities by name
+  const venue = config.venues.find(v => normalize(v.name) === normalize(raw.sala)) || null;
+  const work = config.works.find(w => normalize(w.name) === normalize(raw.obra)) || null;
+  const agreement = config.agreements.find(a => normalize(a.name) === normalize(raw.acuerdo)) || null;
 
-        showToast("Datos actualizados en tiempo real");
-      } catch (err) {
-        console.error("❌ Error detectado en sincronizarTodo():", err);
-        showToast(`Error de Sincronización: ${err.message}`, "error");
-      } finally {
-        state.isLoading = false;
-        render();
-      }
-    }
+  // Build platform snapshots from config + income data
+  const platformSnapshots = {};
+  const income = {};
 
-    async function guardarShow(event) {
-      if (event && event.preventDefault) event.preventDefault();
-      if (state.isSaving) return; 
-      
-      state.isSaving = true;
-      showToast("Procesando y calculando en Google Sheets...", "loading");
-      render();
+  // Map sheet field names to platform ids
+  const platMap = {
+    'atrapalo': 'Atrápalo',
+    'fever': 'Fever',
+    'kultur': 'Kultur',
+    'abonoteatro': 'Abonoteatro',
+    'laopcion': 'Laopcion',
+    'universe': 'Universe',
+  };
 
-      try {
-        const payload = DataAdapter.appFormToSheetPayload(state.formData);
-        await apiPost(payload);
-        
-        showToast("¡Guardado con éxito!");
-        resetForm();
-        state.view = 'dashboard';
-        
-        await sincronizarTodo();
-      } catch (err) {
-        console.error(err);
-        showToast(`Error al guardar: ${err.message}`, "error");
-        state.isSaving = false;
-        render();
-      }
-    }
-
-    // --- CONTROLADORES UX Y VISTAS ---
-    function showToast(message, type = 'success') {
-      state.toast = { message, type };
-      clearTimeout(state.toastTimer);
-      if (type !== 'loading') {
-        state.toastTimer = setTimeout(() => { state.toast = null; render(); }, 4000);
-      }
-      render();
-    }
-
-    function resetForm() {
-      state.formData = {
-        appId: '', fecha: new Date().toISOString().split('T')[0],
-        sala: '', obra: '', acuerdo: '', observaciones: '',
-        atrapalo: 0, fever: 0, kultur: 0, abonoteatro: 0, laopcion: 0, universe: 0, efectivo: 0, tarjeta: 0,
-        autor: 0, alquiler: 0, otrosGastos: 0
+  Object.entries(platMap).forEach(([sheetKey, platName]) => {
+    const amt = Number(raw[sheetKey] || 0);
+    const pl = config.platforms.find(p => normalize(p.name) === normalize(platName));
+    if (pl) {
+      income[pl.id] = amt;
+      platformSnapshots[pl.id] = {
+        name: pl.name,
+        commission: pl.commission,
+        ivaOnCommission: pl.ivaOnCommission,
+        income: amt,
       };
-      state.isSaving = false;
+    }
+  });
+
+  income.cashBox = Number(raw.efectivo || 0);
+  income.cardBox = Number(raw.tarjeta || 0);
+
+  return {
+    id: raw.id || raw.appId || gid(),
+    appId: raw.appId || raw.id || '',
+    venueId: venue?.id || '',
+    workId: work?.id || '',
+    venueName: raw.sala || '',
+    workName: raw.obra || '',
+    date: raw.fecha || '',
+    time: '',
+    agreementId: agreement?.id || '',
+    agreementSnapshot: agreement ? { name: agreement.name, mode: agreement.mode, value: agreement.value } : null,
+    notes: raw.observaciones || '',
+    income,
+    platformSnapshots,
+    expenses: [], // Manual expenses from sheet aren't individually tracked yet
+    // Pre-calculated values from sheet (we use these for display if available)
+    _sheetCalc: {
+      ventaBruta: Number(raw.ventaBruta || 0),
+      ventaNeta: Number(raw.ventaNeta || 0),
+      totalGastos: Number(raw.totalGastos || 0),
+      totalNeto: Number(raw.totalNeto || 0),
+      cache: Number(raw.cache || 0),
+      restanteLaOpcion: Number(raw.restanteLaOpcion || 0),
+    },
+    status: { ticketsSent: false, emailSent: false, invoiceSent: false, sentToAdmin: false, paymentDate: '' },
+  };
+}
+
+// Reverse: App format → Sheet POST format (for saving)
+function appShowToSheetData(show, config) {
+  const ps = show.platformSnapshots || {};
+  const inc = show.income || {};
+
+  // Resolve platform amounts by name
+  function findAmount(platName) {
+    const pl = config.platforms.find(p => normalize(p.name) === normalize(platName));
+    return pl ? Number(inc[pl.id] || ps[pl.id]?.income || 0) : 0;
+  }
+
+  // Resolve agreement
+  const agr = show.agreementSnapshot;
+  let cache = 0;
+  if (agr) {
+    const c = calcShow(show);
+    cache = c.cache;
+  }
+
+  return {
+    action: 'saveShow',
+    appId: show.appId || show.id || gid(),
+    sala: show.venueName || '',
+    obra: show.workName || '',
+    fecha: show.date || '',
+    atrapalo: findAmount('Atrápalo'),
+    fever: findAmount('Fever'),
+    kultur: findAmount('Kultur'),
+    abonoteatro: findAmount('Abonoteatro'),
+    laopcion: findAmount('Laopcion'),
+    universe: findAmount('Universe'),
+    efectivo: Number(inc.cashBox || 0),
+    tarjeta: Number(inc.cardBox || 0),
+    autor: 0,
+    otrosGastos: 0,
+    alquiler: 0,
+    cache: cache,
+    acuerdo: agr?.name || '',
+    observaciones: show.notes || '',
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// CALCULATION ENGINE (matches spreadsheet: ventaNeta = bruta / 1.10)
+// ══════════════════════════════════════════════════════════════
+function calcShow(show) {
+  const ps = show.platformSnapshots || {};
+  const inc = show.income || {};
+
+  const commissions = [];
+  let totalPlatIncome = 0;
+  let totalComm = 0;
+
+  Object.entries(ps).forEach(([pid, snap]) => {
+    const amt = r2(snap.income || 0);
+    totalPlatIncome += amt;
+    const base = r2(amt * snap.commission / 100);
+    const iva = snap.ivaOnCommission ? r2(base * 0.21) : 0;
+    const total = r2(base + iva);
+    commissions.push({ id: pid, name: snap.name, income: amt, commBase: base, commIva: iva, commTotal: total });
+    totalComm += total;
+  });
+
+  const cashBox = r2(parseFloat(inc.cashBox) || 0);
+  const cardBox = r2(parseFloat(inc.cardBox) || 0);
+  const ventaBruta = r2(totalPlatIncome + cashBox + cardBox);
+  const ventaNeta = r2(ventaBruta / 1.10);
+  const manualExp = (show.expenses || []).reduce((s, e) => s + r2(parseFloat(e.amount) || 0), 0);
+  const totalGastos = r2(totalComm + manualExp);
+  const totalNeto = r2(ventaNeta - totalGastos);
+
+  const agr = show.agreementSnapshot;
+  let cache = 0;
+  if (agr) {
+    if (agr.mode === 'percentage') cache = r2(totalNeto * agr.value / 100);
+    else cache = r2(agr.value);
+  }
+  const restanteOpcion = r2(totalNeto - cache);
+
+  return { commissions, cashBox, cardBox, ventaBruta, ventaNeta, totalComm: r2(totalComm), manualExp: r2(manualExp), totalGastos, totalNeto, cache, restanteOpcion, agreement: agr };
+}
+
+// ══════════════════════════════════════════════════════════════
+// API CALLS (Google Sheets via Apps Script)
+// ══════════════════════════════════════════════════════════════
+async function apiGet(action = 'getAll') {
+  const url = `${API_URL}?action=${action}&t=${Date.now()}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const data = await resp.json();
+  if (!data.ok) throw new Error(data.error || 'Error desconocido');
+  return data;
+}
+
+async function apiPost(payload) {
+  const resp = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' }, // Apps Script needs text/plain for CORS
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const data = await resp.json();
+  if (!data.ok) throw new Error(data.error || 'Error al guardar');
+  return data;
+}
+
+// ══════════════════════════════════════════════════════════════
+// SYNC: Load everything from Google Sheets
+// ══════════════════════════════════════════════════════════════
+async function loadFromSheet() {
+  S.isLoading = true;
+  S.loadError = null;
+  render();
+
+  try {
+    const data = await apiGet('getAll');
+
+    // Config
+    if (data.config) {
+      S.config.platforms = data.config.platforms || [];
+      S.config.venues = data.config.venues || [];
+      S.config.works = data.config.works || [];
+      S.config.expenseTypes = data.config.expenseTypes || [];
+      S.config.agreements = data.config.agreements || [];
     }
 
-    function setView(viewName) {
-      state.view = viewName;
-      if (viewName === 'registrar') resetForm();
+    // Shows: transform from sheet format to app format
+    if (data.shows && Array.isArray(data.shows)) {
+      S.shows = data.shows.map(raw => sheetShowToAppShow(raw, S.config));
+    }
+
+    // Set default summary month
+    if (S.shows.length > 0 && !S.summaryMonth) {
+      const months = [...new Set(S.shows.map(s => (s.date || '').slice(0, 7)).filter(Boolean))].sort().reverse();
+      S.summaryMonth = months[0] || '';
+    }
+
+    console.log(`[SYNC] Loaded ${S.config.platforms.length} platforms, ${S.config.venues.length} venues, ${S.config.works.length} works, ${S.shows.length} shows`);
+  } catch (err) {
+    console.error('[SYNC] Error:', err);
+    S.loadError = err.message;
+    showToast('Error al cargar datos: ' + err.message, 'error');
+  }
+
+  S.isLoading = false;
+  render();
+}
+
+async function saveShowToSheet(show) {
+  if (S.isSaving) return; // Anti-duplicate: block while saving
+  S.isSaving = true;
+  render();
+
+  try {
+    const payload = appShowToSheetData(show, S.config);
+    await apiPost(payload);
+    showToast('Función guardada correctamente', 'success');
+    // Reload fresh data
+    await loadFromSheet();
+    S.view = 'shows';
+    S.newShowDraft = null;
+  } catch (err) {
+    console.error('[SAVE] Error:', err);
+    showToast('Error al guardar: ' + err.message, 'error');
+  }
+
+  S.isSaving = false;
+  render();
+}
+
+async function saveConfigToSheet() {
+  if (S.isSaving) return;
+  S.isSaving = true;
+  render();
+
+  try {
+    await apiPost({ action: 'saveConfig', config: S.config });
+    showToast('Configuración guardada', 'success');
+    await loadFromSheet();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+
+  S.isSaving = false;
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ══════════════════════════════════════════════════════════════
+function render() {
+  if (!S.role) {
+    $app.innerHTML = renderLogin();
+    bindLogin();
+    return;
+  }
+
+  let toastHtml = '';
+  if (S.toast) {
+    toastHtml = `<div class="toast ${S.toast.type}">${esc(S.toast.message)}</div>`;
+  }
+
+  let loadingHtml = '';
+  if (S.isLoading) {
+    loadingHtml = `<div class="loading-overlay"><div class="spinner"></div><div class="loading-text">Cargando datos del Sheet...</div></div>`;
+  }
+  if (S.isSaving) {
+    loadingHtml = `<div class="loading-overlay"><div class="spinner"></div><div class="loading-text">Guardando...</div></div>`;
+  }
+
+  $app.innerHTML = `
+    <div class="app">
+      ${renderSidebar()}
+      <div class="main">${renderView()}</div>
+    </div>
+    ${toastHtml}
+    ${loadingHtml}
+  `;
+  bindEvents();
+}
+
+// ── SIDEBAR ──────────────────────────────────────────────────
+function renderSidebar() {
+  const isAdmin = S.role === 'admin';
+  const items = isAdmin
+    ? [
+        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+        { id: 'shows', label: 'Funciones', icon: '🎭' },
+        { id: 'newshow', label: 'Nueva Función', icon: '➕' },
+        { id: 'summary', label: 'Resumen Mensual', icon: '📋' },
+        { id: 'admin', label: 'Administración', icon: '⚙️' },
+      ]
+    : [
+        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+        { id: 'shows', label: 'Funciones', icon: '🎭' },
+        { id: 'newshow', label: 'Registrar Ingreso', icon: '➕' },
+      ];
+
+  const navBtns = items.map(it =>
+    `<button class="nav-btn ${S.view === it.id ? 'active' : ''}" data-view="${it.id}">${it.icon} ${it.label}</button>`
+  ).join('');
+
+  const roleColor = isAdmin ? 'var(--pink-dim)' : 'var(--cyan-dim)';
+  const roleText = isAdmin ? 'var(--pink)' : 'var(--cyan)';
+
+  return `
+    <div class="sidebar">
+      <div class="sidebar-header">${logoSVG(155)}</div>
+      <div class="nav">${navBtns}</div>
+      <div class="sidebar-footer">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+          <div class="role-pill" style="background:${roleColor};color:${roleText}">${isAdmin ? 'A' : 'U'}</div>
+          <div>
+            <div style="font-size:12px;font-weight:600">${isAdmin ? 'Admin' : 'Usuario'}</div>
+            <div style="font-size:10px;color:var(--text-dim)">${isAdmin ? 'Control total' : 'Registro'}</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" data-action="logout" style="width:100%;justify-content:flex-start;gap:7px">🚪 Cerrar sesión</button>
+      </div>
+    </div>
+  `;
+}
+
+// ── LOGIN ────────────────────────────────────────────────────
+function renderLogin() {
+  return `
+    <div class="login-screen">
+      <div class="login-box">
+        <div style="margin-bottom:36px">${logoSVG(220)}</div>
+        <div class="card" style="padding:28px">
+          <p style="color:var(--text-muted);margin:0 0 20px;font-size:13px">Gestión financiera de espectáculos</p>
+          <button class="login-choice admin" data-role="admin">
+            <div style="font-size:14px;font-weight:700;color:var(--pink);margin-bottom:3px">Administrador</div>
+            <div style="font-size:11px;color:var(--text-muted)">Control total: obras, plataformas, comisiones, informes</div>
+          </button>
+          <button class="login-choice" data-role="user">
+            <div style="font-size:14px;font-weight:700;color:var(--cyan);margin-bottom:3px">Usuario</div>
+            <div style="font-size:11px;color:var(--text-muted)">Registro simplificado de ingresos</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bindLogin() {
+  document.querySelectorAll('.login-choice').forEach(btn => {
+    btn.onclick = () => {
+      S.role = btn.dataset.role;
+      S.view = 'dashboard';
       render();
-    }
+      loadFromSheet(); // Load data on login
+    };
+  });
+}
 
-    function login(role) {
-      state.role = role;
-      sincronizarTodo();
-    }
+// ── VIEW ROUTER ──────────────────────────────────────────────
+function renderView() {
+  switch (S.view) {
+    case 'dashboard': return renderDashboard();
+    case 'shows': return renderShowList();
+    case 'newshow': return renderNewShow();
+    case 'detail': return renderShowDetail();
+    case 'summary': return renderSummary();
+    case 'admin': return renderAdmin();
+    default: return '<p>Vista no encontrada</p>';
+  }
+}
 
-    function logout() {
-      state.role = null;
-      state.shows = [];
-      render();
-    }
+// ══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════
+function renderDashboard() {
+  if (S.shows.length === 0 && !S.isLoading) {
+    return `
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-sub mb20">La Opción Producciones</p>
+      <div class="card"><div class="empty">
+        <p style="font-size:16px;margin-bottom:8px">Sin datos todavía</p>
+        <p style="color:var(--text-dim);font-size:13px">Los datos se cargan desde Google Sheets. Si es la primera vez, registra una función.</p>
+        <button class="btn btn-primary mt10" data-action="refresh">🔄 Recargar datos</button>
+      </div></div>
+    `;
+  }
 
-    function handleFormInput(field, val) {
-      state.formData[field] = val;
-    }
+  const cs = S.shows.map(s => ({ ...s, c: calcShow(s) }));
+  const t = cs.reduce((a, s) => ({
+    vb: a.vb + s.c.ventaBruta, vn: a.vn + s.c.ventaNeta, g: a.g + s.c.totalGastos,
+    tn: a.tn + s.c.totalNeto, ca: a.ca + s.c.cache, ro: a.ro + s.c.restanteOpcion,
+  }), { vb: 0, vn: 0, g: 0, tn: 0, ca: 0, ro: 0 });
 
-    function fmt(n) {
-      return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(Number(n || 0));
-    }
+  // Platform bars
+  const pm = {};
+  cs.forEach(s => s.c.commissions.forEach(c => { pm[c.name] = (pm[c.name] || 0) + c.income; }));
+  const taq = cs.reduce((s, sh) => s + sh.c.cashBox + sh.c.cardBox, 0);
+  const pe = Object.entries(pm).sort(([,a],[,b]) => b - a);
+  const mx = Math.max(...pe.map(([,v]) => v), taq, 1);
 
-    function esc(s) {
-      return String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-    }
+  const barsHtml = pe.map(([name, total]) =>
+    `<div class="bar-row">
+      <span class="bar-label">${esc(name)}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${(total/mx*100).toFixed(1)}%;background:var(--cyan)"></div></div>
+      <span class="bar-value">${fmt(total)}</span>
+    </div>`
+  ).join('') + `
+    <div class="bar-row" style="padding-top:8px;border-top:1px solid var(--border);margin-top:6px">
+      <span class="bar-label">Taquilla</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${(taq/mx*100).toFixed(1)}%;background:var(--success)"></div></div>
+      <span class="bar-value">${fmt(taq)}</span>
+    </div>`;
 
-    // --- RENDERIZADO HTML ---
-    function render() {
-      if (!state.role) {
-        renderLogin();
-        return;
-      }
+  // Recent shows table
+  const sorted = cs.sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 10);
+  const rowsHtml = sorted.map(s => {
+    const statusCount = [s.status?.ticketsSent, s.status?.emailSent, s.status?.invoiceSent, s.status?.sentToAdmin].filter(Boolean).length;
+    const roColor = s.c.restanteOpcion >= 0 ? 'success' : 'danger';
+    return `<tr data-show-id="${s.id}">
+      <td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td>
+      <td class="right">${fmt(s.c.ventaBruta)}</td>
+      <td class="right">${fmt(s.c.totalNeto)}</td>
+      <td class="right fw700 ${roColor}">${fmt(s.c.restanteOpcion)}</td>
+    </tr>`;
+  }).join('');
 
-      let html = `
-        <div class="app">
-          <aside class="sidebar">
-            <div class="sidebar-header">
-              <h2 style="font-family:'Outfit',sans-serif;font-weight:900;letter-spacing:-1px;margin:0;color:var(--cyan)">LA OPCIÓN</h2>
-            </div>
-            <nav class="nav">
-              <button class="nav-btn ${state.view === 'dashboard' ? 'active' : ''}" onclick="setView('dashboard')">📊 Dashboard</button>
-              <button class="nav-btn ${state.view === 'registrar' ? 'active' : ''}" onclick="setView('registrar')">➕ Registrar Función</button>
-              <button class="nav-btn ${state.view === 'historial' ? 'active' : ''}" onclick="setView('historial')">📜 Historial Real</button>
-            </nav>
-            <div class="sidebar-footer">
-              <div class="role-box">
-                <div class="role-pill" style="background:${state.role === 'admin' ? 'var(--pink)' : 'var(--cyan)'};color:#000">
-                  ${state.role[0].toUpperCase()}
-                </div>
-                <div>
-                  <div style="font-size:12px;font-weight:700">${state.role === 'admin' ? 'Administrador' : 'Usuario'}</div>
-                  <div style="font-size:10px;color:var(--text-dim)">online</div>
-                </div>
-              </div>
-              <button class="btn btn-secondary btn-sm" style="width:100%" onclick="logout()">Cerrar Sesión</button>
-            </div>
-          </aside>
+  return `
+    <div class="section-top">
+      <div><h1 class="page-title">Dashboard</h1><p class="page-sub">La Opción Producciones · ${S.shows.length} funciones</p></div>
+      <button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Actualizar</button>
+    </div>
 
-          <main class="main">
-            <div class="section-top">
-              <div>
-                <h1 class="page-title">${getPageTitle()}</h1>
-                <p class="page-subtitle">Fuente única de verdad activa: Google Sheets</p>
-              </div>
-              <div class="top-actions">
-                <button class="btn btn-secondary" onclick="sincronizarTodo()" ${state.isLoading || state.isSaving ? 'disabled' : ''}>
-                  ${state.isLoading ? 'Sincronizando...' : '🔄 Forzar Sincronización'}
-                </button>
-              </div>
-            </div>
-      `;
+    <div class="grid grid-kpis mb20">
+      <div class="card"><div class="kpi-label">Venta Bruta</div><div class="kpi-value cyan">${fmt(t.vb)}</div><div class="kpi-sub">${S.shows.length} funciones</div></div>
+      <div class="card"><div class="kpi-label">Venta Neta</div><div class="kpi-value purple">${fmt(t.vn)}</div></div>
+      <div class="card"><div class="kpi-label">Total Gastos</div><div class="kpi-value danger">${fmt(t.g)}</div></div>
+      <div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow">${fmt(t.tn)}</div></div>
+      <div class="card"><div class="kpi-label">Caché Salas</div><div class="kpi-value pink">${fmt(t.ca)}</div></div>
+      <div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value success">${fmt(t.ro)}</div></div>
+    </div>
 
-      if (state.isLoading && state.shows.length === 0) {
-        html += `<div class="loading-overlay">⏳ Cargando ecosistema de teatros desde la nube...</div>`;
-      } else {
-        if (state.view === 'dashboard') html += renderDashboard();
-        else if (state.view === 'registrar') html += renderRegistrarForm();
-        else if (state.view === 'historial') html += renderHistorial();
-      }
-
-      html += `
-          </main>
+    <div class="grid grid-2 mb20">
+      <div class="card"><h3>Ventas por plataforma</h3>${barsHtml}</div>
+      <div class="card"><h3>Últimas funciones</h3>
+        <div class="table-wrap">
+          <table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th class="right">V.Bruta</th><th class="right">T.Neto</th><th class="right">Restante</th></tr></thead>
+          <tbody>${rowsHtml || '<tr><td colspan="6" class="empty">Sin funciones</td></tr>'}</tbody></table>
         </div>
-        ${renderToast()}
-      `;
+      </div>
+    </div>
+  `;
+}
 
-      app.innerHTML = html;
-    }
+// ══════════════════════════════════════════════════════════════
+// SHOW LIST
+// ══════════════════════════════════════════════════════════════
+function renderShowList() {
+  const q = S.search.toLowerCase();
+  const cs = S.shows.map(s => ({ ...s, c: calcShow(s) }))
+    .filter(s => !q || (s.workName||'').toLowerCase().includes(q) || (s.venueName||'').toLowerCase().includes(q) || (s.date||'').includes(q))
+    .sort((a, b) => (b.date||'').localeCompare(a.date||''));
 
-    function renderLogin() {
-      app.innerHTML = `
-        <div class="login-screen">
-          <div class="card login-box">
-            <h1 style="font-family:'Outfit',sans-serif;font-size:32px;font-weight:900;margin-bottom:6px;color:var(--cyan)">LA OPCIÓN</h1>
-            <p style="color:var(--text-muted);font-size:14px;margin-top:0;margin-bottom:24px;">Gestión de Producciones Teatrales</p>
-            <button class="login-choice admin" onclick="login('admin')">
-              <div style="font-weight:700;font-size:15px;color:var(--pink)">Acceso Administrador (Full Admin)</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Gestión, configuraciones y vista consolidada.</div>
-            </button>
-            <button class="login-choice" onclick="login('usuario')">
-              <div style="font-weight:700;font-size:15px;color:var(--cyan)">Acceso Taquilla Rapida (Usuario)</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Ingreso de funciones de salas asignadas.</div>
-            </button>
-          </div>
+  const rowsHtml = cs.map(s => {
+    const roC = s.c.restanteOpcion >= 0 ? 'success' : 'danger';
+    return `<tr data-show-id="${s.id}">
+      <td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td>
+      <td>${esc(s.agreementSnapshot?.name || '—')}</td>
+      <td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td>
+      <td class="right fw700 ${roC}">${fmt(s.c.restanteOpcion)}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="section-top">
+      <div><h1 class="page-title">Funciones</h1><p class="page-sub">${S.shows.length} registradas</p></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" data-action="refresh">🔄</button>
+        <button class="btn btn-primary" data-view="newshow">➕ Nueva</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <span style="color:var(--text-dim)">🔍</span>
+      <input type="text" placeholder="Buscar por obra, sala o fecha..." value="${esc(S.search)}" data-bind="search"
+        style="padding:9px 12px;width:280px;background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;color:var(--text);outline:none;font-size:13px"/>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th><th class="right">V.Bruta</th><th class="right">V.Neta</th><th class="right">Restante</th></tr></thead>
+      <tbody>${rowsHtml || '<tr><td colspan="7" class="empty">Sin funciones</td></tr>'}</tbody></table>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════
+// SHOW DETAIL (role-aware)
+// ══════════════════════════════════════════════════════════════
+function renderShowDetail() {
+  const show = S.shows.find(s => s.id === S.selectedId);
+  if (!show) return '<div class="card"><div class="empty">Función no encontrada</div></div>';
+
+  const c = calcShow(show);
+  const isA = S.role === 'admin';
+
+  // Income breakdown
+  const incomeRows = c.commissions.filter(x => x.income > 0).map(x =>
+    `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:13px">${esc(x.name)}</div>
+        ${isA ? `<div style="font-size:10px;color:var(--text-dim)">Com: ${fmt(x.commBase)}${x.commIva > 0 ? ` +IVA ${fmt(x.commIva)}` : ''} = ${fmt(x.commTotal)}</div>` : ''}
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px;font-weight:700;color:var(--cyan)">${fmt(x.income)}</div>
+        ${isA ? `<div style="font-size:10px;color:var(--danger)">-${fmt(x.commTotal)}</div>` : ''}
+      </div>
+    </div>`
+  ).join('');
+
+  const cashRows = [];
+  if (c.cashBox > 0) cashRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Taquilla efectivo</span><span class="fw700 success">${fmt(c.cashBox)}</span></div>`);
+  if (c.cardBox > 0) cashRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Taquilla tarjeta</span><span class="fw700 success">${fmt(c.cardBox)}</span></div>`);
+
+  const kpiCols = isA ? 'repeat(6,1fr)' : 'repeat(3,1fr)';
+  const roColor = c.restanteOpcion >= 0 ? 'success' : 'danger';
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn btn-ghost" data-view="shows">←</button>
+        <div>
+          <h1 class="page-title" style="font-size:22px">${esc(show.workName)}</h1>
+          <p class="page-sub">${esc(show.venueName)} · ${esc(show.date)}</p>
         </div>
-      `;
-    }
+      </div>
+    </div>
 
-    function getPageTitle() {
-      if (state.view === 'dashboard') return 'Métricas de Producción';
-      if (state.view === 'registrar') return 'Registrar Liquidación';
-      if (state.view === 'historial') return 'Historial Único (Sheets)';
-      return 'La Opción';
-    }
+    <div class="grid mb20" style="grid-template-columns:${kpiCols}">
+      <div class="card"><div class="kpi-label">V. Bruta</div><div class="kpi-value cyan" style="font-size:20px">${fmt(c.ventaBruta)}</div></div>
+      ${isA ? `<div class="card"><div class="kpi-label">V. Neta</div><div class="kpi-value purple" style="font-size:20px">${fmt(c.ventaNeta)}</div></div>` : ''}
+      ${isA ? `<div class="card"><div class="kpi-label">Gastos</div><div class="kpi-value danger" style="font-size:20px">${fmt(c.totalGastos)}</div></div>` : ''}
+      <div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow" style="font-size:20px">${fmt(c.totalNeto)}</div></div>
+      ${isA ? `<div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink" style="font-size:20px">${fmt(c.cache)}</div><div class="kpi-sub">${esc(c.agreement?.name || '—')}</div></div>` : ''}
+      <div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${roColor}" style="font-size:20px">${fmt(c.restanteOpcion)}</div></div>
+    </div>
 
-    function renderToast() {
-      if (!state.toast) return '';
-      return `<div class="toast ${state.toast.type}">${esc(state.toast.message)}</div>`;
-    }
-
-    function renderDashboard() {
-      let totalBruto = 0, totalNeto = 0, totalLaOpcion = 0;
-      state.shows.forEach(s => {
-        totalBruto += s.metrics.ventaBruta;
-        totalNeto += s.metrics.totalNeto;
-        totalLaOpcion += s.metrics.restanteLaOpcion;
-      });
-
-      return `
-        <div class="grid grid-kpis" style="margin-bottom:24px;">
-          <div class="card">
-            <div class="kpi-label">Venta Bruta Sincronizada</div>
-            <div class="kpi-value cyan">${fmt(totalBruto)}</div>
-            <div class="kpi-sub">Suma total de taquillas</div>
-          </div>
-          <div class="card">
-            <div class="kpi-label">Total Neto (Post Gastos)</div>
-            <div class="kpi-value purple">${fmt(totalNeto)}</div>
-            <div class="kpi-sub">Disponibilidad real</div>
-          </div>
-          <div class="card">
-            <div class="kpi-label">Margen Limpio "La Opción"</div>
-            <div class="kpi-value" style="color:var(--success)">${fmt(totalLaOpcion)}</div>
-            <div class="kpi-sub">Neto menos cachés de compañías</div>
-          </div>
+    <div class="grid grid-2 mb20">
+      <div class="card">
+        <h3>Ingresos por plataforma</h3>
+        ${incomeRows}
+        ${cashRows.length ? `<div style="padding-top:6px">${cashRows.join('')}</div>` : ''}
+      </div>
+      <div class="card">
+        <h3>Reparto (${esc(c.agreement?.name || '—')})</h3>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span style="color:var(--text-muted)">Total Neto</span><span class="fw700">${fmt(c.totalNeto)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span style="color:var(--text-muted)">Caché sala</span><span class="fw700 pink">${fmt(c.cache)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800;border-top:1px solid var(--border);margin-top:4px">
+          <span>Restante La Opción</span><span class="${roColor}">${fmt(c.restanteOpcion)}</span>
         </div>
+      </div>
+    </div>
+  `;
+}
 
-        <div class="grid grid-2">
-          <div class="card">
-            <h3>Últimas Funciones Impactadas en Sheets</h3>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Obra / Sala</th>
-                    <th>Ingreso Neto</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${state.shows.slice(0, 5).map(s => `
-                    <tr>
-                      <td>${esc(s.fecha)}</td>
-                      <td><strong>${esc(s.workName)}</strong><br><span style="color:var(--text-dim);font-size:11px;">${esc(s.venueName)}</span></td>
-                      <td style="color:var(--success);font-weight:600">${fmt(s.metrics.totalNeto)}</td>
-                    </tr>
-                  `).join('') || '<tr><td colspan="3" class="empty">No hay datos en las pestañas mensuales del Sheet.</td></tr>'}
-                </tbody>
-              </table>
-            </div>
-          </div>
+// ══════════════════════════════════════════════════════════════
+// NEW SHOW FORM (role-aware)
+// ══════════════════════════════════════════════════════════════
+function renderNewShow() {
+  const isU = S.role === 'user';
+  const d = S.newShowDraft || { workId: '', venueId: '', date: '', time: '', agreementId: '', notes: '', income: {} };
+  S.newShowDraft = d;
 
-          <div class="card">
-            <h3>Estado del Ecosistema de Configuración</h3>
-            <p style="font-size:13px;color:var(--text-muted)">Validado en tiempo real desde la pestaña <strong>CONFIG</strong> de tu Google Sheet:</p>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
-              <span class="btn btn-secondary btn-sm" style="cursor:default">🎭 ${state.config.works.length} Obras</span>
-              <span class="btn btn-secondary btn-sm" style="cursor:default">🏛️ ${state.config.venues.length} Salas</span>
-              <span class="btn btn-secondary btn-sm" style="cursor:default">🎟️ ${state.config.platforms.length} Plataformas</span>
-              <span class="btn btn-secondary btn-sm" style="cursor:default">📜 ${state.config.agreements.length} Acuerdos</span>
-            </div>
-          </div>
+  const workOpts = S.config.works.filter(w => w.active !== false).map(w => `<option value="${w.id}" ${d.workId === w.id ? 'selected' : ''}>${esc(w.name)}</option>`).join('');
+  const venueOpts = S.config.venues.filter(v => v.active !== false).map(v => `<option value="${v.id}" ${d.venueId === v.id ? 'selected' : ''}>${esc(v.name)}</option>`).join('');
+  const agrOpts = S.config.agreements.filter(a => a.active !== false).map(a => `<option value="${a.id}" ${d.agreementId === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
+
+  const activePlats = S.config.platforms.filter(p => p.active !== false);
+  const platFields = activePlats.map(p => {
+    const label = isU ? esc(p.name) : `${esc(p.name)} (${p.commission}%${p.ivaOnCommission ? ' +IVA' : ''})`;
+    return `<div class="field">
+      <label>${label}</label>
+      <input type="number" min="0" step="0.01" placeholder="0" value="${d.income[p.id] || ''}" data-plat-id="${p.id}"/>
+    </div>`;
+  }).join('');
+
+  return `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px">
+      <button class="btn btn-ghost" data-view="shows">← Volver</button>
+      <h1 class="page-title" style="font-size:22px">${isU ? 'Registrar ingreso' : 'Nueva función'}</h1>
+      ${isU ? '<span class="badge" style="background:var(--cyan-dim);color:var(--cyan)">Usuario</span>' : ''}
+    </div>
+
+    <div class="grid grid-2 mb20">
+      <div class="card">
+        <h3>Datos básicos</h3>
+        <div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div>
+        <div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>
+        <div style="display:flex;gap:10px">
+          <div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div>
+          <div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div>
         </div>
-      `;
-    }
-
-    function renderRegistrarForm() {
-      const activeVenues = state.config.venues.filter(v => v.active);
-      const activeWorks = state.config.works.filter(w => w.active);
-      const activeAgreements = state.config.agreements.filter(a => a.active);
-
-      return `
-        <form onsubmit="guardarShow(event)" id="showForm">
-          <div class="grid grid-3" style="margin-bottom:16px;">
-            <div class="card">
-              <h3 style="color:var(--cyan)">1. Datos del Evento</h3>
-              <div class="field">
-                <label>Fecha de la Función</label>
-                <input type="date" value="${state.formData.fecha}" onchange="handleFormInput('fecha', this.value)" required ${state.isSaving ? 'disabled' : ''}>
-              </div>
-              <div class="field">
-                <label>Sala / Teatro</label>
-                <select onchange="handleFormInput('sala', this.value)" required ${state.isSaving ? 'disabled' : ''}>
-                  <option value="">-- Seleccionar Sala --</option>
-                  ${activeVenues.map(v => `<option value="${esc(v.name)}" ${state.formData.sala === v.name ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}
-                </select>
-              </div>
-              <div class="field">
-                <label>Obra</label>
-                <select onchange="handleFormInput('obra', this.value)" required ${state.isSaving ? 'disabled' : ''}>
-                  <option value="">-- Seleccionar Obra --</option>
-                  ${activeWorks.map(w => `<option value="${esc(w.name)}" ${state.formData.obra === w.name ? 'selected' : ''}>${esc(w.name)}</option>`).join('')}
-                </select>
-              </div>
-              <div class="field">
-                <label>Acuerdo COMERCIAL (Compañía)</label>
-                <select onchange="handleFormInput('acuerdo', this.value)" required ${state.isSaving ? 'disabled' : ''}>
-                  <option value="">-- Seleccionar Acuerdo --</option>
-                  ${activeAgreements.map(a => `<option value="${esc(a.name)}" ${state.formData.acuerdo === a.name ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}
-                </select>
-              </div>
-            </div>
-
-            <div class="card">
-              <h3 style="color:var(--yellow)">2. Desglose de Ventas (Brutos)</h3>
-              <div style="max-height:360px; overflow-y:auto; padding-right:4px;">
-                <div class="field"><label>Atrápalo (€)</label><input type="number" step="0.01" value="${state.formData.atrapalo}" oninput="handleFormInput('atrapalo', this.value)" ${state.isSaving ? 'disabled' : ''}></div>
-                <div class="field"><label>Fever (€)</label><input type="number" step="0.01" value="${state.formData.fever}" oninput="handleFormInput('fever', this.value)" ${state.isSaving ? 'disabled' : ''}></div>
-                <div class="field"><label>Kultur (€)</label><input type="number" step="0.01" value="${state.formData.kultur}" oninput="handleFormInput('kultur', this.value)" ${state.isSaving ? 'disabled' : ''}></div>
-                <div class="field"><label>Abonoteatro (€)</label><input type="number" step="0.01" value="${state.formData.abonoteatro}" oninput="handleFormInput('abonoteatro', this.value)" ${state.isSaving ? 'disabled' : ''}></div>
-                <div class="field"><label>La Opción (€)</label><input type="number" step="0.01" value="${state.formData.laopcion}" oninput="handleFormInput('laopcion', this.value)" ${state.isSaving ? 'disabled' : ''}></div>
-                <div class="field"><label>Universe (€)</label><input type="number" step="0.01" value="${state.formData.universe}" oninput="handleFormInput('universe', this.value)" ${state.isSaving ? 'disabled' : ''}></div>
-                <div class="field"><label>Taquilla Efectivo (€)</label><input type="number" step="0.01" value="${state.formData.efectivo}" oninput="handleFormInput('efectivo', this.value)" ${state.isSaving ? 'disabled' : ''}></div>
-                <div class="field"><label>Taquilla Tarjeta (€)</label><input type="number" step="0.01" value="${state.formData.tarjeta}" oninput="handleFormInput('tarjeta', this.value)" ${state.isSaving ? 'disabled' : ''}></div>
-              </div>
-            </div>
-
-            <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
-              <div>
-                <h3 style="color:var(--pink)">3. Gastos Operativos Manuales</h3>
-                <div class="field"><label>Autor (€)</label><input type="number" step="0.01" value="${state.formData.autor}" oninput="handleFormInput('autor', this.value)" ${state.isSaving ? 'disabled' : ''}></div>
-                <div class="field"><label>Alquiler Sala (€)</label><input type="number" step="0.01" value="${state.formData.alquiler}" oninput="handleFormInput('alquiler', this.value)" ${state.isSaving ? 'disabled' : ''}></div>
-                <div class="field"><label>Otros Gastos (€)</label><input type="number" step="0.01" value="${state.formData.otrosGastos}" oninput="handleFormInput('otrosGastos', this.value)" ${state.isSaving ? 'disabled' : ''}></div>
-                <div class="field"><label>Observaciones</label><textarea oninput="handleFormInput('observaciones', this.value)" ${state.isSaving ? 'disabled' : ''}>${esc(state.formData.observaciones)}</textarea></div>
-              </div>
-              <div style="margin-top:20px;">
-                <button type="submit" class="btn btn-primary" style="width:100%; padding:14px;" ${state.isSaving ? 'disabled' : ''}>
-                  ${state.isSaving ? '⏳ Procesando en Sheets...' : '💾 Registrar e Inyectar en Sheet'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </form>
-      `;
-    }
-
-    function renderHistorial() {
-      return `
-        <div class="card">
-          <h3>Todas las Funciones Sincronizadas (Orden Descendente)</h3>
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Lectura dinámica multiplataforma mapeada correctamente.</p>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Fecha</th>
-                  <th>Sala / Teatro</th>
-                  <th>Obra</th>
-                  <th>Venta Bruta</th>
-                  <th>Venta Neta (1.10)</th>
-                  <th>Total Gastos</th>
-                  <th>Neto Final</th>
-                  <th>Caché Cía</th>
-                  <th>La Opción</th>
-                  <th>Acuerdo</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${state.shows.map(s => `
-                  <tr>
-                    <td><strong>${esc(s.fecha)}</strong></td>
-                    <td>${esc(s.venueName)}</td>
-                    <td><span class="badge" style="background:var(--cyan-dim);color:var(--cyan);font-size:12px;">${esc(s.workName)}</span></td>
-                    <td>${fmt(s.metrics.ventaBruta)}</td>
-                    <td>${fmt(s.metrics.ventaNeta)}</td>
-                    <td style="color:var(--danger)">${fmt(s.metrics.totalGastos)}</td>
-                    <td style="font-weight:700">${fmt(s.metrics.totalNeto)}</td>
-                    <td style="color:var(--purple)">${fmt(s.metrics.cache)}</td>
-                    <td style="color:var(--success);font-weight:700">${fmt(s.metrics.restanteLaOpcion)}</td>
-                    <td><span style="font-size:11px;color:var(--text-muted)">${esc(s.agreementName)}</span></td>
-                  </tr>
-                `).join('') || '<tr><td colspan="10" class="empty">No existen registros en las pestañas de datos del Google Sheet.</td></tr>'}
-              </tbody>
-            </table>
-          </div>
+        ${!isU ? `<div class="field"><label>Acuerdo</label><select data-field="agreementId"><option value="">— Seleccionar —</option>${agrOpts}</select></div>` : ''}
+        <div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div>
+      </div>
+      <div class="card">
+        <h3>Ingresos</h3>
+        ${platFields}
+        <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">
+          <div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox || ''}" data-plat-id="cashBox"/></div>
+          <div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox || ''}" data-plat-id="cardBox"/></div>
         </div>
-      `;
-    }
+      </div>
+    </div>
 
-    // --- ENTRADA AUTOMÁTICA DE INICIALIZACIÓN ---
-    render();
-  </script>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving ? 'disabled' : ''}>💾 Guardar</button>
+      <button class="btn btn-secondary" data-view="shows">Cancelar</button>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════
+// MONTHLY SUMMARY (matches spreadsheet format)
+// ══════════════════════════════════════════════════════════════
+function renderSummary() {
+  const months = [...new Set(S.shows.map(s => (s.date||'').slice(0, 7)).filter(Boolean))].sort().reverse();
+  const selMonth = S.summaryMonth || months[0] || '';
+
+  const monthOpts = months.map(m => `<option value="${m}" ${m === selMonth ? 'selected' : ''}>${m}</option>`).join('');
+
+  const cs = S.shows.filter(s => (s.date||'').startsWith(selMonth)).map(s => ({ ...s, c: calcShow(s) }));
+
+  // Group by work
+  const byWork = {};
+  cs.forEach(s => {
+    const k = s.workName || 'Sin obra';
+    if (!byWork[k]) byWork[k] = { work: k, venue: s.venueName, ingreso: 0, coste: 0, beneficio: 0 };
+    byWork[k].ingreso += s.c.totalNeto;
+    byWork[k].coste += s.c.cache;
+    byWork[k].beneficio += s.c.restanteOpcion;
+  });
+  const rows = Object.values(byWork);
+  const totI = rows.reduce((s, r) => s + r.ingreso, 0);
+  const totC = rows.reduce((s, r) => s + r.coste, 0);
+  const totB = rows.reduce((s, r) => s + r.beneficio, 0);
+  rows.forEach(r => { r.pct = totB !== 0 ? r2(r.beneficio / totB * 100) : 0; });
+  const totPct = totI !== 0 ? r2(totB / totI * 100) : 0;
+
+  const tableRows = rows.map(r => {
+    const bColor = r.beneficio >= 0 ? 'success' : 'danger';
+    return `<tr>
+      <td>${esc(r.venue)}</td><td>${esc(r.work)}</td>
+      <td class="right">${fmt(r.ingreso)}</td><td class="right">${fmt(r.coste)}</td>
+      <td class="right fw700 ${bColor}">${fmt(r.beneficio)}</td>
+      <td class="right">${fmtPct(r.pct)}</td>
+    </tr>`;
+  }).join('');
+
+  // Platform summary
+  const platTotals = {};
+  cs.forEach(s => {
+    s.c.commissions.forEach(c => { platTotals[c.name] = (platTotals[c.name] || 0) + c.income; });
+    platTotals['Taq. Efectivo'] = (platTotals['Taq. Efectivo'] || 0) + s.c.cashBox;
+    platTotals['Taq. Tarjeta'] = (platTotals['Taq. Tarjeta'] || 0) + s.c.cardBox;
+  });
+  const platCards = Object.entries(platTotals).sort(([,a],[,b]) => b - a).map(([name, total]) =>
+    `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+      <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:4px">${esc(name)}</div>
+      <div style="font-size:18px;font-family:'Outfit',sans-serif;font-weight:800;color:var(--cyan)">${fmt(total)}</div>
+    </div>`
+  ).join('');
+
+  return `
+    <h1 class="page-title">Resumen Mensual</h1>
+    <p class="page-sub mb20">Visión por obra y plataforma</p>
+
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:18px">
+      <span style="color:var(--text-dim)">📅</span>
+      <select data-bind="summaryMonth" style="padding:8px 12px;background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
+        ${monthOpts}
+      </select>
+      <span style="font-size:12px;color:var(--text-dim)">${cs.length} funciones</span>
+    </div>
+
+    <div class="card mb20">
+      <h3>Resumen por obra</h3>
+      <div class="table-wrap">
+        <table><thead><tr><th>Sala</th><th>Obra</th><th class="right">Ingreso</th><th class="right">Coste CIA</th><th class="right">Beneficios</th><th class="right">%</th></tr></thead>
+        <tbody>${tableRows || '<tr><td colspan="6" class="empty">Sin datos</td></tr>'}</tbody></table>
+      </div>
+      ${rows.length > 0 ? `
+      <div style="display:flex;justify-content:flex-end;gap:24px;padding:12px 14px 0;border-top:2px solid rgba(110,200,228,.2);margin-top:10px">
+        <span style="font-size:12px;color:var(--text-muted)">TOTAL</span>
+        <span style="font-size:12px;font-weight:700;min-width:80px;text-align:right">${fmt(totI)}</span>
+        <span style="font-size:12px;font-weight:700;min-width:80px;text-align:right">${fmt(totC)}</span>
+        <span style="font-size:12px;font-weight:700;min-width:80px;text-align:right;color:var(--success)">${fmt(totB)}</span>
+        <span style="font-size:12px;font-weight:700;min-width:50px;text-align:right;color:var(--cyan)">${fmtPct(totPct)}</span>
+      </div>` : ''}
+    </div>
+
+    <div class="card">
+      <h3>Resumen por plataforma</h3>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${platCards || '<div class="empty">Sin datos</div>'}</div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN
+// ══════════════════════════════════════════════════════════════
+function renderAdmin() {
+  if (S.role !== 'admin') return '<div class="card"><div class="empty">Acceso denegado</div></div>';
+
+  const tabs = [
+    { id: 'platforms', label: 'Plataformas' },
+    { id: 'venues', label: 'Salas' },
+    { id: 'works', label: 'Obras' },
+    { id: 'agreements', label: 'Acuerdos' },
+    { id: 'expenses', label: 'Gastos' },
+  ];
+  const tabBtns = tabs.map(t =>
+    `<button class="btn ${S.adminTab === t.id ? 'btn-primary' : 'btn-ghost'} btn-sm" data-admin-tab="${t.id}">${t.label}</button>`
+  ).join('');
+
+  let content = '';
+  const tab = S.adminTab;
+
+  if (tab === 'platforms') {
+    const rows = S.config.platforms.map(p =>
+      `<tr>
+        <td>${esc(p.name)}</td><td>${p.commission}%</td>
+        <td>${p.ivaOnCommission ? '<span class="badge" style="background:var(--pink-dim);color:var(--pink)">Sí</span>' : 'No'}</td>
+        <td>${p.active !== false ? '<span class="badge" style="background:var(--success-dim);color:var(--success)">Activa</span>' : '<span class="badge" style="background:var(--surface-alt);color:var(--text-dim)">Inactiva</span>'}</td>
+      </tr>`
+    ).join('');
+    content = `<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Comisión</th><th>IVA</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p style="margin-top:12px;font-size:12px;color:var(--text-dim)">Para editar, modifica en Administración → Google Sheets (hoja CONFIG) y recarga.</p>`;
+  } else if (tab === 'venues') {
+    const rows = S.config.venues.map(v =>
+      `<tr><td>${esc(v.name)}</td><td>${v.active !== false ? '<span class="badge" style="background:var(--success-dim);color:var(--success)">Activa</span>' : 'Inactiva'}</td></tr>`
+    ).join('');
+    content = `<div class="table-wrap"><table><thead><tr><th>Sala</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  } else if (tab === 'works') {
+    const rows = S.config.works.map(w =>
+      `<tr><td>${esc(w.name)}</td><td>${w.active !== false ? '<span class="badge" style="background:var(--success-dim);color:var(--success)">Activa</span>' : 'Inactiva'}</td><td>${S.shows.filter(s => s.workId === w.id).length || '—'}</td></tr>`
+    ).join('');
+    content = `<div class="table-wrap"><table><thead><tr><th>Obra</th><th>Estado</th><th>Funciones</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  } else if (tab === 'agreements') {
+    const rows = S.config.agreements.map(a =>
+      `<tr><td>${esc(a.name)}</td><td>${a.mode === 'percentage' ? '<span class="badge" style="background:var(--cyan-dim);color:var(--cyan)">%</span>' : '<span class="badge" style="background:var(--pink-dim);color:var(--pink)">Fijo</span>'}</td><td>${a.mode === 'percentage' ? a.value + '%' : fmt(a.value)}</td><td>${a.active !== false ? 'Activo' : 'Inactivo'}</td></tr>`
+    ).join('');
+    content = `<div class="table-wrap"><table><thead><tr><th>Acuerdo</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  } else if (tab === 'expenses') {
+    const rows = S.config.expenseTypes.map(e =>
+      `<tr><td>${esc(e.name)}</td><td>${e.active !== false ? 'Activo' : 'Inactivo'}</td></tr>`
+    ).join('');
+    content = `<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+
+  return `
+    <div class="section-top">
+      <div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde Google Sheets</p></div>
+      <button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar config</button>
+    </div>
+    <div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>
+    ${content}
+    <p style="margin-top:16px;font-size:12px;color:var(--text-dim)">ℹ️ La configuración se gestiona en la hoja CONFIG del Google Sheet. Usa el botón "Recargar" para ver cambios.</p>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════
+// EVENT BINDING
+// ══════════════════════════════════════════════════════════════
+function bindEvents() {
+  // Nav buttons
+  document.querySelectorAll('[data-view]').forEach(btn => {
+    btn.onclick = () => { S.view = btn.dataset.view; S.selectedId = null; render(); };
+  });
+
+  // Actions
+  document.querySelectorAll('[data-action]').forEach(btn => {
+    btn.onclick = () => {
+      const action = btn.dataset.action;
+      if (action === 'logout') { S.role = null; S.view = 'dashboard'; S.selectedId = null; S.newShowDraft = null; render(); }
+      if (action === 'refresh') { loadFromSheet(); }
+      if (action === 'saveNewShow') { handleSaveNewShow(); }
+    };
+  });
+
+  // Admin tabs
+  document.querySelectorAll('[data-admin-tab]').forEach(btn => {
+    btn.onclick = () => { S.adminTab = btn.dataset.adminTab; render(); };
+  });
+
+  // Search binding
+  const searchInput = document.querySelector('[data-bind="search"]');
+  if (searchInput) {
+    searchInput.oninput = () => { S.search = searchInput.value; render(); };
+  }
+
+  // Summary month
+  const summarySelect = document.querySelector('[data-bind="summaryMonth"]');
+  if (summarySelect) {
+    summarySelect.onchange = () => { S.summaryMonth = summarySelect.value; render(); };
+  }
+
+  // Show row clicks
+  document.querySelectorAll('[data-show-id]').forEach(tr => {
+    tr.onclick = () => { S.selectedId = tr.dataset.showId; S.view = 'detail'; render(); };
+  });
+
+  // New show form fields
+  document.querySelectorAll('[data-field]').forEach(el => {
+    el.onchange = el.oninput = () => {
+      if (!S.newShowDraft) S.newShowDraft = { workId: '', venueId: '', date: '', time: '', agreementId: '', notes: '', income: {} };
+      S.newShowDraft[el.dataset.field] = el.value;
+    };
+  });
+
+  // Platform income fields
+  document.querySelectorAll('[data-plat-id]').forEach(el => {
+    el.onchange = el.oninput = () => {
+      if (!S.newShowDraft) S.newShowDraft = { workId: '', venueId: '', date: '', time: '', agreementId: '', notes: '', income: {} };
+      S.newShowDraft.income[el.dataset.platId] = el.value;
+    };
+  });
+}
+
+// ── SAVE NEW SHOW ────────────────────────────────────────────
+function handleSaveNewShow() {
+  const d = S.newShowDraft;
+  if (!d) return showToast('Rellena el formulario', 'error');
+  if (!d.workId) return showToast('Selecciona una obra', 'error');
+  if (!d.venueId) return showToast('Selecciona una sala', 'error');
+  if (!d.date) return showToast('Introduce una fecha', 'error');
+
+  // Build full show object
+  const work = S.config.works.find(w => w.id === d.workId);
+  const venue = S.config.venues.find(v => v.id === d.venueId);
+  const agreement = S.config.agreements.find(a => a.id === d.agreementId);
+
+  const income = {};
+  S.config.platforms.forEach(p => {
+    income[p.id] = parseFloat(d.income[p.id]) || 0;
+  });
+  income.cashBox = parseFloat(d.income.cashBox) || 0;
+  income.cardBox = parseFloat(d.income.cardBox) || 0;
+
+  // Check for negatives
+  if (Object.values(income).some(v => v < 0)) return showToast('No se admiten importes negativos', 'error');
+
+  const show = {
+    id: gid(),
+    appId: gid(),
+    workId: d.workId,
+    venueId: d.venueId,
+    workName: work?.name || '',
+    venueName: venue?.name || '',
+    date: d.date,
+    time: d.time || '',
+    agreementId: d.agreementId || '',
+    agreementSnapshot: agreement ? { name: agreement.name, mode: agreement.mode, value: agreement.value } : null,
+    notes: d.notes || '',
+    income,
+    platformSnapshots: {},
+    expenses: [],
+    status: {},
+  };
+
+  // Build snapshots
+  S.config.platforms.forEach(p => {
+    show.platformSnapshots[p.id] = {
+      name: p.name, commission: p.commission, ivaOnCommission: p.ivaOnCommission,
+      income: income[p.id] || 0,
+    };
+  });
+
+  // Save to Google Sheet
+  saveShowToSheet(show);
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+render();
+</script>
 </body>
 </html>
