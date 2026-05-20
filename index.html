@@ -306,6 +306,7 @@
       editShow: null,
       settingsDraft: null,
       summaryMonth: '',
+      isSaving: false,
       data: {
         platforms: [
           { id: 'p1', name: 'Atrápalo', commission: 10, ivaOnCommission: true, active: true },
@@ -411,11 +412,10 @@
     }
     function getShowById(id) { return state.data.shows.find(s => s.id === id) || null; }
     function saveLocal() {
-      localStorage.setItem('laopcion_app_data_v2', JSON.stringify(state.data));
+      localStorage.setItem('laopcion_app_data_v2_sheet', JSON.stringify(state.data));
     }
     function loadLocal() {
-      localStorage.removeItem('laopcion_app_data_v1');
-      const raw = localStorage.getItem('laopcion_app_data_v2');
+      const raw = localStorage.getItem('laopcion_app_data_v2_sheet');
       if (!raw) return;
       try {
         const parsed = JSON.parse(raw);
@@ -788,7 +788,7 @@
           </div>
 
           <div class="top-actions">
-            <button class="btn btn-primary" onclick="actions.saveNewShow()">Guardar</button>
+            <button class="btn btn-primary" onclick="actions.saveNewShow()" ${state.isSaving ? 'disabled' : ''}>${state.isSaving ? 'Guardando...' : 'Guardar'}</button>
             <button class="btn btn-secondary" onclick="actions.setView('shows')">Cancelar</button>
           </div>
         </div>
@@ -937,7 +937,7 @@
           </div>
 
           <div class="top-actions">
-            <button class="btn btn-primary" onclick="actions.saveEditedShow()">Guardar</button>
+            <button class="btn btn-primary" onclick="actions.saveEditedShow()" ${state.isSaving ? 'disabled' : ''}>${state.isSaving ? 'Guardando...' : 'Guardar'}</button>
             <button class="btn btn-secondary" onclick="actions.cancelEditShow()">Cancelar</button>
           </div>
         </div>
@@ -1139,11 +1139,14 @@
     function setSettingsListByType(type, value) {
       const map = { platform: 'platforms', venue: 'venues', work: 'works', expenseType: 'expenseTypes', agreement: 'agreements' };
       state.data[map[type]] = value;
-      saveLocal();
+      guardarConfigEnSheet()
+        .then(() => toast('Configuración guardada en Google Sheets', 'success'))
+        .catch(error => toast('No se pudo guardar CONFIG en Sheets: ' + error.message, 'error'));
     }
 
     function contentTemplate() {
       if (!state.role) return loginTemplate();
+      if (state.isLoading) return `${sidebarTemplate()}<main class="main"><div class="card"><h3>Cargando datos desde Google Sheets...</h3><p class="muted">Un momento.</p></div></main>`;
       let viewHtml = '';
       if (state.editShow) viewHtml = editShowTemplate();
       else switch (state.view) {
@@ -1166,11 +1169,146 @@
     }
 
 
-    async function guardarFuncionEnSheet(show) {
+    async function sheetGet(action = 'getAll') {
       if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('PEGA_AQUI')) {
         throw new Error('Falta pegar la URL de Apps Script en GOOGLE_SCRIPT_URL');
       }
 
+      const url = GOOGLE_SCRIPT_URL + '?' + new URLSearchParams({
+        action,
+        _ts: Date.now().toString()
+      }).toString();
+
+      const res = await fetch(url, { method: 'GET' });
+      const data = await res.json();
+
+      if (!data.ok) {
+        throw new Error(data.error || 'Error leyendo Google Sheets');
+      }
+
+      return data;
+    }
+
+    async function sheetPost(payload) {
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('PEGA_AQUI')) {
+        throw new Error('Falta pegar la URL de Apps Script en GOOGLE_SCRIPT_URL');
+      }
+
+      const res = await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!data.ok) {
+        throw new Error(data.error || 'Error guardando en Google Sheets');
+      }
+
+      return data;
+    }
+
+    function findByName(list, name) {
+      const clean = String(name || '').toLowerCase().trim();
+      return (list || []).find(x => String(x.name || '').toLowerCase().trim() === clean) || null;
+    }
+
+    function showFromSheet(row) {
+      const venue = findByName(state.data.venues, row.sala);
+      const work = findByName(state.data.works, row.obra);
+
+      const income = {
+        p1: Number(row.atrapalo || 0),
+        p2: Number(row.fever || 0),
+        p3: Number(row.kultur || 0),
+        p4: Number(row.abonoteatro || 0),
+        p5: Number(row.laopcion || 0),
+        p6: Number(row.universe || 0),
+        cashBox: Number(row.efectivo || 0),
+        cardBox: Number(row.tarjeta || 0)
+      };
+
+      const platformSnapshots = snapPlatforms(state.data.platforms, income);
+
+      // Para que lo mostrado coincida con el Sheet, calculamos como gasto manual
+      // la diferencia entre TOTAL GASTOS del Sheet y las comisiones según CONFIG.
+      let totalCommission = 0;
+      Object.values(platformSnapshots).forEach(p => {
+        const base = Number(p.income || 0) * Number(p.commission || 0) / 100;
+        totalCommission += p.ivaOnCommission ? base * 1.21 : base;
+      });
+
+      const totalGastosSheet = Number(row.totalGastos || 0);
+      const gastoManualSheet = Math.max(0, r2(totalGastosSheet - totalCommission));
+
+      const expenses = gastoManualSheet > 0
+        ? [{ typeId: 'et3', typeName: 'Gastos Sheet', amount: gastoManualSheet }]
+        : [];
+
+      return {
+        id: row.appId || row.id || gid(),
+        venueId: venue?.id || '',
+        workId: work?.id || '',
+        venueName: row.sala || venue?.name || '',
+        workName: row.obra || work?.name || '',
+        date: row.fecha || '',
+        time: row.hora || '',
+        agreementId: '',
+        agreementSnapshot: {
+          name: row.acuerdo || 'Desde Sheet',
+          mode: 'fixed',
+          value: Number(row.cache || 0)
+        },
+        notes: row.observaciones || '',
+        income,
+        platformSnapshots,
+        expenses,
+        status: { ticketsSent: false, emailSent: false, invoiceSent: false, sentToAdmin: false, paymentDate: '' }
+      };
+    }
+
+    async function cargarDatosDesdeSheet() {
+      try {
+        state.isLoading = true;
+        render();
+
+        const result = await sheetGet('getAll');
+
+        if (result.config) {
+          state.data.platforms = result.config.platforms || [];
+          state.data.venues = result.config.venues || [];
+          state.data.works = result.config.works || [];
+          state.data.expenseTypes = result.config.expenseTypes || [];
+          state.data.agreements = result.config.agreements || [];
+        }
+
+        state.data.shows = Array.isArray(result.shows)
+          ? result.shows.map(showFromSheet)
+          : [];
+
+        state.isLoading = false;
+        render();
+      } catch (error) {
+        state.isLoading = false;
+        console.error(error);
+        toast('No se pudieron cargar datos del Sheet: ' + error.message, 'error');
+      }
+    }
+
+    async function guardarConfigEnSheet() {
+      return sheetPost({
+        action: 'saveConfig',
+        config: {
+          platforms: state.data.platforms,
+          venues: state.data.venues,
+          works: state.data.works,
+          expenseTypes: state.data.expenseTypes,
+          agreements: state.data.agreements
+        }
+      });
+    }
+
+    async function guardarFuncionEnSheet(show) {
       const c = calcShow(show);
       const expenses = show.expenses || [];
 
@@ -1187,7 +1325,8 @@
         })
         .reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
-      const payload = {
+      return sheetPost({
+        action: 'saveShow',
         appId: show.id,
         fecha: show.date,
         hora: show.time || '',
@@ -1217,18 +1356,7 @@
         acuerdo: show.agreementSnapshot?.name || '',
         estado: show.status || {},
         observaciones: show.notes || ''
-      };
-
-      const res = await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
       });
-
-      const result = await res.json();
-      if (!result.ok) {
-        throw new Error(result.error || 'Error guardando en Google Sheets');
-      }
-      return result;
     }
 
     const actions = {
@@ -1243,6 +1371,7 @@
       updateNewExpense(index, key, value) { state.newShow.expenses[index][key] = value; render(); },
       removeNewExpense(index) { state.newShow.expenses.splice(index, 1); render(); },
       saveNewShow() {
+        if (state.isSaving) return;
         const d = state.newShow;
         if (!d.workId || !d.venueId || !d.date) return toast('Completa obra, sala y fecha', 'error');
         const vals = [...state.data.platforms.map(p => parseFloat(d.income?.[p.id]) || 0), parseFloat(d.income?.cashBox) || 0, parseFloat(d.income?.cardBox) || 0];
@@ -1258,19 +1387,23 @@
         const ag = state.data.agreements.find(a => a.id === d.agreementId);
         const expenses = (d.expenses || []).filter(e => e.typeId && (parseFloat(e.amount) || 0) > 0).map(e => ({ ...e, amount: parseFloat(e.amount) || 0, typeName: state.data.expenseTypes.find(t => t.id === e.typeId)?.name || 'Gasto' }));
         const payload = { ...clone(d), income: inc, expenses, venueName: venue?.name || '', workName: work?.name || '', agreementSnapshot: snapAgreement(ag), platformSnapshots: snapPlatforms(state.data.platforms, inc) };
-        state.data.shows.push(payload);
-        saveLocal();
+
+        state.isSaving = true;
+        toast('Guardando en Google Sheets...', 'warn');
 
         guardarFuncionEnSheet(payload)
+          .then(() => cargarFuncionesDesdeSheet())
           .then(() => {
             state.newShow = null;
             state.view = 'shows';
-            toast('Función guardada y enviada a Google Sheets', 'success');
+            state.isSaving = false;
+            toast('Función guardada en Google Sheets', 'success');
+            render();
           })
           .catch((error) => {
-            state.newShow = null;
-            state.view = 'shows';
-            toast('Guardada en la app, pero NO en Sheets: ' + error.message, 'error');
+            state.isSaving = false;
+            toast('NO se guardó en Sheets: ' + error.message, 'error');
+            render();
           });
       },
       startEditShow() { const show = getShowById(state.selectedId); state.editShow = clone(show); render(); },
@@ -1281,6 +1414,7 @@
       updateEditExpense(index, key, value) { state.editShow.expenses[index][key] = value; render(); },
       removeEditExpense(index) { state.editShow.expenses.splice(index, 1); render(); },
       saveEditedShow() {
+        if (state.isSaving) return;
         const ed = state.editShow;
         const inc = { ...ed.income };
         state.data.platforms.forEach(p => inc[p.id] = parseFloat(inc[p.id]) || 0);
@@ -1291,26 +1425,31 @@
         const work = state.data.works.find(w => w.id === ed.workId);
         const ag = state.data.agreements.find(a => a.id === ed.agreementId);
         const payload = { ...ed, income: inc, expenses, venueName: venue?.name || ed.venueName, workName: work?.name || ed.workName, agreementSnapshot: snapAgreement(ag) || ed.agreementSnapshot, platformSnapshots: snapPlatforms(state.data.platforms, inc) };
-        state.data.shows = state.data.shows.map(s => s.id === payload.id ? payload : s);
-        saveLocal();
+
+        state.isSaving = true;
+        toast('Actualizando en Google Sheets...', 'warn');
 
         guardarFuncionEnSheet(payload)
+          .then(() => cargarFuncionesDesdeSheet())
           .then(() => {
             state.editShow = null;
-            toast('Función actualizada y enviada a Google Sheets', 'success');
+            state.isSaving = false;
+            toast('Función actualizada en Google Sheets', 'success');
+            render();
           })
           .catch((error) => {
-            state.editShow = null;
-            toast('Actualizada en la app, pero NO en Sheets: ' + error.message, 'error');
+            state.isSaving = false;
+            toast('NO se actualizó en Sheets: ' + error.message, 'error');
+            render();
           });
       },
       toggleStatus(id, key) {
         state.data.shows = state.data.shows.map(s => s.id === id ? { ...s, status: { ...s.status, [key]: !s.status?.[key] } } : s);
-        saveLocal(); render();
+        render();
       },
       updatePaymentDate(id, value) {
         state.data.shows = state.data.shows.map(s => s.id === id ? { ...s, status: { ...s.status, paymentDate: value } } : s);
-        saveLocal(); render();
+        render();
       },
       setSummaryMonth(value) { state.summaryMonth = value; render(); },
       setReportFilter(key, value) { state.reportFilters[key] = value; render(); },
@@ -1361,8 +1500,9 @@
       app.innerHTML = contentTemplate();
     }
 
-    loadLocal();
     render();
+    cargarDatosDesdeSheet();
+    cargarFuncionesDesdeSheet();
   </script>
 </body>
 </html>
