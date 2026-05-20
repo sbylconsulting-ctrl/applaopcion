@@ -1208,9 +1208,17 @@
       return data;
     }
 
+    function normalizeNameForMatch(value) {
+      return String(value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+    }
+
     function findByName(list, name) {
-      const clean = String(name || '').toLowerCase().trim();
-      return (list || []).find(x => String(x.name || '').toLowerCase().trim() === clean) || null;
+      const clean = normalizeNameForMatch(name);
+      return (list || []).find(x => normalizeNameForMatch(x.name) === clean) || null;
     }
 
     function showFromSheet(row) {
@@ -1230,8 +1238,8 @@
 
       const platformSnapshots = snapPlatforms(state.data.platforms, income);
 
-      // Para que lo mostrado coincida con el Sheet, calculamos como gasto manual
-      // la diferencia entre TOTAL GASTOS del Sheet y las comisiones según CONFIG.
+      // Intentamos reconstruir gastos manuales desde el total de gastos que viene del Sheet.
+      // Si el Apps Script antiguo devolvió columnas desplazadas, evitamos inventar gastos negativos.
       let totalCommission = 0;
       Object.values(platformSnapshots).forEach(p => {
         const base = Number(p.income || 0) * Number(p.commission || 0) / 100;
@@ -1240,10 +1248,12 @@
 
       const totalGastosSheet = Number(row.totalGastos || 0);
       const gastoManualSheet = Math.max(0, r2(totalGastosSheet - totalCommission));
-
       const expenses = gastoManualSheet > 0
         ? [{ typeId: 'et3', typeName: 'Gastos Sheet', amount: gastoManualSheet }]
         : [];
+
+      const agreementName = row.acuerdo || 'Desde Sheet';
+      const agreement = findByName(state.data.agreements, agreementName);
 
       return {
         id: row.appId || row.id || gid(),
@@ -1253,12 +1263,10 @@
         workName: row.obra || work?.name || '',
         date: row.fecha || '',
         time: row.hora || '',
-        agreementId: '',
-        agreementSnapshot: {
-          name: row.acuerdo || 'Desde Sheet',
-          mode: 'fixed',
-          value: Number(row.cache || 0)
-        },
+        agreementId: agreement?.id || '',
+        agreementSnapshot: agreement
+          ? snapAgreement(agreement)
+          : { name: agreementName, mode: 'fixed', value: Number(row.cache || 0) },
         notes: row.observaciones || '',
         income,
         platformSnapshots,
@@ -1279,7 +1287,7 @@
           state.data.venues = result.config.venues || [];
           state.data.works = result.config.works || [];
           state.data.expenseTypes = result.config.expenseTypes || [];
-          state.data.agreements = result.config.agreements || [];
+          state.data.agreements = result.config.agreements || result.config.acuerdos || [];
         }
 
         state.data.shows = Array.isArray(result.shows)
@@ -1293,6 +1301,14 @@
         console.error(error);
         toast('No se pudieron cargar datos del Sheet: ' + error.message, 'error');
       }
+    }
+
+    async function cargarFuncionesDesdeSheet() {
+      const result = await sheetGet('getShows');
+      state.data.shows = Array.isArray(result.shows)
+        ? result.shows.map(showFromSheet)
+        : [];
+      render();
     }
 
     async function guardarConfigEnSheet() {
@@ -1502,7 +1518,6 @@
 
     render();
     cargarDatosDesdeSheet();
-    cargarFuncionesDesdeSheet();
   </script>
 </body>
 </html>
