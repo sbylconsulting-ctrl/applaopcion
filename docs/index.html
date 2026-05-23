@@ -207,8 +207,12 @@
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyCwwMRxy6J4l1oqF9BqgvzHZ7DKSASqytV2B7anHsokG0VTraeTBLfTHXDEwS11uQDXQ/exec";
 
+const SESSION_KEY = 'laopcion_session_v1';
+
 // ── STATE ────────────────────────────────────────────────────
 const S = {
+  token: '',
+  user: null,
   role: null,
   view: 'dashboard',
   selectedId: null,
@@ -220,8 +224,15 @@ const S = {
   isLoading: false,
   isSaving: false,
   isRefreshing: false,
+  isLoggingIn: false,
+  isAuthChecking: false,
+  isUserLoading: false,
+  isUserSaving: false,
   lastSyncAt: '',
   loadError: null,
+  loginDraft: { email: '', password: '' },
+  newUserDraft: { email: '', password: '', role: 'user' },
+  users: [],
   // Form states
   newShowDraft: null,
   editShowDraft: null,
@@ -259,6 +270,51 @@ function showToast(message, type = 'success') {
 
 function normalize(text) {
   return String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+function saveSession(token, user) {
+  S.token = token || '';
+  S.user = user || null;
+  S.role = user?.role || null;
+  if (S.token && S.user) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ token: S.token, user: S.user }));
+  }
+}
+
+function restoreSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return false;
+    const saved = JSON.parse(raw);
+    if (!saved?.token || !saved?.user) return false;
+    S.token = saved.token;
+    S.user = saved.user;
+    S.role = saved.user.role;
+    return true;
+  } catch (e) {
+    localStorage.removeItem(SESSION_KEY);
+    return false;
+  }
+}
+
+function clearSession() {
+  S.token = '';
+  S.user = null;
+  S.role = null;
+  S.view = 'dashboard';
+  S.selectedId = null;
+  S.newShowDraft = null;
+  S.users = [];
+  localStorage.removeItem(SESSION_KEY);
+}
+
+function isAuthError(err) {
+  const msg = String(err?.message || err || '').toLowerCase();
+  return msg.includes('token') || msg.includes('sesión') || msg.includes('sesion') || msg.includes('autoriz') || msg.includes('permiso') || msg.includes('login');
+}
+
+function requireAdmin() {
+  return S.user?.role === 'admin' || S.role === 'admin';
 }
 
 // ── LOGO SVG ─────────────────────────────────────────────────
@@ -431,29 +487,114 @@ function calcShow(show) {
 // ══════════════════════════════════════════════════════════════
 // API CALLS (Google Sheets via Apps Script)
 // ══════════════════════════════════════════════════════════════
-async function apiGet(action = 'getAll') {
-  const url = `${API_URL}?action=${action}&t=${Date.now()}`;
-  const resp = await fetch(url, {
+function buildUrl(action = 'getAll', params = {}) {
+  const url = new URL(API_URL);
+  url.searchParams.set('action', action);
+  url.searchParams.set('t', Date.now());
+
+  if (S.token) url.searchParams.set('token', S.token);
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      url.searchParams.set(key, value);
+    }
+  });
+
+  return url.toString();
+}
+
+async function apiGet(action = 'getAll', params = {}) {
+  const resp = await fetch(buildUrl(action, params), {
     method: 'GET',
     cache: 'no-store',
   });
+
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
   const data = await resp.json();
-  if (!data.ok) throw new Error(data.error || 'Error desconocido');
+
+  if (!data.ok) {
+    throw new Error(data.error || 'Error desconocido');
+  }
+
   return data;
 }
 
-async function apiPost(payload) {
+async function apiPost(payload, opts = {}) {
+  const auth = opts.auth !== false;
+  const body = { ...(payload || {}) };
+
+  if (auth && S.token && !body.token) {
+    body.token = S.token;
+  }
+
   const resp = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' }, // Apps Script needs text/plain for CORS
     cache: 'no-store',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
+
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
   const data = await resp.json();
-  if (!data.ok) throw new Error(data.error || 'Error al guardar');
+
+  if (!data.ok) {
+    throw new Error(data.error || 'Error al guardar');
+  }
+
   return data;
+}
+
+async function loginWithEmail() {
+  if (S.isLoggingIn) return;
+
+  const email = normalizeEmail(S.loginDraft.email);
+  const password = String(S.loginDraft.password || '');
+
+  if (!email) return showToast('Introduce el correo electrónico', 'error');
+  if (!password) return showToast('Introduce la contraseña', 'error');
+
+  S.isLoggingIn = true;
+  render();
+
+  try {
+    const data = await apiPost({ action: 'login', email, password }, { auth: false });
+    const user = data.user || { email, role: data.role || 'user' };
+    const token = data.token || data.sessionToken || '';
+
+    if (!token) throw new Error('El servidor no devolvió token de sesión');
+
+    saveSession(token, user);
+    S.loginDraft = { email: '', password: '' };
+    S.view = 'dashboard';
+    showToast(`Bienvenido, ${user.email}`, 'success');
+    render();
+    await loadFromSheet();
+  } catch (err) {
+    console.error('[LOGIN] Error:', err);
+    showToast('Error de acceso: ' + err.message, 'error');
+  } finally {
+    S.isLoggingIn = false;
+    render();
+  }
+}
+
+async function logoutAndClear() {
+  const oldToken = S.token;
+  try {
+    if (oldToken) {
+      await apiPost({ action: 'logout', token: oldToken }, { auth: false });
+    }
+  } catch (err) {
+    console.warn('[LOGOUT] No se pudo cerrar sesión en servidor:', err);
+  }
+  clearSession();
+  render();
+}
+
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -508,7 +649,13 @@ async function loadFromSheet(opts = {}) {
   } catch (err) {
     console.error('[SYNC] Error:', err);
     S.loadError = err.message;
-    showToast('Error al cargar datos: ' + err.message, 'error');
+
+    if (isAuthError(err)) {
+      showToast('Sesión caducada o sin permisos. Inicia sesión otra vez.', 'error');
+      clearSession();
+    } else {
+      showToast('Error al cargar datos: ' + err.message, 'error');
+    }
   } finally {
     S.isLoading = false;
     S.isRefreshing = false;
@@ -544,7 +691,12 @@ async function saveShowToSheet(show) {
     showToast('Función guardada correctamente', 'success');
   } catch (err) {
     console.error('[SAVE] Error:', err);
-    showToast('Error al guardar: ' + err.message, 'error');
+    if (isAuthError(err)) {
+      showToast('Sesión caducada o sin permisos. Inicia sesión otra vez.', 'error');
+      clearSession();
+    } else {
+      showToast('Error al guardar: ' + err.message, 'error');
+    }
   } finally {
     S.isSaving = false;
     SAVE_LOCK = false;
@@ -573,7 +725,12 @@ async function saveConfigToSheet() {
 // RENDER ENGINE
 // ══════════════════════════════════════════════════════════════
 function render() {
-  if (!S.role) {
+  if (S.isAuthChecking) {
+    $app.innerHTML = `<div class="login-screen"><div class="login-box"><div style="margin-bottom:36px">${logoSVG(220)}</div><div class="card"><div class="spinner" style="margin:0 auto 14px"></div><p style="color:var(--text-muted)">Comprobando sesión...</p></div></div></div>`;
+    return;
+  }
+
+  if (!S.role || !S.token || !S.user) {
     $app.innerHTML = renderLogin();
     bindLogin();
     return;
@@ -613,6 +770,7 @@ function renderSidebar() {
         { id: 'newshow', label: 'Nueva Función', icon: '➕' },
         { id: 'summary', label: 'Resumen Mensual', icon: '📋' },
         { id: 'admin', label: 'Administración', icon: '⚙️' },
+        { id: 'users', label: 'Usuarios', icon: '👥' },
       ]
     : [
         { id: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -635,8 +793,8 @@ function renderSidebar() {
         <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
           <div class="role-pill" style="background:${roleColor};color:${roleText}">${isAdmin ? 'A' : 'U'}</div>
           <div>
-            <div style="font-size:12px;font-weight:600">${isAdmin ? 'Admin' : 'Usuario'}</div>
-            <div style="font-size:10px;color:var(--text-dim)">${isAdmin ? 'Control total' : 'Registro'}</div>
+            <div style="font-size:12px;font-weight:600">${esc(S.user?.email || (isAdmin ? 'Admin' : 'Usuario'))}</div>
+            <div style="font-size:10px;color:var(--text-dim)">${isAdmin ? 'Administrador' : 'Usuario'}</div>
           </div>
         </div>
         <button class="btn btn-ghost btn-sm" data-action="logout" style="width:100%;justify-content:flex-start;gap:7px">🚪 Cerrar sesión</button>
@@ -647,20 +805,34 @@ function renderSidebar() {
 
 // ── LOGIN ────────────────────────────────────────────────────
 function renderLogin() {
+  const email = S.loginDraft.email || '';
+  const password = S.loginDraft.password || '';
+
   return `
     <div class="login-screen">
       <div class="login-box">
-        <div style="margin-bottom:36px">${logoSVG(220)}</div>
-        <div class="card" style="padding:28px">
-          <p style="color:var(--text-muted);margin:0 0 20px;font-size:13px">Gestión financiera de espectáculos</p>
-          <button class="login-choice admin" data-role="admin">
-            <div style="font-size:14px;font-weight:700;color:var(--pink);margin-bottom:3px">Administrador</div>
-            <div style="font-size:11px;color:var(--text-muted)">Control total: obras, plataformas, comisiones, informes</div>
+        <div style="margin-bottom:30px">${logoSVG(220)}</div>
+        <div class="card" style="padding:28px;text-align:left">
+          <h1 class="page-title" style="font-size:22px;text-align:center;margin-bottom:6px">Acceso privado</h1>
+          <p style="color:var(--text-muted);margin:0 0 22px;font-size:13px;text-align:center">Gestión financiera de espectáculos</p>
+
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" autocomplete="email" placeholder="usuario@correo.com" value="${esc(email)}" data-login-field="email" />
+          </div>
+
+          <div class="field">
+            <label>Contraseña</label>
+            <input type="password" autocomplete="current-password" placeholder="Contraseña" value="${esc(password)}" data-login-field="password" />
+          </div>
+
+          <button class="btn btn-primary" data-action="login" style="width:100%;margin-top:6px" ${S.isLoggingIn ? 'disabled' : ''}>
+            ${S.isLoggingIn ? '⏳ Entrando...' : 'Entrar'}
           </button>
-          <button class="login-choice" data-role="user">
-            <div style="font-size:14px;font-weight:700;color:var(--cyan);margin-bottom:3px">Usuario</div>
-            <div style="font-size:11px;color:var(--text-muted)">Registro simplificado de ingresos</div>
-          </button>
+
+          <p style="color:var(--text-dim);font-size:11px;margin-top:16px;text-align:center">
+            El administrador puede crear usuarios y otros administradores desde la sección Usuarios.
+          </p>
         </div>
       </div>
     </div>
@@ -668,14 +840,22 @@ function renderLogin() {
 }
 
 function bindLogin() {
-  document.querySelectorAll('.login-choice').forEach(btn => {
-    btn.onclick = () => {
-      S.role = btn.dataset.role;
-      S.view = 'dashboard';
-      render();
-      loadFromSheet(); // Load data on login
+  document.querySelectorAll('[data-login-field]').forEach(el => {
+    el.oninput = () => {
+      S.loginDraft[el.dataset.loginField] = el.value;
+    };
+    el.onkeydown = (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        loginWithEmail();
+      }
     };
   });
+
+  const loginBtn = document.querySelector('[data-action="login"]');
+  if (loginBtn) {
+    loginBtn.onclick = () => loginWithEmail();
+  }
 }
 
 // ── VIEW ROUTER ──────────────────────────────────────────────
@@ -687,6 +867,7 @@ function renderView() {
     case 'detail': return renderShowDetail();
     case 'summary': return renderSummary();
     case 'admin': return renderAdmin();
+    case 'users': return renderUsers();
     default: return '<p>Vista no encontrada</p>';
   }
 }
@@ -1027,6 +1208,202 @@ function renderSummary() {
   `;
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// USERS (admin only)
+// ══════════════════════════════════════════════════════════════
+async function loadUsers() {
+  if (!requireAdmin()) return;
+  if (S.isUserLoading) return;
+
+  S.isUserLoading = true;
+  render();
+
+  try {
+    const data = await apiGet('listUsers');
+    S.users = data.users || [];
+  } catch (err) {
+    console.error('[USERS] Error:', err);
+    if (isAuthError(err)) {
+      showToast('Sesión caducada o sin permisos. Inicia sesión otra vez.', 'error');
+      clearSession();
+    } else {
+      showToast('Error al cargar usuarios: ' + err.message, 'error');
+    }
+  } finally {
+    S.isUserLoading = false;
+    render();
+  }
+}
+
+async function createUserFromForm() {
+  if (!requireAdmin()) return showToast('Solo un administrador puede crear usuarios', 'error');
+  if (S.isUserSaving) return;
+
+  const email = normalizeEmail(S.newUserDraft.email);
+  const password = String(S.newUserDraft.password || '');
+  const role = S.newUserDraft.role === 'admin' ? 'admin' : 'user';
+
+  if (!email) return showToast('Introduce el email del usuario', 'error');
+  if (!password || password.length < 6) return showToast('La contraseña debe tener al menos 6 caracteres', 'error');
+
+  S.isUserSaving = true;
+  render();
+
+  try {
+    await apiPost({ action: 'createUser', email, password, role });
+    S.newUserDraft = { email: '', password: '', role: 'user' };
+    showToast(role === 'admin' ? 'Administrador creado' : 'Usuario creado', 'success');
+    await loadUsers();
+  } catch (err) {
+    console.error('[CREATE USER] Error:', err);
+    showToast('Error al crear usuario: ' + err.message, 'error');
+  } finally {
+    S.isUserSaving = false;
+    render();
+  }
+}
+
+async function updateUserFromButton(id, updates) {
+  if (!requireAdmin()) return showToast('Solo un administrador puede editar usuarios', 'error');
+  if (!id) return;
+  if (S.isUserSaving) return;
+
+  S.isUserSaving = true;
+  render();
+
+  try {
+    await apiPost({
+      action: 'updateUser',
+      id,
+      userId: id,
+      targetUserId: id,
+      updates,
+      role: updates.role,
+      active: updates.active,
+      password: updates.password,
+    });
+    showToast('Usuario actualizado', 'success');
+    await loadUsers();
+  } catch (err) {
+    console.error('[UPDATE USER] Error:', err);
+    showToast('Error al actualizar usuario: ' + err.message, 'error');
+  } finally {
+    S.isUserSaving = false;
+    render();
+  }
+}
+
+async function deleteUserFromButton(id) {
+  if (!requireAdmin()) return showToast('Solo un administrador puede eliminar usuarios', 'error');
+  if (!id) return;
+  if (S.isUserSaving) return;
+
+  const user = S.users.find(u => String(u.id) === String(id));
+  const email = user?.email || 'este usuario';
+
+  if (!confirm(`¿Seguro que quieres eliminar/desactivar a ${email}?`)) return;
+
+  S.isUserSaving = true;
+  render();
+
+  try {
+    await apiPost({
+      action: 'deleteUser',
+      id,
+      userId: id,
+      targetUserId: id,
+    });
+    showToast('Usuario eliminado o desactivado', 'success');
+    await loadUsers();
+  } catch (err) {
+    console.error('[DELETE USER] Error:', err);
+    showToast('Error al eliminar usuario: ' + err.message, 'error');
+  } finally {
+    S.isUserSaving = false;
+    render();
+  }
+}
+
+function renderUsers() {
+  if (!requireAdmin()) {
+    return '<div class="card"><div class="empty">Acceso denegado</div></div>';
+  }
+
+  const d = S.newUserDraft || { email: '', password: '', role: 'user' };
+  S.newUserDraft = d;
+
+  const rows = (S.users || []).map(u => {
+    const id = esc(u.id || u.userId || '');
+    const email = esc(u.email || '');
+    const role = u.role === 'admin' ? 'admin' : 'user';
+    const active = u.active !== false && String(u.active).toUpperCase() !== 'FALSE';
+    const isMe = normalizeEmail(u.email) === normalizeEmail(S.user?.email);
+
+    return `<tr>
+      <td>${email}</td>
+      <td><span class="badge" style="background:${role === 'admin' ? 'var(--pink-dim)' : 'var(--cyan-dim)'};color:${role === 'admin' ? 'var(--pink)' : 'var(--cyan)'}">${role === 'admin' ? 'Admin' : 'Usuario'}</span></td>
+      <td>${active ? '<span class="badge" style="background:var(--success-dim);color:var(--success)">Activo</span>' : '<span class="badge" style="background:var(--danger-dim);color:var(--danger)">Inactivo</span>'}</td>
+      <td>${esc(u.createdAt || '')}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" data-user-action="toggleActive" data-user-id="${id}" data-next-active="${active ? 'false' : 'true'}" ${isMe ? 'disabled' : ''}>${active ? 'Desactivar' : 'Activar'}</button>
+        <button class="btn btn-secondary btn-sm" data-user-action="toggleRole" data-user-id="${id}" data-next-role="${role === 'admin' ? 'user' : 'admin'}" ${isMe ? 'disabled' : ''}>Hacer ${role === 'admin' ? 'usuario' : 'admin'}</button>
+        <button class="btn btn-danger btn-sm" data-user-action="delete" data-user-id="${id}" ${isMe ? 'disabled' : ''}>Eliminar</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="section-top">
+      <div>
+        <h1 class="page-title">Usuarios</h1>
+        <p class="page-sub">Crea usuarios y administradores con correo y contraseña</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" data-action="refreshUsers" ${S.isUserLoading || S.isUserSaving ? 'disabled' : ''}>${S.isUserLoading ? '⏳ Cargando...' : '🔄 Actualizar usuarios'}</button>
+    </div>
+
+    <div class="grid grid-2 mb20">
+      <div class="card">
+        <h3>Crear nuevo acceso</h3>
+        <div class="field">
+          <label>Correo electrónico *</label>
+          <input type="email" placeholder="usuario@correo.com" value="${esc(d.email || '')}" data-user-field="email" />
+        </div>
+        <div class="field">
+          <label>Contraseña *</label>
+          <input type="password" placeholder="Mínimo 6 caracteres" value="${esc(d.password || '')}" data-user-field="password" />
+        </div>
+        <div class="field">
+          <label>Rol *</label>
+          <select data-user-field="role">
+            <option value="user" ${d.role !== 'admin' ? 'selected' : ''}>Usuario</option>
+            <option value="admin" ${d.role === 'admin' ? 'selected' : ''}>Administrador</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" data-action="createUser" ${S.isUserSaving ? 'disabled' : ''}>${S.isUserSaving ? '⏳ Guardando...' : 'Crear acceso'}</button>
+      </div>
+
+      <div class="card">
+        <h3>Permisos</h3>
+        <p style="font-size:13px;color:var(--text-muted);line-height:1.55">
+          <strong style="color:var(--pink)">Administrador:</strong> puede ver todo, recargar datos, registrar funciones, gestionar configuración y crear usuarios.<br><br>
+          <strong style="color:var(--cyan)">Usuario:</strong> puede entrar, registrar ingresos y consultar funciones, pero no puede crear usuarios ni tocar administración.
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Usuarios existentes</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Email</th><th>Rol</th><th>Estado</th><th>Creado</th><th>Acciones</th></tr></thead>
+          <tbody>${S.isUserLoading ? '<tr><td colspan="5" class="empty">Cargando usuarios...</td></tr>' : (rows || '<tr><td colspan="5" class="empty">Sin usuarios cargados. Pulsa “Actualizar usuarios”.</td></tr>')}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
 // ══════════════════════════════════════════════════════════════
 // ADMIN
 // ══════════════════════════════════════════════════════════════
@@ -1097,13 +1474,25 @@ function bindEvents() {
   // Nav buttons
   document.querySelectorAll('[data-view]').forEach(btn => {
     btn.onclick = () => {
-      if (S.isSaving) {
+      if (S.isSaving || S.isUserSaving) {
         showToast('Espera a que termine el guardado.', 'warn');
         return;
       }
-      S.view = btn.dataset.view;
+
+      const nextView = btn.dataset.view;
+
+      if (nextView === 'users' && !requireAdmin()) {
+        showToast('Solo un administrador puede gestionar usuarios.', 'error');
+        return;
+      }
+
+      S.view = nextView;
       S.selectedId = null;
       render();
+
+      if (nextView === 'users' && (!S.users || S.users.length === 0)) {
+        loadUsers();
+      }
     };
   });
 
@@ -1111,12 +1500,32 @@ function bindEvents() {
   document.querySelectorAll('[data-action]').forEach(btn => {
     btn.onclick = () => {
       const action = btn.dataset.action;
-      if (action === 'logout') { S.role = null; S.view = 'dashboard'; S.selectedId = null; S.newShowDraft = null; render(); }
-      if (action === 'refresh') { loadFromSheet({ manual: true }); }
+
+      if (action === 'logout') {
+        logoutAndClear();
+        return;
+      }
+
+      if (action === 'refresh') {
+        loadFromSheet({ manual: true });
+        return;
+      }
+
+      if (action === 'refreshUsers') {
+        loadUsers();
+        return;
+      }
+
+      if (action === 'createUser') {
+        createUserFromForm();
+        return;
+      }
+
       if (action === 'saveNewShow') {
         btn.disabled = true;
         btn.innerHTML = '⏳ Guardando...';
         handleSaveNewShow();
+        return;
       }
     };
   });
@@ -1124,6 +1533,41 @@ function bindEvents() {
   // Admin tabs
   document.querySelectorAll('[data-admin-tab]').forEach(btn => {
     btn.onclick = () => { S.adminTab = btn.dataset.adminTab; render(); };
+  });
+
+  // User create form fields
+  document.querySelectorAll('[data-user-field]').forEach(el => {
+    el.onchange = el.oninput = () => {
+      if (!S.newUserDraft) S.newUserDraft = { email: '', password: '', role: 'user' };
+      S.newUserDraft[el.dataset.userField] = el.value;
+    };
+
+    el.onkeydown = (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        createUserFromForm();
+      }
+    };
+  });
+
+  // User table actions
+  document.querySelectorAll('[data-user-action]').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.userId;
+      const userAction = btn.dataset.userAction;
+
+      if (userAction === 'toggleActive') {
+        updateUserFromButton(id, { active: btn.dataset.nextActive === 'true' });
+      }
+
+      if (userAction === 'toggleRole') {
+        updateUserFromButton(id, { role: btn.dataset.nextRole === 'admin' ? 'admin' : 'user' });
+      }
+
+      if (userAction === 'delete') {
+        deleteUserFromButton(id);
+      }
+    };
   });
 
   // Search binding
@@ -1225,7 +1669,36 @@ async function handleSaveNewShow() {
 // ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
-render();
+async function initApp() {
+  const restored = restoreSession();
+
+  if (!restored) {
+    render();
+    return;
+  }
+
+  S.isAuthChecking = true;
+  render();
+
+  try {
+    // If the backend supports "me", this confirms the token is still valid.
+    // If it does not return a user but the token is accepted, we keep the saved user.
+    const data = await apiGet('me');
+    if (data.user) {
+      saveSession(S.token, data.user);
+    }
+    S.isAuthChecking = false;
+    render();
+    await loadFromSheet();
+  } catch (err) {
+    console.warn('[INIT] Sesión no válida:', err);
+    clearSession();
+    S.isAuthChecking = false;
+    render();
+  }
+}
+
+initApp();
 </script>
 </body>
 </html>
