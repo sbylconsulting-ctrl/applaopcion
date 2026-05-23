@@ -8,1697 +8,232 @@
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
     :root {
-      --bg: #0A0A0F;
-      --surface: #111118;
-      --surface-alt: #16161F;
-      --card: #1A1A24;
-      --border: #2A2A3A;
-      --border-light: #35354A;
-      --text: #EEEEF4;
-      --text-muted: #9090AA;
-      --text-dim: #606078;
-      --cyan: #6EC8E4;
-      --cyan-dim: rgba(110, 200, 228, 0.12);
-      --pink: #E85DA0;
-      --pink-dim: rgba(232, 93, 160, 0.12);
-      --yellow: #E8D44C;
-      --yellow-dim: rgba(232, 212, 76, 0.12);
-      --success: #4ADE80;
-      --success-dim: rgba(74, 222, 128, 0.10);
-      --danger: #F87171;
-      --danger-dim: rgba(248, 113, 113, 0.10);
-      --purple: #A78BFA;
-      --purple-dim: rgba(167, 139, 250, 0.10);
-      --warn: #FBBF24;
-      --warn-dim: rgba(251, 191, 36, 0.10);
-      --sidebar-w: 230px;
-      --radius: 14px;
-      --shadow: 0 18px 40px rgba(0,0,0,.35);
+      --bg:#0A0A0F; --surface:#111118; --surface-alt:#16161F; --card:#1A1A24;
+      --border:#2A2A3A; --border-light:#35354A; --text:#EEEEF4; --text-muted:#9090AA; --text-dim:#606078;
+      --cyan:#6EC8E4; --cyan-dim:rgba(110,200,228,.12); --pink:#E85DA0; --pink-dim:rgba(232,93,160,.12);
+      --yellow:#E8D44C; --success:#4ADE80; --success-dim:rgba(74,222,128,.10);
+      --danger:#F87171; --danger-dim:rgba(248,113,113,.10); --purple:#A78BFA; --warn:#FBBF24; --warn-dim:rgba(251,191,36,.10);
+      --sidebar-w:230px; --radius:14px; --shadow:0 18px 40px rgba(0,0,0,.35);
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
-    button, input, select, textarea { font: inherit; }
-
-    /* ── LAYOUT ─────────────────────────── */
-    .app { display: flex; min-height: 100vh; }
-    .sidebar {
-      width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border);
-      position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 30;
-    }
-    .sidebar-header { padding: 18px 10px 14px; border-bottom: 1px solid var(--border); text-align: center; }
-    .nav { flex: 1; padding: 10px 8px; overflow-y: auto; }
-    .nav-btn {
-      width: 100%; border: none; background: transparent; color: var(--text-muted);
-      border-radius: 8px; padding: 10px 13px; display: flex; align-items: center; gap: 10px;
-      cursor: pointer; transition: .15s; text-align: left; margin-bottom: 2px; font-size: 13px;
-    }
-    .nav-btn:hover { background: var(--surface-alt); }
-    .nav-btn.active { background: var(--cyan-dim); color: var(--cyan); font-weight: 700; }
-    .sidebar-footer { border-top: 1px solid var(--border); padding: 14px; }
-    .role-pill {
-      width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
-      font-size: 12px; font-weight: 800;
-    }
-    .main { margin-left: var(--sidebar-w); flex: 1; padding: 28px 36px; min-width: 0; }
-
-    /* ── UI COMPONENTS ──────────────────── */
-    .card {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 20px; box-shadow: var(--shadow);
-    }
-    .card h3 { margin: 0 0 14px; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; }
-
-    .page-title { font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 800; margin: 0; }
-    .page-sub { color: var(--text-muted); font-size: 13px; margin: 4px 0 0; }
-    .section-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-
-    .grid { display: grid; gap: 14px; }
-    .grid-2 { grid-template-columns: 1fr 1fr; }
-    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
-    .grid-kpis { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
-
-    .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; }
-    .kpi-value { margin-top: 8px; font-size: 22px; font-family: 'Outfit', sans-serif; font-weight: 800; }
-    .kpi-sub { margin-top: 4px; font-size: 11px; color: var(--text-dim); }
-
-    .btn {
-      border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      padding: 9px 16px; transition: .15s; font-size: 13px;
-    }
-    .btn:disabled { opacity: .5; cursor: not-allowed; }
-    .btn-primary { background: var(--cyan); color: #0A0A0F; }
-    .btn-secondary { background: var(--surface-alt); color: var(--text); border: 1px solid var(--border); }
-    .btn-danger { background: var(--danger-dim); color: var(--danger); }
-    .btn-ghost { background: transparent; color: var(--text-muted); }
-    .btn-sm { padding: 5px 10px; font-size: 12px; }
-
-    .badge {
-      display: inline-flex; padding: 2px 9px; border-radius: 999px;
-      font-size: 10px; font-weight: 700; letter-spacing: .3px;
-    }
-
-    .field { margin-bottom: 12px; }
-    .field label {
-      display: block; margin-bottom: 4px; font-size: 11px; color: var(--text-muted);
-      text-transform: uppercase; letter-spacing: .5px; font-weight: 700;
-    }
-    .field input, .field select, .field textarea {
-      width: 100%; padding: 8px 11px; background: var(--surface-alt); color: var(--text);
-      border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 13px;
-    }
-    .field textarea { min-height: 64px; resize: vertical; }
-    .field input:focus, .field select:focus { border-color: var(--cyan); }
-    .field-error { margin-top: 3px; font-size: 10px; color: var(--danger); }
-
-    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th {
-      padding: 11px 14px; text-align: left; color: var(--text-dim);
-      font-size: 10px; text-transform: uppercase; letter-spacing: .8px;
-      background: var(--surface); border-bottom: 1px solid var(--border); white-space: nowrap;
-    }
-    th.right, td.right { text-align: right; }
-    td { padding: 11px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-    tbody tr { cursor: pointer; transition: background .1s; }
-    tbody tr:hover { background: var(--surface-alt); }
-
-    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .bar-label { width: 90px; flex-shrink: 0; color: var(--text-muted); font-size: 11px; }
-    .bar-track { flex: 1; height: 6px; background: var(--surface-alt); border-radius: 3px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 3px; }
-    .bar-value { min-width: 75px; text-align: right; font-size: 12px; font-weight: 700; }
-
-    .empty { text-align: center; color: var(--text-dim); padding: 36px 10px; }
-    .success { color: var(--success); }
-    .danger { color: var(--danger); }
-    .cyan { color: var(--cyan); }
-    .pink { color: var(--pink); }
-    .yellow { color: var(--yellow); }
-    .purple { color: var(--purple); }
-    .fw700 { font-weight: 700; }
-    .mb20 { margin-bottom: 20px; }
-    .mt10 { margin-top: 10px; }
-    .gap10 { gap: 10px; }
-    .flex { display: flex; }
-    .flex-col { flex-direction: column; }
-    .items-center { align-items: center; }
-    .justify-between { justify-content: space-between; }
-    .wrap { flex-wrap: wrap; }
-
-    /* ── LOGIN ──────────────────────────── */
-    .login-screen {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(ellipse at 30% 20%, var(--cyan-dim) 0%, transparent 50%),
-                  radial-gradient(ellipse at 70% 80%, var(--pink-dim) 0%, transparent 50%), var(--bg);
-      padding: 20px;
-    }
-    .login-box { width: 100%; max-width: 420px; text-align: center; }
-    .login-choice {
-      width: 100%; text-align: left; padding: 15px 18px; border-radius: 10px; cursor: pointer;
-      transition: .15s; border: 1px solid var(--border); background: var(--surface-alt); color: var(--text);
-      margin-bottom: 10px;
-    }
-    .login-choice.admin { background: var(--pink-dim); border-color: rgba(232,93,160,.25); }
-    .login-choice:hover { transform: translateY(-1px); }
-
-    /* ── TOAST ──────────────────────────── */
-    .toast {
-      position: fixed; top: 18px; right: 18px; z-index: 200;
-      padding: 11px 18px; border-radius: 10px; background: var(--card);
-      border: 1px solid var(--border); box-shadow: var(--shadow); font-size: 13px; font-weight: 600;
-      display: flex; align-items: center; gap: 8px; max-width: 400px;
-    }
-    .toast.success { border-color: rgba(74,222,128,.3); color: var(--success); }
-    .toast.error { border-color: rgba(248,113,113,.3); color: var(--danger); }
-    .toast.warn { border-color: rgba(251,191,36,.3); color: var(--warn); }
-
-    /* ── LOADING ────────────────────────── */
-    .loading-overlay {
-      position: fixed; inset: 0; background: rgba(10,10,15,.85); z-index: 150;
-      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
-    }
-    .spinner {
-      width: 36px; height: 36px; border: 3px solid var(--border);
-      border-top-color: var(--cyan); border-radius: 50%; animation: spin .7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { color: var(--text-muted); font-size: 14px; }
-
-    /* ── RESPONSIVE ─────────────────────── */
-    @media (max-width: 1100px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
-    @media (max-width: 900px) {
-      :root { --sidebar-w: 0px; }
-      .sidebar { position: static; width: 100%; min-height: auto; }
-      .app { flex-direction: column; }
-      .main { margin-left: 0; padding: 18px; }
-    }
+    *{box-sizing:border-box;margin:0;padding:0} html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh} button,input,select,textarea{font:inherit}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:30}.sidebar-header{padding:18px 10px 14px;border-bottom:1px solid var(--border);text-align:center}.nav{flex:1;padding:10px 8px;overflow-y:auto}.nav-btn{width:100%;border:0;background:transparent;color:var(--text-muted);border-radius:8px;padding:10px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.15s;text-align:left;margin-bottom:2px;font-size:13px}.nav-btn:hover{background:var(--surface-alt)}.nav-btn.active{background:var(--cyan-dim);color:var(--cyan);font-weight:700}.sidebar-footer{border-top:1px solid var(--border);padding:14px}.role-pill{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800}.main{margin-left:var(--sidebar-w);flex:1;padding:28px 36px;min-width:0}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}.card h3{margin:0 0 14px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700}.page-title{font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;margin:0}.page-sub{color:var(--text-muted);font-size:13px;margin:4px 0 0}.section-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}.grid{display:grid;gap:14px}.grid-2{grid-template-columns:1fr 1fr}.grid-kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700}.kpi-value{margin-top:8px;font-size:22px;font-family:'Outfit',sans-serif;font-weight:800}.kpi-sub{margin-top:4px;font-size:11px;color:var(--text-dim)}
+    .btn{border:0;border-radius:8px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;transition:.15s;font-size:13px}.btn:disabled{opacity:.5;cursor:not-allowed}.btn-primary{background:var(--cyan);color:#0A0A0F}.btn-secondary{background:var(--surface-alt);color:var(--text);border:1px solid var(--border)}.btn-danger{background:var(--danger-dim);color:var(--danger)}.btn-ghost{background:transparent;color:var(--text-muted)}.btn-sm{padding:5px 10px;font-size:12px}.badge{display:inline-flex;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.3px}.badge-ok{background:var(--success-dim);color:var(--success)}.badge-off{background:var(--surface-alt);color:var(--text-dim)}
+    .field{margin-bottom:12px}.field label{display:block;margin-bottom:4px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700}.field input,.field select,.field textarea{width:100%;padding:8px 11px;background:var(--surface-alt);color:var(--text);border:1px solid var(--border);border-radius:8px;outline:none;font-size:13px}.field textarea{min-height:64px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--cyan)}.inline-input{width:100%;min-width:120px;padding:7px 9px;background:var(--surface-alt);color:var(--text);border:1px solid var(--border);border-radius:8px;outline:none;font-size:12px}.inline-check{width:18px;height:18px;accent-color:var(--cyan)}
+    .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}table{width:100%;border-collapse:collapse;font-size:13px}th{padding:11px 14px;text-align:left;color:var(--text-dim);font-size:10px;text-transform:uppercase;letter-spacing:.8px;background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap}th.right,td.right{text-align:right}td{padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap}tbody tr.clickable{cursor:pointer;transition:background .1s}tbody tr.clickable:hover{background:var(--surface-alt)}
+    .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}.bar-label{width:90px;flex-shrink:0;color:var(--text-muted);font-size:11px}.bar-track{flex:1;height:6px;background:var(--surface-alt);border-radius:3px;overflow:hidden}.bar-fill{height:100%;border-radius:3px;background:var(--cyan)}.bar-value{min-width:75px;text-align:right;font-size:12px;font-weight:700}.empty{text-align:center;color:var(--text-dim);padding:36px 10px}.success{color:var(--success)}.danger{color:var(--danger)}.cyan{color:var(--cyan)}.pink{color:var(--pink)}.yellow{color:var(--yellow)}.purple{color:var(--purple)}.fw700{font-weight:700}.mb20{margin-bottom:20px}.mt10{margin-top:10px}.muted{color:var(--text-muted)}.dim{color:var(--text-dim)}
+    .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 20%,var(--cyan-dim) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,var(--pink-dim) 0%,transparent 50%),var(--bg);padding:20px}.login-box{width:100%;max-width:430px;text-align:center}.toast{position:fixed;top:18px;right:18px;z-index:200;padding:11px 18px;border-radius:10px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;max-width:420px}.toast.success{border-color:rgba(74,222,128,.3);color:var(--success)}.toast.error{border-color:rgba(248,113,113,.3);color:var(--danger)}.toast.warn{border-color:rgba(251,191,36,.3);color:var(--warn)}.loading-overlay{position:fixed;inset:0;background:rgba(10,10,15,.85);z-index:150;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-text{color:var(--text-muted);font-size:14px}.dirty-note{background:var(--warn-dim);border:1px solid rgba(251,191,36,.25);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:12px;margin-bottom:14px}
+    @media(max-width:1100px){.grid-2{grid-template-columns:1fr}}@media(max-width:900px){:root{--sidebar-w:0}.sidebar{position:static;width:100%;min-height:auto}.app{flex-direction:column}.main{margin-left:0;padding:18px}}
   </style>
 </head>
 <body>
 <div id="app"></div>
-
 <script>
-/* ════════════════════════════════════════════════════════════════
-   LA OPCIÓN PRODUCCIONES — GESTIÓN FINANCIERA
-   HTML + JS puro · Google Sheets como fuente de verdad
-   ════════════════════════════════════════════════════════════════ */
-
 const API_URL = "https://script.google.com/macros/s/AKfycbyCwwMRxy6J4l1oqF9BqgvzHZ7DKSASqytV2B7anHsokG0VTraeTBLfTHXDEwS11uQDXQ/exec";
-
-const SESSION_KEY = 'laopcion_session_v1';
-
-// ── STATE ────────────────────────────────────────────────────
-const S = {
-  token: '',
-  user: null,
-  role: null,
-  view: 'dashboard',
-  selectedId: null,
-  search: '',
-  toast: null,
-  toastTimer: null,
-  adminTab: 'platforms',
-  summaryMonth: '',
-  isLoading: false,
-  isSaving: false,
-  isRefreshing: false,
-  isLoggingIn: false,
-  isAuthChecking: false,
-  isUserLoading: false,
-  isUserSaving: false,
-  lastSyncAt: '',
-  loadError: null,
-  loginDraft: { email: '', password: '' },
-  newUserDraft: { email: '', password: '', role: 'user' },
-  users: [],
-  // Form states
-  newShowDraft: null,
-  editShowDraft: null,
-  // Data from Google Sheets
-  config: {
-    platforms: [],
-    venues: [],
-    works: [],
-    expenseTypes: [],
-    agreements: [],
-  },
-  shows: [],
-};
-
+const STORAGE_KEY = 'laopcion_session_v3';
 const $app = document.getElementById('app');
 
-// Hard locks that do not depend on re-rendering the DOM.
-// They prevent double-clicks, Enter-repeat and slow network duplicate submissions.
-let SAVE_LOCK = false;
-let REFRESH_LOCK = false;
+const S = {
+  token: '', user: null, role: null, view: 'dashboard', selectedId: null, search: '', toast: null, toastTimer: null,
+  adminTab: 'platforms', summaryMonth: '', isLoading: false, isSaving: false, isRefreshing: false, isBooting: false,
+  lastSyncAt: '', loadError: null, configDirty: false, users: [], newShowDraft: null,
+  config: { platforms: [], venues: [], works: [], expenseTypes: [], agreements: [] }, shows: []
+};
+let SAVE_LOCK = false; let REFRESH_LOCK = false;
 
-// ── UTILS ────────────────────────────────────────────────────
-function gid() { return (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)).slice(0, 8); }
-function fmt(n) { return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(Number(n || 0)); }
+const CONFIG_META = {
+  platforms: { key:'platforms', title:'Plataformas', singular:'plataforma', prefix:'p' },
+  venues: { key:'venues', title:'Salas', singular:'sala', prefix:'v' },
+  works: { key:'works', title:'Obras', singular:'obra', prefix:'w' },
+  agreements: { key:'agreements', title:'Acuerdos', singular:'acuerdo', prefix:'a' },
+  expenses: { key:'expenseTypes', title:'Gastos', singular:'gasto', prefix:'et' },
+};
+
+function gid(prefix='id') { return prefix + '_' + (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)).slice(0, 8); }
+function fmt(n) { return new Intl.NumberFormat('es-ES', { style:'currency', currency:'EUR', minimumFractionDigits:2 }).format(Number(n || 0)); }
 function fmtPct(n) { return `${Number(n || 0).toFixed(2)}%`; }
 function r2(n) { return Math.round(Number(n || 0) * 100) / 100; }
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function normalize(text) { return String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
+function showToast(message, type='success') { S.toast = { message, type }; clearTimeout(S.toastTimer); S.toastTimer = setTimeout(() => { S.toast = null; render(); }, 3500); render(); }
+function logoSVG(w=150){ const h=w*.55; return `<svg width="${w}" height="${h}" viewBox="0 0 280 154" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="140" y="68" text-anchor="middle" font-family="'Outfit','Arial Black',sans-serif" font-size="52" font-weight="900" letter-spacing="6" fill="var(--text)">LA OPCIÓN</text><line x1="10" y1="82" x2="270" y2="82" stroke="var(--cyan)" stroke-width="4"/><line x1="10" y1="92" x2="270" y2="92" stroke="var(--pink)" stroke-width="4"/><line x1="10" y1="102" x2="270" y2="102" stroke="var(--yellow)" stroke-width="4"/><text x="140" y="132" text-anchor="middle" font-family="'Outfit','Arial',sans-serif" font-size="22" font-weight="300" letter-spacing="12" fill="var(--text-muted)">PRODUCCIONES</text></svg>`; }
+function roleLabel(role){ return role === 'admin' ? 'Administrador' : 'Usuario'; }
 
-function showToast(message, type = 'success') {
-  S.toast = { message, type };
-  clearTimeout(S.toastTimer);
-  S.toastTimer = setTimeout(() => { S.toast = null; render(); }, 3500);
-  render();
-}
-
-function normalize(text) {
-  return String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-}
-
-function saveSession(token, user) {
-  S.token = token || '';
-  S.user = user || null;
-  S.role = user?.role || null;
-  if (S.token && S.user) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ token: S.token, user: S.user }));
+async function apiPost(payload) {
+  const body = { ...payload };
+  if (S.token && body.action !== 'login' && body.token === undefined) body.token = S.token;
+  const resp = await fetch(API_URL, { method:'POST', headers:{ 'Content-Type':'text/plain' }, cache:'no-store', body: JSON.stringify(body) });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const data = await resp.json();
+  if (!data.ok) {
+    const msg = data.error || 'Error desconocido';
+    if (/sesión|sesion|token|caducado/i.test(msg)) clearSession(false);
+    throw new Error(msg);
   }
+  if (data.user) { S.user = data.user; S.role = data.user.role; }
+  return data;
 }
 
-function restoreSession() {
+function saveSession(token, user){ S.token = token; S.user = user; S.role = user.role; localStorage.setItem(STORAGE_KEY, JSON.stringify({ token, user })); }
+function clearSession(renderNow=true){ S.token=''; S.user=null; S.role=null; S.view='dashboard'; S.selectedId=null; S.users=[]; S.newShowDraft=null; localStorage.removeItem(STORAGE_KEY); if (renderNow) render(); }
+async function boot(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) { render(); return; }
   try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return false;
     const saved = JSON.parse(raw);
-    if (!saved?.token || !saved?.user) return false;
-    S.token = saved.token;
-    S.user = saved.user;
-    S.role = saved.user.role;
-    return true;
-  } catch (e) {
-    localStorage.removeItem(SESSION_KEY);
-    return false;
-  }
+    if (!saved.token) throw new Error('Sin token');
+    S.token = saved.token; S.user = saved.user || null; S.role = saved.user?.role || null; S.isBooting = true; render();
+    const me = await apiPost({ action:'me' });
+    saveSession(S.token, me.user);
+    await loadFromSheet();
+    if (S.role === 'admin') await loadUsers();
+  } catch (err) { clearSession(false); }
+  S.isBooting = false; render();
 }
 
-function clearSession() {
-  S.token = '';
-  S.user = null;
-  S.role = null;
-  S.view = 'dashboard';
-  S.selectedId = null;
-  S.newShowDraft = null;
-  S.users = [];
-  localStorage.removeItem(SESSION_KEY);
-}
-
-function isAuthError(err) {
-  const msg = String(err?.message || err || '').toLowerCase();
-  return msg.includes('token') || msg.includes('sesión') || msg.includes('sesion') || msg.includes('autoriz') || msg.includes('permiso') || msg.includes('login');
-}
-
-function requireAdmin() {
-  return S.user?.role === 'admin' || S.role === 'admin';
-}
-
-// ── LOGO SVG ─────────────────────────────────────────────────
-function logoSVG(w = 150) {
-  const h = w * 0.55;
-  return `<svg width="${w}" height="${h}" viewBox="0 0 280 154" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <text x="140" y="68" text-anchor="middle" font-family="'Outfit','Arial Black',sans-serif" font-size="52" font-weight="900" letter-spacing="6" fill="var(--text)">LA OPCIÓN</text>
-    <line x1="10" y1="82" x2="270" y2="82" stroke="var(--cyan)" stroke-width="4"/>
-    <line x1="10" y1="92" x2="270" y2="92" stroke="var(--pink)" stroke-width="4"/>
-    <line x1="10" y1="102" x2="270" y2="102" stroke="var(--yellow)" stroke-width="4"/>
-    <text x="140" y="132" text-anchor="middle" font-family="'Outfit','Arial',sans-serif" font-size="22" font-weight="300" letter-spacing="12" fill="var(--text-muted)">PRODUCCIONES</text>
-  </svg>`;
-}
-
-// ══════════════════════════════════════════════════════════════
-// DATA ADAPTER: Sheet format → App format
-// This is the KEY piece that was missing
-// ══════════════════════════════════════════════════════════════
 function sheetShowToAppShow(raw, config) {
-  // The Sheet returns: { id, sala, obra, fecha, atrapalo, fever, kultur, abonoteatro,
-  //   laopcion, universe, efectivo, tarjeta, ventaBruta, ventaNeta, totalGastos,
-  //   totalNeto, cache, restanteLaOpcion, acuerdo, observaciones }
-
-  // Find matching config entities by name
   const venue = config.venues.find(v => normalize(v.name) === normalize(raw.sala)) || null;
   const work = config.works.find(w => normalize(w.name) === normalize(raw.obra)) || null;
   const agreement = config.agreements.find(a => normalize(a.name) === normalize(raw.acuerdo)) || null;
+  const platformSnapshots = {}; const income = {};
 
-  // Build platform snapshots from config + income data
-  const platformSnapshots = {};
-  const income = {};
-
-  // Map sheet field names to platform ids
-  const platMap = {
-    'atrapalo': 'Atrápalo',
-    'fever': 'Fever',
-    'kultur': 'Kultur',
-    'abonoteatro': 'Abonoteatro',
-    'laopcion': 'Laopcion',
-    'universe': 'Universe',
-  };
-
-  Object.entries(platMap).forEach(([sheetKey, platName]) => {
-    const amt = Number(raw[sheetKey] || 0);
-    const pl = config.platforms.find(p => normalize(p.name) === normalize(platName));
-    if (pl) {
-      income[pl.id] = amt;
-      platformSnapshots[pl.id] = {
-        name: pl.name,
-        commission: pl.commission,
-        ivaOnCommission: pl.ivaOnCommission,
-        income: amt,
-      };
-    }
-  });
-
-  income.cashBox = Number(raw.efectivo || 0);
-  income.cardBox = Number(raw.tarjeta || 0);
-
-  return {
-    id: raw.id || raw.appId || gid(),
-    appId: raw.appId || raw.id || '',
-    venueId: venue?.id || '',
-    workId: work?.id || '',
-    venueName: raw.sala || '',
-    workName: raw.obra || '',
-    date: raw.fecha || '',
-    time: '',
-    agreementId: agreement?.id || '',
-    agreementSnapshot: agreement ? { name: agreement.name, mode: agreement.mode, value: agreement.value } : null,
-    notes: raw.observaciones || '',
-    income,
-    platformSnapshots,
-    expenses: [], // Manual expenses from sheet aren't individually tracked yet
-    // Pre-calculated values from sheet (we use these for display if available)
-    _sheetCalc: {
-      ventaBruta: Number(raw.ventaBruta || 0),
-      ventaNeta: Number(raw.ventaNeta || 0),
-      totalGastos: Number(raw.totalGastos || 0),
-      totalNeto: Number(raw.totalNeto || 0),
-      cache: Number(raw.cache || 0),
-      restanteLaOpcion: Number(raw.restanteLaOpcion || 0),
-    },
-    status: { ticketsSent: false, emailSent: false, invoiceSent: false, sentToAdmin: false, paymentDate: '' },
-  };
+  if (Array.isArray(raw.platformData) && raw.platformData.length) {
+    raw.platformData.forEach(p => {
+      const id = p.id || gid('p');
+      const cfg = config.platforms.find(x => x.id === id || normalize(x.name) === normalize(p.name));
+      const pid = cfg?.id || id;
+      const amt = Number(p.income || 0);
+      income[pid] = amt;
+      platformSnapshots[pid] = { name: cfg?.name || p.name || 'Plataforma', commission: Number(p.commission ?? cfg?.commission ?? 0), ivaOnCommission: Boolean(p.ivaOnCommission ?? cfg?.ivaOnCommission), income: amt };
+    });
+  } else {
+    const platMap = { atrapalo:'Atrápalo', fever:'Fever', kultur:'Kultur', abonoteatro:'Abonoteatro', laopcion:'Laopcion', universe:'Universe' };
+    Object.entries(platMap).forEach(([sheetKey, platName]) => {
+      const amt = Number(raw[sheetKey] || 0); const pl = config.platforms.find(p => normalize(p.name) === normalize(platName));
+      if (pl) { income[pl.id] = amt; platformSnapshots[pl.id] = { name: pl.name, commission: pl.commission, ivaOnCommission: pl.ivaOnCommission, income: amt }; }
+    });
+  }
+  income.cashBox = Number(raw.efectivo || 0); income.cardBox = Number(raw.tarjeta || 0);
+  return { id: raw.id || raw.appId || gid('s'), appId: raw.appId || raw.id || '', venueId: venue?.id || '', workId: work?.id || '', venueName: raw.sala || '', workName: raw.obra || '', date: raw.fecha || '', time:'', agreementId: agreement?.id || '', agreementSnapshot: agreement ? { name:agreement.name, mode:agreement.mode, value:agreement.value } : null, notes: raw.observaciones || '', income, platformSnapshots, expenses: [], status:{} };
 }
 
-// Reverse: App format → Sheet POST format (for saving)
 function appShowToSheetData(show, config) {
-  const ps = show.platformSnapshots || {};
-  const inc = show.income || {};
-
-  // Resolve platform amounts by name
-  function findAmount(platName) {
-    const pl = config.platforms.find(p => normalize(p.name) === normalize(platName));
-    return pl ? Number(inc[pl.id] || ps[pl.id]?.income || 0) : 0;
-  }
-
-  // Resolve agreement
-  const agr = show.agreementSnapshot;
-  let cache = 0;
-  if (agr) {
-    const c = calcShow(show);
-    cache = c.cache;
-  }
-
-  return {
-    action: 'saveShow',
-    appId: show.appId || show.id || gid(),
-    sala: show.venueName || '',
-    obra: show.workName || '',
-    fecha: show.date || '',
-    atrapalo: findAmount('Atrápalo'),
-    fever: findAmount('Fever'),
-    kultur: findAmount('Kultur'),
-    abonoteatro: findAmount('Abonoteatro'),
-    laopcion: findAmount('Laopcion'),
-    universe: findAmount('Universe'),
-    efectivo: Number(inc.cashBox || 0),
-    tarjeta: Number(inc.cardBox || 0),
-    autor: 0,
-    otrosGastos: 0,
-    alquiler: 0,
-    cache: cache,
-    acuerdo: agr?.name || '',
-    observaciones: show.notes || '',
-  };
+  const ps = show.platformSnapshots || {}; const inc = show.income || {};
+  function findAmount(platName){ const pl = config.platforms.find(p => normalize(p.name) === normalize(platName)); return pl ? Number(inc[pl.id] ?? ps[pl.id]?.income ?? 0) : 0; }
+  const platformData = Object.entries(ps).map(([id, snap]) => ({ id, name:snap.name, income:Number(inc[id] ?? snap.income ?? 0), commission:Number(snap.commission || 0), ivaOnCommission:snap.ivaOnCommission === true }));
+  const c = calcShow(show);
+  return { action:'saveShow', appId: show.appId || show.id || gid('s'), sala: show.venueName || '', obra: show.workName || '', fecha: show.date || '',
+    atrapalo: findAmount('Atrápalo'), fever: findAmount('Fever'), kultur: findAmount('Kultur'), abonoteatro: findAmount('Abonoteatro'), laopcion: findAmount('Laopcion'), universe: findAmount('Universe'),
+    efectivo: Number(inc.cashBox || 0), tarjeta: Number(inc.cardBox || 0), autor:0, otrosGastos:0, alquiler:0, cache:c.cache, acuerdo:c.agreement?.name || '', observaciones: show.notes || '', platformData };
 }
 
-// ══════════════════════════════════════════════════════════════
-// CALCULATION ENGINE (matches spreadsheet: ventaNeta = bruta / 1.10)
-// ══════════════════════════════════════════════════════════════
 function calcShow(show) {
-  const ps = show.platformSnapshots || {};
-  const inc = show.income || {};
-
-  const commissions = [];
-  let totalPlatIncome = 0;
-  let totalComm = 0;
-
+  const ps = show.platformSnapshots || {}; const inc = show.income || {}; const commissions = [];
+  let totalPlatIncome = 0; let totalComm = 0;
   Object.entries(ps).forEach(([pid, snap]) => {
-    const amt = r2(snap.income || 0);
-    totalPlatIncome += amt;
-    const base = r2(amt * snap.commission / 100);
-    const iva = snap.ivaOnCommission ? r2(base * 0.21) : 0;
-    const total = r2(base + iva);
-    commissions.push({ id: pid, name: snap.name, income: amt, commBase: base, commIva: iva, commTotal: total });
-    totalComm += total;
+    const amt = r2(Number(inc[pid] ?? snap.income ?? 0)); totalPlatIncome += amt;
+    const base = r2(amt * Number(snap.commission || 0) / 100); const iva = snap.ivaOnCommission ? r2(base * 0.21) : 0; const total = r2(base + iva);
+    commissions.push({ id:pid, name:snap.name, income:amt, commBase:base, commIva:iva, commTotal:total }); totalComm += total;
   });
-
-  const cashBox = r2(parseFloat(inc.cashBox) || 0);
-  const cardBox = r2(parseFloat(inc.cardBox) || 0);
-  const ventaBruta = r2(totalPlatIncome + cashBox + cardBox);
-  const ventaNeta = r2(ventaBruta / 1.10);
-  const manualExp = (show.expenses || []).reduce((s, e) => s + r2(parseFloat(e.amount) || 0), 0);
-  const totalGastos = r2(totalComm + manualExp);
-  const totalNeto = r2(ventaNeta - totalGastos);
-
-  const agr = show.agreementSnapshot;
-  let cache = 0;
-  if (agr) {
-    if (agr.mode === 'percentage') cache = r2(totalNeto * agr.value / 100);
-    else cache = r2(agr.value);
-  }
-  const restanteOpcion = r2(totalNeto - cache);
-
-  return { commissions, cashBox, cardBox, ventaBruta, ventaNeta, totalComm: r2(totalComm), manualExp: r2(manualExp), totalGastos, totalNeto, cache, restanteOpcion, agreement: agr };
+  const cashBox = r2(parseFloat(inc.cashBox) || 0); const cardBox = r2(parseFloat(inc.cardBox) || 0);
+  const ventaBruta = r2(totalPlatIncome + cashBox + cardBox); const ventaNeta = r2(ventaBruta / 1.10); const manualExp = (show.expenses || []).reduce((s,e)=>s+r2(parseFloat(e.amount)||0),0);
+  const totalGastos = r2(totalComm + manualExp); const totalNeto = r2(ventaNeta - totalGastos); const agr = show.agreementSnapshot; let cache = 0;
+  if (agr) cache = agr.mode === 'percentage' ? r2(totalNeto * agr.value / 100) : r2(agr.value);
+  return { commissions, cashBox, cardBox, ventaBruta, ventaNeta, totalComm:r2(totalComm), manualExp:r2(manualExp), totalGastos, totalNeto, cache, restanteOpcion:r2(totalNeto-cache), agreement:agr };
 }
 
-// ══════════════════════════════════════════════════════════════
-// API CALLS (Google Sheets via Apps Script)
-// ══════════════════════════════════════════════════════════════
-function buildUrl(action = 'getAll', params = {}) {
-  const url = new URL(API_URL);
-  url.searchParams.set('action', action);
-  url.searchParams.set('t', Date.now());
-
-  if (S.token) url.searchParams.set('token', S.token);
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      url.searchParams.set(key, value);
-    }
-  });
-
-  return url.toString();
-}
-
-async function apiGet(action = 'getAll', params = {}) {
-  const resp = await fetch(buildUrl(action, params), {
-    method: 'GET',
-    cache: 'no-store',
-  });
-
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-  const data = await resp.json();
-
-  if (!data.ok) {
-    throw new Error(data.error || 'Error desconocido');
-  }
-
-  return data;
-}
-
-async function apiPost(payload, opts = {}) {
-  const auth = opts.auth !== false;
-  const body = { ...(payload || {}) };
-
-  if (auth && S.token && !body.token) {
-    body.token = S.token;
-  }
-
-  const resp = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' }, // Apps Script needs text/plain for CORS
-    cache: 'no-store',
-    body: JSON.stringify(body),
-  });
-
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-  const data = await resp.json();
-
-  if (!data.ok) {
-    throw new Error(data.error || 'Error al guardar');
-  }
-
-  return data;
-}
-
-async function loginWithEmail() {
-  if (S.isLoggingIn) return;
-
-  const email = normalizeEmail(S.loginDraft.email);
-  const password = String(S.loginDraft.password || '');
-
-  if (!email) return showToast('Introduce el correo electrónico', 'error');
-  if (!password) return showToast('Introduce la contraseña', 'error');
-
-  S.isLoggingIn = true;
-  render();
-
+async function loadFromSheet(opts={}) {
+  const manual = !!opts.manual; if (REFRESH_LOCK) return; REFRESH_LOCK = true; S.isLoading = !S.isSaving; S.isRefreshing = manual; S.loadError = null; render();
   try {
-    const data = await apiPost({ action: 'login', email, password }, { auth: false });
-    const user = data.user || { email, role: data.role || 'user' };
-    const token = data.token || data.sessionToken || '';
-
-    if (!token) throw new Error('El servidor no devolvió token de sesión');
-
-    saveSession(token, user);
-    S.loginDraft = { email: '', password: '' };
-    S.view = 'dashboard';
-    showToast(`Bienvenido, ${user.email}`, 'success');
-    render();
-    await loadFromSheet();
-  } catch (err) {
-    console.error('[LOGIN] Error:', err);
-    showToast('Error de acceso: ' + err.message, 'error');
-  } finally {
-    S.isLoggingIn = false;
-    render();
-  }
-}
-
-async function logoutAndClear() {
-  const oldToken = S.token;
-  try {
-    if (oldToken) {
-      await apiPost({ action: 'logout', token: oldToken }, { auth: false });
-    }
-  } catch (err) {
-    console.warn('[LOGOUT] No se pudo cerrar sesión en servidor:', err);
-  }
-  clearSession();
-  render();
-}
-
-function normalizeEmail(email) {
-  return String(email || '').trim().toLowerCase();
-}
-
-// ══════════════════════════════════════════════════════════════
-// SYNC: Load everything from Google Sheets
-// ══════════════════════════════════════════════════════════════
-async function loadFromSheet(opts = {}) {
-  const manual = !!opts.manual;
-
-  // Avoid multiple refresh calls fighting each other.
-  if (REFRESH_LOCK) return;
-  REFRESH_LOCK = true;
-
-  S.isLoading = !S.isSaving;
-  S.isRefreshing = manual;
-  S.loadError = null;
-  render();
-
-  try {
-    const data = await apiGet('getAll');
-
-    // Config
-    if (data.config) {
-      S.config.platforms = data.config.platforms || [];
-      S.config.venues = data.config.venues || [];
-      S.config.works = data.config.works || [];
-      S.config.expenseTypes = data.config.expenseTypes || [];
-      S.config.agreements = data.config.agreements || [];
-    }
-
-    // Shows: transform from sheet format to app format
-    if (data.shows && Array.isArray(data.shows)) {
-      // Replace local data completely with Sheet data.
-      // This makes the dashboard reliable after clearing cache or opening another device.
-      S.shows = data.shows.map(raw => sheetShowToAppShow(raw, S.config));
-    } else {
-      S.shows = [];
-    }
-
-    // Set default summary month
-    if (S.shows.length > 0 && !S.summaryMonth) {
-      const months = [...new Set(S.shows.map(s => (s.date || '').slice(0, 7)).filter(Boolean))].sort().reverse();
-      S.summaryMonth = months[0] || '';
-    }
-
-    S.lastSyncAt = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-    console.log(`[SYNC] Loaded ${S.config.platforms.length} platforms, ${S.config.venues.length} venues, ${S.config.works.length} works, ${S.shows.length} shows`);
-
-    if (manual) {
-      showToast(`Datos actualizados desde el Sheet (${S.shows.length} funciones)`, 'success');
-    }
-  } catch (err) {
-    console.error('[SYNC] Error:', err);
-    S.loadError = err.message;
-
-    if (isAuthError(err)) {
-      showToast('Sesión caducada o sin permisos. Inicia sesión otra vez.', 'error');
-      clearSession();
-    } else {
-      showToast('Error al cargar datos: ' + err.message, 'error');
-    }
-  } finally {
-    S.isLoading = false;
-    S.isRefreshing = false;
-    REFRESH_LOCK = false;
-    render();
-  }
+    const data = await apiPost({ action:'getAll' });
+    if (data.config) S.config = { platforms:data.config.platforms||[], venues:data.config.venues||[], works:data.config.works||[], expenseTypes:data.config.expenseTypes||[], agreements:data.config.agreements||[] };
+    S.shows = Array.isArray(data.shows) ? data.shows.map(raw => sheetShowToAppShow(raw, S.config)) : [];
+    if (S.shows.length > 0 && !S.summaryMonth) { const months = [...new Set(S.shows.map(s => (s.date||'').slice(0,7)).filter(Boolean))].sort().reverse(); S.summaryMonth = months[0] || ''; }
+    S.lastSyncAt = new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    if (manual) showToast(`Datos actualizados desde el Sheet (${S.shows.length} funciones)`, 'success');
+  } catch (err) { S.loadError = err.message; showToast('Error al cargar datos: ' + err.message, 'error'); }
+  finally { S.isLoading = false; S.isRefreshing = false; REFRESH_LOCK = false; render(); }
 }
 
 async function saveShowToSheet(show) {
-  // Strong anti-duplicate guard: works even before the button visually changes.
-  if (SAVE_LOCK || S.isSaving) {
-    showToast('Ya se está guardando. Espera a que termine.', 'warn');
-    return;
-  }
-
-  SAVE_LOCK = true;
-  S.isSaving = true;
-  S.loadError = null;
-  render();
-
-  try {
-    const payload = appShowToSheetData(show, S.config);
-    payload.appId = show.appId || show.id; // idempotency key for Apps Script
-
-    await apiPost(payload);
-
-    // After saving, always read the Sheet again. The Sheet is the source of truth.
-    await loadFromSheet();
-
-    S.view = 'shows';
-    S.selectedId = null;
-    S.newShowDraft = null;
-    showToast('Función guardada correctamente', 'success');
-  } catch (err) {
-    console.error('[SAVE] Error:', err);
-    if (isAuthError(err)) {
-      showToast('Sesión caducada o sin permisos. Inicia sesión otra vez.', 'error');
-      clearSession();
-    } else {
-      showToast('Error al guardar: ' + err.message, 'error');
-    }
-  } finally {
-    S.isSaving = false;
-    SAVE_LOCK = false;
-    render();
-  }
+  if (SAVE_LOCK || S.isSaving) { showToast('Ya se está guardando. Espera a que termine.', 'warn'); return; }
+  SAVE_LOCK = true; S.isSaving = true; render();
+  try { await apiPost(appShowToSheetData(show, S.config)); await loadFromSheet(); S.view='shows'; S.selectedId=null; S.newShowDraft=null; showToast('Función guardada correctamente','success'); }
+  catch(err){ showToast('Error al guardar: ' + err.message, 'error'); }
+  finally { S.isSaving = false; SAVE_LOCK = false; render(); }
 }
 
 async function saveConfigToSheet() {
-  if (S.isSaving) return;
-  S.isSaving = true;
-  render();
-
-  try {
-    await apiPost({ action: 'saveConfig', config: S.config });
-    showToast('Configuración guardada', 'success');
-    await loadFromSheet();
-  } catch (err) {
-    showToast('Error: ' + err.message, 'error');
-  }
-
-  S.isSaving = false;
-  render();
+  if (S.role !== 'admin') return showToast('No tienes permisos.', 'error');
+  S.isSaving = true; render();
+  try { await apiPost({ action:'saveConfig', config:S.config }); S.configDirty = false; showToast('Configuración guardada', 'success'); await loadFromSheet(); }
+  catch(err){ showToast('Error al guardar configuración: ' + err.message, 'error'); }
+  finally { S.isSaving = false; render(); }
 }
+async function loadUsers() { if (S.role !== 'admin') return; try { const data = await apiPost({ action:'listUsers' }); S.users = data.users || []; } catch(err) { showToast('Error al cargar usuarios: ' + err.message, 'error'); } render(); }
 
-// ══════════════════════════════════════════════════════════════
-// RENDER ENGINE
-// ══════════════════════════════════════════════════════════════
 function render() {
-  if (S.isAuthChecking) {
-    $app.innerHTML = `<div class="login-screen"><div class="login-box"><div style="margin-bottom:36px">${logoSVG(220)}</div><div class="card"><div class="spinner" style="margin:0 auto 14px"></div><p style="color:var(--text-muted)">Comprobando sesión...</p></div></div></div>`;
-    return;
-  }
-
-  if (!S.role || !S.token || !S.user) {
-    $app.innerHTML = renderLogin();
-    bindLogin();
-    return;
-  }
-
-  let toastHtml = '';
-  if (S.toast) {
-    toastHtml = `<div class="toast ${S.toast.type}">${esc(S.toast.message)}</div>`;
-  }
-
-  let loadingHtml = '';
-  if (S.isLoading) {
-    loadingHtml = `<div class="loading-overlay"><div class="spinner"></div><div class="loading-text">Cargando datos del Sheet...</div></div>`;
-  }
-  if (S.isSaving) {
-    loadingHtml = `<div class="loading-overlay"><div class="spinner"></div><div class="loading-text">Guardando...</div></div>`;
-  }
-
-  $app.innerHTML = `
-    <div class="app">
-      ${renderSidebar()}
-      <div class="main">${renderView()}</div>
-    </div>
-    ${toastHtml}
-    ${loadingHtml}
-  `;
+  if (S.isBooting && !S.user) { $app.innerHTML = `<div class="login-screen"><div class="spinner"></div><div class="loading-text">Comprobando sesión...</div></div>`; return; }
+  if (!S.user) { $app.innerHTML = renderLogin(); bindLogin(); return; }
+  const toastHtml = S.toast ? `<div class="toast ${S.toast.type}">${esc(S.toast.message)}</div>` : '';
+  const loadingHtml = S.isLoading || S.isSaving ? `<div class="loading-overlay"><div class="spinner"></div><div class="loading-text">${S.isSaving ? 'Guardando...' : 'Cargando datos del Sheet...'}</div></div>` : '';
+  $app.innerHTML = `<div class="app">${renderSidebar()}<div class="main">${renderView()}</div></div>${toastHtml}${loadingHtml}`;
   bindEvents();
 }
 
-// ── SIDEBAR ──────────────────────────────────────────────────
-function renderSidebar() {
-  const isAdmin = S.role === 'admin';
-  const items = isAdmin
-    ? [
-        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-        { id: 'shows', label: 'Funciones', icon: '🎭' },
-        { id: 'newshow', label: 'Nueva Función', icon: '➕' },
-        { id: 'summary', label: 'Resumen Mensual', icon: '📋' },
-        { id: 'admin', label: 'Administración', icon: '⚙️' },
-        { id: 'users', label: 'Usuarios', icon: '👥' },
-      ]
-    : [
-        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-        { id: 'shows', label: 'Funciones', icon: '🎭' },
-        { id: 'newshow', label: 'Registrar Ingreso', icon: '➕' },
-      ];
+function renderLogin() { return `<div class="login-screen"><div class="login-box"><div style="margin-bottom:36px">${logoSVG(220)}</div><div class="card" style="padding:28px;text-align:left"><p style="color:var(--text-muted);margin:0 0 20px;font-size:13px;text-align:center">Acceso privado · La Opción Producciones</p><form id="login-form"><div class="field"><label>Correo electrónico</label><input type="email" id="login-email" autocomplete="username" placeholder="correo@ejemplo.com" required /></div><div class="field"><label>Contraseña</label><input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••" required /></div><button class="btn btn-primary" style="width:100%;margin-top:6px" type="submit">Entrar</button></form></div></div></div>`; }
+function bindLogin(){ const form=document.getElementById('login-form'); if(!form)return; form.onsubmit=async(e)=>{ e.preventDefault(); const email=document.getElementById('login-email').value.trim(); const password=document.getElementById('login-password').value; S.isSaving=true; render(); try{ const res=await apiPost({action:'login',email,password}); saveSession(res.token,res.user); await loadFromSheet(); if(S.role==='admin') await loadUsers(); showToast('Sesión iniciada','success'); }catch(err){ showToast(err.message,'error'); } finally{ S.isSaving=false; render(); } }; }
 
-  const navBtns = items.map(it =>
-    `<button class="nav-btn ${S.view === it.id ? 'active' : ''}" data-view="${it.id}">${it.icon} ${it.label}</button>`
-  ).join('');
+function renderSidebar(){ const isAdmin=S.role==='admin'; const items=isAdmin ? [{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Nueva Función',icon:'➕'},{id:'summary',label:'Resumen Mensual',icon:'📋'},{id:'admin',label:'Administración',icon:'⚙️'}] : [{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar Ingreso',icon:'➕'}]; const navBtns=items.map(it=>`<button class="nav-btn ${S.view===it.id?'active':''}" data-view="${it.id}">${it.icon} ${it.label}</button>`).join(''); const roleColor=isAdmin?'var(--pink-dim)':'var(--cyan-dim)'; const roleText=isAdmin?'var(--pink)':'var(--cyan)'; return `<div class="sidebar"><div class="sidebar-header">${logoSVG(155)}</div><div class="nav">${navBtns}</div><div class="sidebar-footer"><div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><div class="role-pill" style="background:${roleColor};color:${roleText}">${isAdmin?'A':'U'}</div><div><div style="font-size:12px;font-weight:600">${esc(S.user.email)}</div><div style="font-size:10px;color:var(--text-dim)">${roleLabel(S.role)}</div></div></div><button class="btn btn-ghost btn-sm" data-action="logout" style="width:100%;justify-content:flex-start;gap:7px">🚪 Cerrar sesión</button></div></div>`; }
+function renderView(){ switch(S.view){ case 'dashboard':return renderDashboard(); case 'shows':return renderShowList(); case 'newshow':return renderNewShow(); case 'detail':return renderShowDetail(); case 'summary':return renderSummary(); case 'admin':return renderAdmin(); default:return '<p>Vista no encontrada</p>'; } }
 
-  const roleColor = isAdmin ? 'var(--pink-dim)' : 'var(--cyan-dim)';
-  const roleText = isAdmin ? 'var(--pink)' : 'var(--cyan)';
-
-  return `
-    <div class="sidebar">
-      <div class="sidebar-header">${logoSVG(155)}</div>
-      <div class="nav">${navBtns}</div>
-      <div class="sidebar-footer">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
-          <div class="role-pill" style="background:${roleColor};color:${roleText}">${isAdmin ? 'A' : 'U'}</div>
-          <div>
-            <div style="font-size:12px;font-weight:600">${esc(S.user?.email || (isAdmin ? 'Admin' : 'Usuario'))}</div>
-            <div style="font-size:10px;color:var(--text-dim)">${isAdmin ? 'Administrador' : 'Usuario'}</div>
-          </div>
-        </div>
-        <button class="btn btn-ghost btn-sm" data-action="logout" style="width:100%;justify-content:flex-start;gap:7px">🚪 Cerrar sesión</button>
-      </div>
-    </div>
-  `;
+function renderDashboard(){ if(S.shows.length===0&&!S.isLoading){ return `<h1 class="page-title">Dashboard</h1><p class="page-sub mb20">La Opción Producciones</p><div class="card"><div class="empty"><p style="font-size:16px;margin-bottom:8px">Sin datos todavía</p><p class="dim" style="font-size:13px">Los datos se cargan desde Google Sheets.</p><button class="btn btn-primary mt10" data-action="refresh">🔄 Actualizar desde Sheet</button></div></div>`; }
+  const cs=S.shows.map(s=>({...s,c:calcShow(s)})); const t=cs.reduce((a,s)=>({vb:a.vb+s.c.ventaBruta,vn:a.vn+s.c.ventaNeta,g:a.g+s.c.totalGastos,tn:a.tn+s.c.totalNeto,ca:a.ca+s.c.cache,ro:a.ro+s.c.restanteOpcion}),{vb:0,vn:0,g:0,tn:0,ca:0,ro:0});
+  const pm={}; cs.forEach(s=>s.c.commissions.forEach(c=>{pm[c.name]=(pm[c.name]||0)+c.income;})); const taq=cs.reduce((s,sh)=>s+sh.c.cashBox+sh.c.cardBox,0); const pe=Object.entries(pm).sort(([,a],[,b])=>b-a); const mx=Math.max(...pe.map(([,v])=>v),taq,1);
+  const barsHtml=pe.map(([name,total])=>`<div class="bar-row"><span class="bar-label">${esc(name)}</span><div class="bar-track"><div class="bar-fill" style="width:${(total/mx*100).toFixed(1)}%"></div></div><span class="bar-value">${fmt(total)}</span></div>`).join('')+`<div class="bar-row" style="padding-top:8px;border-top:1px solid var(--border);margin-top:6px"><span class="bar-label">Taquilla</span><div class="bar-track"><div class="bar-fill" style="width:${(taq/mx*100).toFixed(1)}%;background:var(--success)"></div></div><span class="bar-value">${fmt(taq)}</span></div>`;
+  const rowsHtml=cs.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10).map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.totalNeto)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td></tr>`).join('');
+  return `<div class="section-top"><div><h1 class="page-title">Dashboard</h1><p class="page-sub">La Opción Producciones · ${S.shows.length} funciones${S.lastSyncAt?` · Última actualización: ${S.lastSyncAt}`:''}</p></div><button class="btn btn-secondary btn-sm" data-action="refresh">${S.isRefreshing?'⏳ Actualizando...':'🔄 Actualizar desde Sheet'}</button></div><div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">Venta Bruta</div><div class="kpi-value cyan">${fmt(t.vb)}</div><div class="kpi-sub">${S.shows.length} funciones</div></div><div class="card"><div class="kpi-label">Venta Neta</div><div class="kpi-value purple">${fmt(t.vn)}</div></div><div class="card"><div class="kpi-label">Total Gastos</div><div class="kpi-value danger">${fmt(t.g)}</div></div><div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow">${fmt(t.tn)}</div></div><div class="card"><div class="kpi-label">Caché Salas</div><div class="kpi-value pink">${fmt(t.ca)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value success">${fmt(t.ro)}</div></div></div><div class="grid grid-2 mb20"><div class="card"><h3>Ventas por plataforma</h3>${barsHtml}</div><div class="card"><h3>Últimas funciones</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th class="right">V.Bruta</th><th class="right">T.Neto</th><th class="right">Restante</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="6" class="empty">Sin funciones</td></tr>'}</tbody></table></div></div></div>`;
 }
 
-// ── LOGIN ────────────────────────────────────────────────────
-function renderLogin() {
-  const email = S.loginDraft.email || '';
-  const password = S.loginDraft.password || '';
+function renderShowList(){ const q=S.search.toLowerCase(); const cs=S.shows.map(s=>({...s,c:calcShow(s)})).filter(s=>!q||(s.workName||'').toLowerCase().includes(q)||(s.venueName||'').toLowerCase().includes(q)||(s.date||'').includes(q)).sort((a,b)=>(b.date||'').localeCompare(a.date||'')); const rowsHtml=cs.map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td><td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td></tr>`).join(''); return `<div class="section-top"><div><h1 class="page-title">Funciones</h1><p class="page-sub">${S.shows.length} registradas</p></div><div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄</button><button class="btn btn-primary" data-view="newshow">➕ Nueva</button></div></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><span class="dim">🔍</span><input class="inline-input" type="text" placeholder="Buscar por obra, sala o fecha..." value="${esc(S.search)}" data-bind="search" style="max-width:300px" /></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th><th class="right">V.Bruta</th><th class="right">V.Neta</th><th class="right">Restante</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="7" class="empty">Sin funciones</td></tr>'}</tbody></table></div>`; }
 
-  return `
-    <div class="login-screen">
-      <div class="login-box">
-        <div style="margin-bottom:30px">${logoSVG(220)}</div>
-        <div class="card" style="padding:28px;text-align:left">
-          <h1 class="page-title" style="font-size:22px;text-align:center;margin-bottom:6px">Acceso privado</h1>
-          <p style="color:var(--text-muted);margin:0 0 22px;font-size:13px;text-align:center">Gestión financiera de espectáculos</p>
+function renderShowDetail(){ const show=S.shows.find(s=>s.id===S.selectedId); if(!show)return '<div class="card"><div class="empty">Función no encontrada</div></div>'; const c=calcShow(show); const isA=S.role==='admin'; const incomeRows=c.commissions.filter(x=>x.income>0).map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px">${esc(x.name)}</div>${isA?`<div style="font-size:10px;color:var(--text-dim)">Com: ${fmt(x.commBase)}${x.commIva>0?` +IVA ${fmt(x.commIva)}`:''} = ${fmt(x.commTotal)}</div>`:''}</div><div style="text-align:right"><div style="font-size:13px;font-weight:700;color:var(--cyan)">${fmt(x.income)}</div>${isA?`<div style="font-size:10px;color:var(--danger)">-${fmt(x.commTotal)}</div>`:''}</div></div>`).join(''); const cashRows=[]; if(c.cashBox>0)cashRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Taquilla efectivo</span><span class="fw700 success">${fmt(c.cashBox)}</span></div>`); if(c.cardBox>0)cashRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Taquilla tarjeta</span><span class="fw700 success">${fmt(c.cardBox)}</span></div>`); return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">←</button><div><h1 class="page-title" style="font-size:22px">${esc(show.workName)}</h1><p class="page-sub">${esc(show.venueName)} · ${esc(show.date)}</p></div></div><div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">V. Bruta</div><div class="kpi-value cyan">${fmt(c.ventaBruta)}</div></div><div class="card"><div class="kpi-label">V. Neta</div><div class="kpi-value purple">${fmt(c.ventaNeta)}</div></div><div class="card"><div class="kpi-label">Gastos</div><div class="kpi-value danger">${fmt(c.totalGastos)}</div></div><div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow">${fmt(c.totalNeto)}</div></div><div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink">${fmt(c.cache)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</div></div></div><div class="grid grid-2 mb20"><div class="card"><h3>Ingresos por plataforma</h3>${incomeRows||'<div class="empty">Sin ingresos de plataforma</div>'}${cashRows.length?`<div style="padding-top:6px">${cashRows.join('')}</div>`:''}</div><div class="card"><h3>Reparto (${esc(c.agreement?.name||'—')})</h3><div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Total Neto</span><span class="fw700">${fmt(c.totalNeto)}</span></div><div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Caché sala</span><span class="fw700 pink">${fmt(c.cache)}</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800;border-top:1px solid var(--border);margin-top:4px"><span>Restante La Opción</span><span class="${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</span></div></div></div>`; }
 
-          <div class="field">
-            <label>Correo electrónico</label>
-            <input type="email" autocomplete="email" placeholder="usuario@correo.com" value="${esc(email)}" data-login-field="email" />
-          </div>
+function renderNewShow(){ const isU=S.role==='user'; const d=S.newShowDraft||{workId:'',venueId:'',date:'',time:'',agreementId:'',notes:'',income:{}}; S.newShowDraft=d; const workOpts=S.config.works.filter(w=>w.active!==false).map(w=>`<option value="${w.id}" ${d.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join(''); const venueOpts=S.config.venues.filter(v=>v.active!==false).map(v=>`<option value="${v.id}" ${d.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join(''); const agrOpts=S.config.agreements.filter(a=>a.active!==false).map(a=>`<option value="${a.id}" ${d.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join(''); const platFields=S.config.platforms.filter(p=>p.active!==false).map(p=>{ const label=isU?esc(p.name):`${esc(p.name)} (${p.commission}%${p.ivaOnCommission?' +IVA':''})`; return `<div class="field"><label>${label}</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income[p.id]||''}" data-plat-id="${p.id}" /></div>`; }).join(''); return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">← Volver</button><h1 class="page-title" style="font-size:22px">${isU?'Registrar ingreso':'Nueva función'}</h1></div><div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div><div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div><div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date" /></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time" /></div></div>${!isU?`<div class="field"><label>Acuerdo</label><select data-field="agreementId"><option value="">— Seleccionar —</option>${agrOpts}</select></div>`:''}<div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox" /></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox" /></div></div></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':'💾 Guardar'}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`; }
 
-          <div class="field">
-            <label>Contraseña</label>
-            <input type="password" autocomplete="current-password" placeholder="Contraseña" value="${esc(password)}" data-login-field="password" />
-          </div>
+function renderSummary(){ const months=[...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse(); const sel=S.summaryMonth||months[0]||''; const opts=months.map(m=>`<option value="${m}" ${m===sel?'selected':''}>${m}</option>`).join(''); const cs=S.shows.filter(s=>(s.date||'').startsWith(sel)).map(s=>({...s,c:calcShow(s)})); const byWork={}; cs.forEach(s=>{const k=s.workName||'Sin obra'; if(!byWork[k])byWork[k]={work:k,venue:s.venueName,ingreso:0,coste:0,beneficio:0}; byWork[k].ingreso+=s.c.totalNeto; byWork[k].coste+=s.c.cache; byWork[k].beneficio+=s.c.restanteOpcion;}); const rows=Object.values(byWork); const totI=rows.reduce((s,r)=>s+r.ingreso,0); const totC=rows.reduce((s,r)=>s+r.coste,0); const totB=rows.reduce((s,r)=>s+r.beneficio,0); rows.forEach(r=>{r.pct=totB!==0?r2(r.beneficio/totB*100):0;}); const tableRows=rows.map(r=>`<tr><td>${esc(r.venue)}</td><td>${esc(r.work)}</td><td class="right">${fmt(r.ingreso)}</td><td class="right">${fmt(r.coste)}</td><td class="right fw700 ${r.beneficio>=0?'success':'danger'}">${fmt(r.beneficio)}</td><td class="right">${fmtPct(r.pct)}</td></tr>`).join(''); const platTotals={}; cs.forEach(s=>{s.c.commissions.forEach(c=>{platTotals[c.name]=(platTotals[c.name]||0)+c.income;}); platTotals['Taq. Efectivo']=(platTotals['Taq. Efectivo']||0)+s.c.cashBox; platTotals['Taq. Tarjeta']=(platTotals['Taq. Tarjeta']||0)+s.c.cardBox;}); const platCards=Object.entries(platTotals).sort(([,a],[,b])=>b-a).map(([name,total])=>`<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;padding:14px 16px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:4px">${esc(name)}</div><div style="font-size:18px;font-family:'Outfit',sans-serif;font-weight:800;color:var(--cyan)">${fmt(total)}</div></div>`).join(''); return `<h1 class="page-title">Resumen Mensual</h1><p class="page-sub mb20">Visión por obra y plataforma</p><div style="display:flex;gap:8px;align-items:center;margin-bottom:18px"><span class="dim">📅</span><select data-bind="summaryMonth" class="inline-input" style="max-width:160px">${opts}</select><span class="dim" style="font-size:12px">${cs.length} funciones</span></div><div class="card mb20"><h3>Resumen por obra</h3><div class="table-wrap"><table><thead><tr><th>Sala</th><th>Obra</th><th class="right">Ingreso</th><th class="right">Coste CIA</th><th class="right">Beneficios</th><th class="right">%</th></tr></thead><tbody>${tableRows||'<tr><td colspan="6" class="empty">Sin datos</td></tr>'}</tbody></table></div></div><div class="card"><h3>Resumen por plataforma</h3><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${platCards||'<div class="empty">Sin datos</div>'}</div></div>`; }
 
-          <button class="btn btn-primary" data-action="login" style="width:100%;margin-top:6px" ${S.isLoggingIn ? 'disabled' : ''}>
-            ${S.isLoggingIn ? '⏳ Entrando...' : 'Entrar'}
-          </button>
+function renderAdmin(){ if(S.role!=='admin')return '<div class="card"><div class="empty">Acceso denegado</div></div>'; const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras'},{id:'agreements',label:'Acuerdos'},{id:'expenses',label:'Gastos'},{id:'users',label:'Usuarios'}]; const tabBtns=tabs.map(t=>`<button class="btn ${S.adminTab===t.id?'btn-primary':'btn-ghost'} btn-sm" data-admin-tab="${t.id}">${t.label}</button>`).join(''); const content=S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab); return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Crear y editar configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa “Guardar cambios” para enviarlos al Sheet.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`; }
 
-          <p style="color:var(--text-dim);font-size:11px;margin-top:16px;text-align:center">
-            El administrador puede crear usuarios y otros administradores desde la sección Usuarios.
-          </p>
-        </div>
-      </div>
-    </div>
-  `;
+function renderConfigEditor(tab){ const meta=CONFIG_META[tab]||CONFIG_META.platforms; const items=S.config[meta.key]||[]; const rows=items.map(item=>renderConfigRow(tab,item)).join(''); return `<div class="grid grid-2 mb20"><div class="card"><h3>Añadir ${meta.singular}</h3>${renderAddConfigForm(tab)}<p class="dim" style="font-size:12px;margin-top:10px">Añade el elemento y después guarda los cambios para que se actualice el Sheet.</p></div><div class="card"><h3>${meta.title}</h3><div class="table-wrap"><table><thead>${renderConfigHeader(tab)}</thead><tbody>${rows||`<tr><td colspan="6" class="empty">Sin ${meta.title.toLowerCase()}</td></tr>`}</tbody></table></div><p class="dim" style="font-size:12px;margin-top:10px">Para no romper históricos, desactiva elementos en vez de borrarlos.</p></div></div>`; }
+function renderAddConfigForm(tab){ if(tab==='platforms')return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva plataforma" /></div><div class="grid grid-2"><div class="field"><label>Comisión %</label><input type="number" min="0" step="0.01" data-add="commission" data-add-tab="${tab}" placeholder="0" /></div><div class="field"><label>IVA comisión</label><select data-add="ivaOnCommission" data-add-tab="${tab}"><option value="true">Sí</option><option value="false">No</option></select></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir plataforma</button>`; if(tab==='agreements')return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nuevo acuerdo" /></div><div class="grid grid-2"><div class="field"><label>Tipo</label><select data-add="mode" data-add-tab="${tab}"><option value="percentage">Porcentaje</option><option value="fixed">Fijo</option></select></div><div class="field"><label>Valor</label><input type="number" min="0" step="0.01" data-add="value" data-add-tab="${tab}" placeholder="0" /></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir acuerdo</button>`; const meta=CONFIG_META[tab]; return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nuevo ${meta.singular}" /></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir ${meta.singular}</button>`; }
+function renderConfigHeader(tab){ if(tab==='platforms')return '<tr><th>Nombre</th><th>Comisión</th><th>IVA</th><th>Activa</th></tr>'; if(tab==='agreements')return '<tr><th>Nombre</th><th>Tipo</th><th>Valor</th><th>Activo</th></tr>'; return '<tr><th>Nombre</th><th>Activo</th></tr>'; }
+function renderConfigRow(tab,item){ if(tab==='platforms')return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}" /></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="commission" value="${Number(item.commission||0)}" /></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="ivaOnCommission"><option value="true" ${item.ivaOnCommission?'selected':''}>Sí</option><option value="false" ${!item.ivaOnCommission?'selected':''}>No</option></select></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''} /></td></tr>`; if(tab==='agreements')return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}" /></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="mode"><option value="percentage" ${item.mode==='percentage'?'selected':''}>Porcentaje</option><option value="fixed" ${item.mode==='fixed'?'selected':''}>Fijo</option></select></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="value" value="${Number(item.value||0)}" /></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''} /></td></tr>`; return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}" /></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''} /></td></tr>`; }
+
+function renderUsersAdmin(){ const rows=(S.users||[]).map(u=>`<tr><td>${esc(u.email)}</td><td><select class="inline-input" data-user-role="${u.id}"><option value="user" ${u.role==='user'?'selected':''}>Usuario</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select></td><td><input class="inline-check" type="checkbox" data-user-active="${u.id}" ${u.active?'checked':''} /></td><td>${esc(u.lastLoginAt||'—')}</td><td><input class="inline-input" type="password" placeholder="Nueva contraseña" data-user-pass="${u.id}" /></td><td><button class="btn btn-secondary btn-sm" data-action="updateUser" data-user-id="${u.id}">Guardar</button></td></tr>`).join(''); return `<div class="grid grid-2 mb20"><div class="card"><h3>Crear usuario</h3><div class="field"><label>Email</label><input id="new-user-email" type="email" placeholder="correo@ejemplo.com" /></div><div class="field"><label>Contraseña</label><input id="new-user-password" type="password" placeholder="Mínimo 6 caracteres" /></div><div class="field"><label>Rol</label><select id="new-user-role"><option value="user">Usuario</option><option value="admin">Administrador</option></select></div><button class="btn btn-primary" data-action="createUser">➕ Crear usuario</button></div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">Usuarios</h3><button class="btn btn-secondary btn-sm" data-action="refreshUsers">🔄</button></div><div class="table-wrap"><table><thead><tr><th>Email</th><th>Rol</th><th>Activo</th><th>Último acceso</th><th>Nueva contraseña</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="empty">Sin usuarios</td></tr>'}</tbody></table></div></div></div>`; }
+
+function bindEvents(){
+  document.querySelectorAll('[data-view]').forEach(btn=>{btn.onclick=()=>{if(S.isSaving)return showToast('Espera a que termine el guardado.','warn'); S.view=btn.dataset.view; S.selectedId=null; render();};});
+  document.querySelectorAll('[data-action]').forEach(btn=>{btn.onclick=()=>{const a=btn.dataset.action; if(a==='logout')return handleLogout(); if(a==='refresh')return loadFromSheet({manual:true}); if(a==='saveNewShow'){btn.disabled=true;btn.innerHTML='⏳ Guardando...';return handleSaveNewShow();} if(a==='saveConfig')return saveConfigToSheet(); if(a==='addConfig')return addConfigItem(btn.dataset.addConfigTab); if(a==='createUser')return handleCreateUser(); if(a==='updateUser')return handleUpdateUser(btn.dataset.userId); if(a==='refreshUsers')return loadUsers();};});
+  document.querySelectorAll('[data-admin-tab]').forEach(btn=>{btn.onclick=()=>{S.adminTab=btn.dataset.adminTab; if(S.adminTab==='users')loadUsers(); render();};});
+  const searchInput=document.querySelector('[data-bind="search"]'); if(searchInput)searchInput.oninput=()=>{S.search=searchInput.value; render();};
+  const summarySelect=document.querySelector('[data-bind="summaryMonth"]'); if(summarySelect)summarySelect.onchange=()=>{S.summaryMonth=summarySelect.value; render();};
+  document.querySelectorAll('[data-show-id]').forEach(tr=>{tr.onclick=()=>{S.selectedId=tr.dataset.showId; S.view='detail'; render();};});
+  document.querySelectorAll('[data-field]').forEach(el=>{el.onchange=el.oninput=()=>{if(!S.newShowDraft)S.newShowDraft={workId:'',venueId:'',date:'',time:'',agreementId:'',notes:'',income:{}}; S.newShowDraft[el.dataset.field]=el.value;};});
+  document.querySelectorAll('[data-plat-id]').forEach(el=>{el.onchange=el.oninput=()=>{if(!S.newShowDraft)S.newShowDraft={workId:'',venueId:'',date:'',time:'',agreementId:'',notes:'',income:{}}; S.newShowDraft.income[el.dataset.platId]=el.value;};});
+  document.querySelectorAll('[data-cfg-field]').forEach(el=>{el.onchange=el.oninput=()=>updateConfigFromInput(el);});
 }
 
-function bindLogin() {
-  document.querySelectorAll('[data-login-field]').forEach(el => {
-    el.oninput = () => {
-      S.loginDraft[el.dataset.loginField] = el.value;
-    };
-    el.onkeydown = (ev) => {
-      if (ev.key === 'Enter') {
-        ev.preventDefault();
-        loginWithEmail();
-      }
-    };
-  });
-
-  const loginBtn = document.querySelector('[data-action="login"]');
-  if (loginBtn) {
-    loginBtn.onclick = () => loginWithEmail();
-  }
-}
-
-// ── VIEW ROUTER ──────────────────────────────────────────────
-function renderView() {
-  switch (S.view) {
-    case 'dashboard': return renderDashboard();
-    case 'shows': return renderShowList();
-    case 'newshow': return renderNewShow();
-    case 'detail': return renderShowDetail();
-    case 'summary': return renderSummary();
-    case 'admin': return renderAdmin();
-    case 'users': return renderUsers();
-    default: return '<p>Vista no encontrada</p>';
-  }
-}
-
-// ══════════════════════════════════════════════════════════════
-// DASHBOARD
-// ══════════════════════════════════════════════════════════════
-function renderDashboard() {
-  if (S.shows.length === 0 && !S.isLoading) {
-    return `
-      <h1 class="page-title">Dashboard</h1>
-      <p class="page-sub mb20">La Opción Producciones</p>
-      <div class="card"><div class="empty">
-        <p style="font-size:16px;margin-bottom:8px">Sin datos todavía</p>
-        <p style="color:var(--text-dim);font-size:13px">Los datos se cargan desde Google Sheets. Si es la primera vez, registra una función.</p>
-        <button class="btn btn-primary mt10" data-action="refresh" ${S.isLoading || S.isSaving ? 'disabled' : ''}>${S.isRefreshing ? '⏳ Actualizando...' : '🔄 Actualizar desde Sheet'}</button>
-      </div></div>
-    `;
-  }
-
-  const cs = S.shows.map(s => ({ ...s, c: calcShow(s) }));
-  const t = cs.reduce((a, s) => ({
-    vb: a.vb + s.c.ventaBruta, vn: a.vn + s.c.ventaNeta, g: a.g + s.c.totalGastos,
-    tn: a.tn + s.c.totalNeto, ca: a.ca + s.c.cache, ro: a.ro + s.c.restanteOpcion,
-  }), { vb: 0, vn: 0, g: 0, tn: 0, ca: 0, ro: 0 });
-
-  // Platform bars
-  const pm = {};
-  cs.forEach(s => s.c.commissions.forEach(c => { pm[c.name] = (pm[c.name] || 0) + c.income; }));
-  const taq = cs.reduce((s, sh) => s + sh.c.cashBox + sh.c.cardBox, 0);
-  const pe = Object.entries(pm).sort(([,a],[,b]) => b - a);
-  const mx = Math.max(...pe.map(([,v]) => v), taq, 1);
-
-  const barsHtml = pe.map(([name, total]) =>
-    `<div class="bar-row">
-      <span class="bar-label">${esc(name)}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${(total/mx*100).toFixed(1)}%;background:var(--cyan)"></div></div>
-      <span class="bar-value">${fmt(total)}</span>
-    </div>`
-  ).join('') + `
-    <div class="bar-row" style="padding-top:8px;border-top:1px solid var(--border);margin-top:6px">
-      <span class="bar-label">Taquilla</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${(taq/mx*100).toFixed(1)}%;background:var(--success)"></div></div>
-      <span class="bar-value">${fmt(taq)}</span>
-    </div>`;
-
-  // Recent shows table
-  const sorted = cs.sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 10);
-  const rowsHtml = sorted.map(s => {
-    const statusCount = [s.status?.ticketsSent, s.status?.emailSent, s.status?.invoiceSent, s.status?.sentToAdmin].filter(Boolean).length;
-    const roColor = s.c.restanteOpcion >= 0 ? 'success' : 'danger';
-    return `<tr data-show-id="${s.id}">
-      <td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td>
-      <td class="right">${fmt(s.c.ventaBruta)}</td>
-      <td class="right">${fmt(s.c.totalNeto)}</td>
-      <td class="right fw700 ${roColor}">${fmt(s.c.restanteOpcion)}</td>
-    </tr>`;
-  }).join('');
-
-  return `
-    <div class="section-top">
-      <div>
-        <h1 class="page-title">Dashboard</h1>
-        <p class="page-sub">La Opción Producciones · ${S.shows.length} funciones${S.lastSyncAt ? ` · Última actualización: ${S.lastSyncAt}` : ''}</p>
-      </div>
-      <button class="btn btn-secondary btn-sm" data-action="refresh" ${S.isLoading || S.isSaving ? 'disabled' : ''}>${S.isRefreshing ? '⏳ Actualizando...' : '🔄 Actualizar desde Sheet'}</button>
-    </div>
-
-    <div class="grid grid-kpis mb20">
-      <div class="card"><div class="kpi-label">Venta Bruta</div><div class="kpi-value cyan">${fmt(t.vb)}</div><div class="kpi-sub">${S.shows.length} funciones</div></div>
-      <div class="card"><div class="kpi-label">Venta Neta</div><div class="kpi-value purple">${fmt(t.vn)}</div></div>
-      <div class="card"><div class="kpi-label">Total Gastos</div><div class="kpi-value danger">${fmt(t.g)}</div></div>
-      <div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow">${fmt(t.tn)}</div></div>
-      <div class="card"><div class="kpi-label">Caché Salas</div><div class="kpi-value pink">${fmt(t.ca)}</div></div>
-      <div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value success">${fmt(t.ro)}</div></div>
-    </div>
-
-    <div class="grid grid-2 mb20">
-      <div class="card"><h3>Ventas por plataforma</h3>${barsHtml}</div>
-      <div class="card"><h3>Últimas funciones</h3>
-        <div class="table-wrap">
-          <table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th class="right">V.Bruta</th><th class="right">T.Neto</th><th class="right">Restante</th></tr></thead>
-          <tbody>${rowsHtml || '<tr><td colspan="6" class="empty">Sin funciones</td></tr>'}</tbody></table>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// ══════════════════════════════════════════════════════════════
-// SHOW LIST
-// ══════════════════════════════════════════════════════════════
-function renderShowList() {
-  const q = S.search.toLowerCase();
-  const cs = S.shows.map(s => ({ ...s, c: calcShow(s) }))
-    .filter(s => !q || (s.workName||'').toLowerCase().includes(q) || (s.venueName||'').toLowerCase().includes(q) || (s.date||'').includes(q))
-    .sort((a, b) => (b.date||'').localeCompare(a.date||''));
-
-  const rowsHtml = cs.map(s => {
-    const roC = s.c.restanteOpcion >= 0 ? 'success' : 'danger';
-    return `<tr data-show-id="${s.id}">
-      <td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td>
-      <td>${esc(s.agreementSnapshot?.name || '—')}</td>
-      <td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td>
-      <td class="right fw700 ${roC}">${fmt(s.c.restanteOpcion)}</td>
-    </tr>`;
-  }).join('');
-
-  return `
-    <div class="section-top">
-      <div><h1 class="page-title">Funciones</h1><p class="page-sub">${S.shows.length} registradas</p></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-secondary btn-sm" data-action="refresh" ${S.isLoading || S.isSaving ? 'disabled' : ''}>${S.isRefreshing ? '⏳' : '🔄'}</button>
-        <button class="btn btn-primary" data-view="newshow">➕ Nueva</button>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-      <span style="color:var(--text-dim)">🔍</span>
-      <input type="text" placeholder="Buscar por obra, sala o fecha..." value="${esc(S.search)}" data-bind="search"
-        style="padding:9px 12px;width:280px;background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;color:var(--text);outline:none;font-size:13px"/>
-    </div>
-    <div class="table-wrap">
-      <table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th><th class="right">V.Bruta</th><th class="right">V.Neta</th><th class="right">Restante</th></tr></thead>
-      <tbody>${rowsHtml || '<tr><td colspan="7" class="empty">Sin funciones</td></tr>'}</tbody></table>
-    </div>
-  `;
-}
-
-// ══════════════════════════════════════════════════════════════
-// SHOW DETAIL (role-aware)
-// ══════════════════════════════════════════════════════════════
-function renderShowDetail() {
-  const show = S.shows.find(s => s.id === S.selectedId);
-  if (!show) return '<div class="card"><div class="empty">Función no encontrada</div></div>';
-
-  const c = calcShow(show);
-  const isA = S.role === 'admin';
-
-  // Income breakdown
-  const incomeRows = c.commissions.filter(x => x.income > 0).map(x =>
-    `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:13px">${esc(x.name)}</div>
-        ${isA ? `<div style="font-size:10px;color:var(--text-dim)">Com: ${fmt(x.commBase)}${x.commIva > 0 ? ` +IVA ${fmt(x.commIva)}` : ''} = ${fmt(x.commTotal)}</div>` : ''}
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:13px;font-weight:700;color:var(--cyan)">${fmt(x.income)}</div>
-        ${isA ? `<div style="font-size:10px;color:var(--danger)">-${fmt(x.commTotal)}</div>` : ''}
-      </div>
-    </div>`
-  ).join('');
-
-  const cashRows = [];
-  if (c.cashBox > 0) cashRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Taquilla efectivo</span><span class="fw700 success">${fmt(c.cashBox)}</span></div>`);
-  if (c.cardBox > 0) cashRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Taquilla tarjeta</span><span class="fw700 success">${fmt(c.cardBox)}</span></div>`);
-
-  const kpiCols = isA ? 'repeat(6,1fr)' : 'repeat(3,1fr)';
-  const roColor = c.restanteOpcion >= 0 ? 'success' : 'danger';
-
-  return `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <button class="btn btn-ghost" data-view="shows">←</button>
-        <div>
-          <h1 class="page-title" style="font-size:22px">${esc(show.workName)}</h1>
-          <p class="page-sub">${esc(show.venueName)} · ${esc(show.date)}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid mb20" style="grid-template-columns:${kpiCols}">
-      <div class="card"><div class="kpi-label">V. Bruta</div><div class="kpi-value cyan" style="font-size:20px">${fmt(c.ventaBruta)}</div></div>
-      ${isA ? `<div class="card"><div class="kpi-label">V. Neta</div><div class="kpi-value purple" style="font-size:20px">${fmt(c.ventaNeta)}</div></div>` : ''}
-      ${isA ? `<div class="card"><div class="kpi-label">Gastos</div><div class="kpi-value danger" style="font-size:20px">${fmt(c.totalGastos)}</div></div>` : ''}
-      <div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow" style="font-size:20px">${fmt(c.totalNeto)}</div></div>
-      ${isA ? `<div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink" style="font-size:20px">${fmt(c.cache)}</div><div class="kpi-sub">${esc(c.agreement?.name || '—')}</div></div>` : ''}
-      <div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${roColor}" style="font-size:20px">${fmt(c.restanteOpcion)}</div></div>
-    </div>
-
-    <div class="grid grid-2 mb20">
-      <div class="card">
-        <h3>Ingresos por plataforma</h3>
-        ${incomeRows}
-        ${cashRows.length ? `<div style="padding-top:6px">${cashRows.join('')}</div>` : ''}
-      </div>
-      <div class="card">
-        <h3>Reparto (${esc(c.agreement?.name || '—')})</h3>
-        <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span style="color:var(--text-muted)">Total Neto</span><span class="fw700">${fmt(c.totalNeto)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span style="color:var(--text-muted)">Caché sala</span><span class="fw700 pink">${fmt(c.cache)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800;border-top:1px solid var(--border);margin-top:4px">
-          <span>Restante La Opción</span><span class="${roColor}">${fmt(c.restanteOpcion)}</span>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// ══════════════════════════════════════════════════════════════
-// NEW SHOW FORM (role-aware)
-// ══════════════════════════════════════════════════════════════
-function renderNewShow() {
-  const isU = S.role === 'user';
-  const d = S.newShowDraft || { workId: '', venueId: '', date: '', time: '', agreementId: '', notes: '', income: {} };
-  S.newShowDraft = d;
-
-  const workOpts = S.config.works.filter(w => w.active !== false).map(w => `<option value="${w.id}" ${d.workId === w.id ? 'selected' : ''}>${esc(w.name)}</option>`).join('');
-  const venueOpts = S.config.venues.filter(v => v.active !== false).map(v => `<option value="${v.id}" ${d.venueId === v.id ? 'selected' : ''}>${esc(v.name)}</option>`).join('');
-  const agrOpts = S.config.agreements.filter(a => a.active !== false).map(a => `<option value="${a.id}" ${d.agreementId === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
-
-  const activePlats = S.config.platforms.filter(p => p.active !== false);
-  const platFields = activePlats.map(p => {
-    const label = isU ? esc(p.name) : `${esc(p.name)} (${p.commission}%${p.ivaOnCommission ? ' +IVA' : ''})`;
-    return `<div class="field">
-      <label>${label}</label>
-      <input type="number" min="0" step="0.01" placeholder="0" value="${d.income[p.id] || ''}" data-plat-id="${p.id}"/>
-    </div>`;
-  }).join('');
-
-  return `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px">
-      <button class="btn btn-ghost" data-view="shows">← Volver</button>
-      <h1 class="page-title" style="font-size:22px">${isU ? 'Registrar ingreso' : 'Nueva función'}</h1>
-      ${isU ? '<span class="badge" style="background:var(--cyan-dim);color:var(--cyan)">Usuario</span>' : ''}
-    </div>
-
-    <div class="grid grid-2 mb20">
-      <div class="card">
-        <h3>Datos básicos</h3>
-        <div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div>
-        <div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>
-        <div style="display:flex;gap:10px">
-          <div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div>
-          <div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div>
-        </div>
-        ${!isU ? `<div class="field"><label>Acuerdo</label><select data-field="agreementId"><option value="">— Seleccionar —</option>${agrOpts}</select></div>` : ''}
-        <div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div>
-      </div>
-      <div class="card">
-        <h3>Ingresos</h3>
-        ${platFields}
-        <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">
-          <div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox || ''}" data-plat-id="cashBox"/></div>
-          <div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox || ''}" data-plat-id="cardBox"/></div>
-        </div>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving ? 'disabled' : ''}>${S.isSaving ? '⏳ Guardando...' : '💾 Guardar'}</button>
-      <button class="btn btn-secondary" data-view="shows" ${S.isSaving ? 'disabled' : ''}>Cancelar</button>
-    </div>
-  `;
-}
-
-// ══════════════════════════════════════════════════════════════
-// MONTHLY SUMMARY (matches spreadsheet format)
-// ══════════════════════════════════════════════════════════════
-function renderSummary() {
-  const months = [...new Set(S.shows.map(s => (s.date||'').slice(0, 7)).filter(Boolean))].sort().reverse();
-  const selMonth = S.summaryMonth || months[0] || '';
-
-  const monthOpts = months.map(m => `<option value="${m}" ${m === selMonth ? 'selected' : ''}>${m}</option>`).join('');
-
-  const cs = S.shows.filter(s => (s.date||'').startsWith(selMonth)).map(s => ({ ...s, c: calcShow(s) }));
-
-  // Group by work
-  const byWork = {};
-  cs.forEach(s => {
-    const k = s.workName || 'Sin obra';
-    if (!byWork[k]) byWork[k] = { work: k, venue: s.venueName, ingreso: 0, coste: 0, beneficio: 0 };
-    byWork[k].ingreso += s.c.totalNeto;
-    byWork[k].coste += s.c.cache;
-    byWork[k].beneficio += s.c.restanteOpcion;
-  });
-  const rows = Object.values(byWork);
-  const totI = rows.reduce((s, r) => s + r.ingreso, 0);
-  const totC = rows.reduce((s, r) => s + r.coste, 0);
-  const totB = rows.reduce((s, r) => s + r.beneficio, 0);
-  rows.forEach(r => { r.pct = totB !== 0 ? r2(r.beneficio / totB * 100) : 0; });
-  const totPct = totI !== 0 ? r2(totB / totI * 100) : 0;
-
-  const tableRows = rows.map(r => {
-    const bColor = r.beneficio >= 0 ? 'success' : 'danger';
-    return `<tr>
-      <td>${esc(r.venue)}</td><td>${esc(r.work)}</td>
-      <td class="right">${fmt(r.ingreso)}</td><td class="right">${fmt(r.coste)}</td>
-      <td class="right fw700 ${bColor}">${fmt(r.beneficio)}</td>
-      <td class="right">${fmtPct(r.pct)}</td>
-    </tr>`;
-  }).join('');
-
-  // Platform summary
-  const platTotals = {};
-  cs.forEach(s => {
-    s.c.commissions.forEach(c => { platTotals[c.name] = (platTotals[c.name] || 0) + c.income; });
-    platTotals['Taq. Efectivo'] = (platTotals['Taq. Efectivo'] || 0) + s.c.cashBox;
-    platTotals['Taq. Tarjeta'] = (platTotals['Taq. Tarjeta'] || 0) + s.c.cardBox;
-  });
-  const platCards = Object.entries(platTotals).sort(([,a],[,b]) => b - a).map(([name, total]) =>
-    `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
-      <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:4px">${esc(name)}</div>
-      <div style="font-size:18px;font-family:'Outfit',sans-serif;font-weight:800;color:var(--cyan)">${fmt(total)}</div>
-    </div>`
-  ).join('');
-
-  return `
-    <h1 class="page-title">Resumen Mensual</h1>
-    <p class="page-sub mb20">Visión por obra y plataforma</p>
-
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:18px">
-      <span style="color:var(--text-dim)">📅</span>
-      <select data-bind="summaryMonth" style="padding:8px 12px;background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
-        ${monthOpts}
-      </select>
-      <span style="font-size:12px;color:var(--text-dim)">${cs.length} funciones</span>
-    </div>
-
-    <div class="card mb20">
-      <h3>Resumen por obra</h3>
-      <div class="table-wrap">
-        <table><thead><tr><th>Sala</th><th>Obra</th><th class="right">Ingreso</th><th class="right">Coste CIA</th><th class="right">Beneficios</th><th class="right">%</th></tr></thead>
-        <tbody>${tableRows || '<tr><td colspan="6" class="empty">Sin datos</td></tr>'}</tbody></table>
-      </div>
-      ${rows.length > 0 ? `
-      <div style="display:flex;justify-content:flex-end;gap:24px;padding:12px 14px 0;border-top:2px solid rgba(110,200,228,.2);margin-top:10px">
-        <span style="font-size:12px;color:var(--text-muted)">TOTAL</span>
-        <span style="font-size:12px;font-weight:700;min-width:80px;text-align:right">${fmt(totI)}</span>
-        <span style="font-size:12px;font-weight:700;min-width:80px;text-align:right">${fmt(totC)}</span>
-        <span style="font-size:12px;font-weight:700;min-width:80px;text-align:right;color:var(--success)">${fmt(totB)}</span>
-        <span style="font-size:12px;font-weight:700;min-width:50px;text-align:right;color:var(--cyan)">${fmtPct(totPct)}</span>
-      </div>` : ''}
-    </div>
-
-    <div class="card">
-      <h3>Resumen por plataforma</h3>
-      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${platCards || '<div class="empty">Sin datos</div>'}</div>
-    </div>
-  `;
-}
-
-
-// ══════════════════════════════════════════════════════════════
-// USERS (admin only)
-// ══════════════════════════════════════════════════════════════
-async function loadUsers() {
-  if (!requireAdmin()) return;
-  if (S.isUserLoading) return;
-
-  S.isUserLoading = true;
-  render();
-
-  try {
-    const data = await apiGet('listUsers');
-    S.users = data.users || [];
-  } catch (err) {
-    console.error('[USERS] Error:', err);
-    if (isAuthError(err)) {
-      showToast('Sesión caducada o sin permisos. Inicia sesión otra vez.', 'error');
-      clearSession();
-    } else {
-      showToast('Error al cargar usuarios: ' + err.message, 'error');
-    }
-  } finally {
-    S.isUserLoading = false;
-    render();
-  }
-}
-
-async function createUserFromForm() {
-  if (!requireAdmin()) return showToast('Solo un administrador puede crear usuarios', 'error');
-  if (S.isUserSaving) return;
-
-  const email = normalizeEmail(S.newUserDraft.email);
-  const password = String(S.newUserDraft.password || '');
-  const role = S.newUserDraft.role === 'admin' ? 'admin' : 'user';
-
-  if (!email) return showToast('Introduce el email del usuario', 'error');
-  if (!password || password.length < 6) return showToast('La contraseña debe tener al menos 6 caracteres', 'error');
-
-  S.isUserSaving = true;
-  render();
-
-  try {
-    await apiPost({ action: 'createUser', email, password, role });
-    S.newUserDraft = { email: '', password: '', role: 'user' };
-    showToast(role === 'admin' ? 'Administrador creado' : 'Usuario creado', 'success');
-    await loadUsers();
-  } catch (err) {
-    console.error('[CREATE USER] Error:', err);
-    showToast('Error al crear usuario: ' + err.message, 'error');
-  } finally {
-    S.isUserSaving = false;
-    render();
-  }
-}
-
-async function updateUserFromButton(id, updates) {
-  if (!requireAdmin()) return showToast('Solo un administrador puede editar usuarios', 'error');
-  if (!id) return;
-  if (S.isUserSaving) return;
-
-  S.isUserSaving = true;
-  render();
-
-  try {
-    await apiPost({
-      action: 'updateUser',
-      id,
-      userId: id,
-      targetUserId: id,
-      updates,
-      role: updates.role,
-      active: updates.active,
-      password: updates.password,
-    });
-    showToast('Usuario actualizado', 'success');
-    await loadUsers();
-  } catch (err) {
-    console.error('[UPDATE USER] Error:', err);
-    showToast('Error al actualizar usuario: ' + err.message, 'error');
-  } finally {
-    S.isUserSaving = false;
-    render();
-  }
-}
-
-async function deleteUserFromButton(id) {
-  if (!requireAdmin()) return showToast('Solo un administrador puede eliminar usuarios', 'error');
-  if (!id) return;
-  if (S.isUserSaving) return;
-
-  const user = S.users.find(u => String(u.id) === String(id));
-  const email = user?.email || 'este usuario';
-
-  if (!confirm(`¿Seguro que quieres eliminar/desactivar a ${email}?`)) return;
-
-  S.isUserSaving = true;
-  render();
-
-  try {
-    await apiPost({
-      action: 'deleteUser',
-      id,
-      userId: id,
-      targetUserId: id,
-    });
-    showToast('Usuario eliminado o desactivado', 'success');
-    await loadUsers();
-  } catch (err) {
-    console.error('[DELETE USER] Error:', err);
-    showToast('Error al eliminar usuario: ' + err.message, 'error');
-  } finally {
-    S.isUserSaving = false;
-    render();
-  }
-}
-
-function renderUsers() {
-  if (!requireAdmin()) {
-    return '<div class="card"><div class="empty">Acceso denegado</div></div>';
-  }
-
-  const d = S.newUserDraft || { email: '', password: '', role: 'user' };
-  S.newUserDraft = d;
-
-  const rows = (S.users || []).map(u => {
-    const id = esc(u.id || u.userId || '');
-    const email = esc(u.email || '');
-    const role = u.role === 'admin' ? 'admin' : 'user';
-    const active = u.active !== false && String(u.active).toUpperCase() !== 'FALSE';
-    const isMe = normalizeEmail(u.email) === normalizeEmail(S.user?.email);
-
-    return `<tr>
-      <td>${email}</td>
-      <td><span class="badge" style="background:${role === 'admin' ? 'var(--pink-dim)' : 'var(--cyan-dim)'};color:${role === 'admin' ? 'var(--pink)' : 'var(--cyan)'}">${role === 'admin' ? 'Admin' : 'Usuario'}</span></td>
-      <td>${active ? '<span class="badge" style="background:var(--success-dim);color:var(--success)">Activo</span>' : '<span class="badge" style="background:var(--danger-dim);color:var(--danger)">Inactivo</span>'}</td>
-      <td>${esc(u.createdAt || '')}</td>
-      <td style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btn-secondary btn-sm" data-user-action="toggleActive" data-user-id="${id}" data-next-active="${active ? 'false' : 'true'}" ${isMe ? 'disabled' : ''}>${active ? 'Desactivar' : 'Activar'}</button>
-        <button class="btn btn-secondary btn-sm" data-user-action="toggleRole" data-user-id="${id}" data-next-role="${role === 'admin' ? 'user' : 'admin'}" ${isMe ? 'disabled' : ''}>Hacer ${role === 'admin' ? 'usuario' : 'admin'}</button>
-        <button class="btn btn-danger btn-sm" data-user-action="delete" data-user-id="${id}" ${isMe ? 'disabled' : ''}>Eliminar</button>
-      </td>
-    </tr>`;
-  }).join('');
-
-  return `
-    <div class="section-top">
-      <div>
-        <h1 class="page-title">Usuarios</h1>
-        <p class="page-sub">Crea usuarios y administradores con correo y contraseña</p>
-      </div>
-      <button class="btn btn-secondary btn-sm" data-action="refreshUsers" ${S.isUserLoading || S.isUserSaving ? 'disabled' : ''}>${S.isUserLoading ? '⏳ Cargando...' : '🔄 Actualizar usuarios'}</button>
-    </div>
-
-    <div class="grid grid-2 mb20">
-      <div class="card">
-        <h3>Crear nuevo acceso</h3>
-        <div class="field">
-          <label>Correo electrónico *</label>
-          <input type="email" placeholder="usuario@correo.com" value="${esc(d.email || '')}" data-user-field="email" />
-        </div>
-        <div class="field">
-          <label>Contraseña *</label>
-          <input type="password" placeholder="Mínimo 6 caracteres" value="${esc(d.password || '')}" data-user-field="password" />
-        </div>
-        <div class="field">
-          <label>Rol *</label>
-          <select data-user-field="role">
-            <option value="user" ${d.role !== 'admin' ? 'selected' : ''}>Usuario</option>
-            <option value="admin" ${d.role === 'admin' ? 'selected' : ''}>Administrador</option>
-          </select>
-        </div>
-        <button class="btn btn-primary" data-action="createUser" ${S.isUserSaving ? 'disabled' : ''}>${S.isUserSaving ? '⏳ Guardando...' : 'Crear acceso'}</button>
-      </div>
-
-      <div class="card">
-        <h3>Permisos</h3>
-        <p style="font-size:13px;color:var(--text-muted);line-height:1.55">
-          <strong style="color:var(--pink)">Administrador:</strong> puede ver todo, recargar datos, registrar funciones, gestionar configuración y crear usuarios.<br><br>
-          <strong style="color:var(--cyan)">Usuario:</strong> puede entrar, registrar ingresos y consultar funciones, pero no puede crear usuarios ni tocar administración.
-        </p>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Usuarios existentes</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Email</th><th>Rol</th><th>Estado</th><th>Creado</th><th>Acciones</th></tr></thead>
-          <tbody>${S.isUserLoading ? '<tr><td colspan="5" class="empty">Cargando usuarios...</td></tr>' : (rows || '<tr><td colspan="5" class="empty">Sin usuarios cargados. Pulsa “Actualizar usuarios”.</td></tr>')}</tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-// ══════════════════════════════════════════════════════════════
-// ADMIN
-// ══════════════════════════════════════════════════════════════
-function renderAdmin() {
-  if (S.role !== 'admin') return '<div class="card"><div class="empty">Acceso denegado</div></div>';
-
-  const tabs = [
-    { id: 'platforms', label: 'Plataformas' },
-    { id: 'venues', label: 'Salas' },
-    { id: 'works', label: 'Obras' },
-    { id: 'agreements', label: 'Acuerdos' },
-    { id: 'expenses', label: 'Gastos' },
-  ];
-  const tabBtns = tabs.map(t =>
-    `<button class="btn ${S.adminTab === t.id ? 'btn-primary' : 'btn-ghost'} btn-sm" data-admin-tab="${t.id}">${t.label}</button>`
-  ).join('');
-
-  let content = '';
-  const tab = S.adminTab;
-
-  if (tab === 'platforms') {
-    const rows = S.config.platforms.map(p =>
-      `<tr>
-        <td>${esc(p.name)}</td><td>${p.commission}%</td>
-        <td>${p.ivaOnCommission ? '<span class="badge" style="background:var(--pink-dim);color:var(--pink)">Sí</span>' : 'No'}</td>
-        <td>${p.active !== false ? '<span class="badge" style="background:var(--success-dim);color:var(--success)">Activa</span>' : '<span class="badge" style="background:var(--surface-alt);color:var(--text-dim)">Inactiva</span>'}</td>
-      </tr>`
-    ).join('');
-    content = `<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Comisión</th><th>IVA</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p style="margin-top:12px;font-size:12px;color:var(--text-dim)">Para editar, modifica en Administración → Google Sheets (hoja CONFIG) y recarga.</p>`;
-  } else if (tab === 'venues') {
-    const rows = S.config.venues.map(v =>
-      `<tr><td>${esc(v.name)}</td><td>${v.active !== false ? '<span class="badge" style="background:var(--success-dim);color:var(--success)">Activa</span>' : 'Inactiva'}</td></tr>`
-    ).join('');
-    content = `<div class="table-wrap"><table><thead><tr><th>Sala</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  } else if (tab === 'works') {
-    const rows = S.config.works.map(w =>
-      `<tr><td>${esc(w.name)}</td><td>${w.active !== false ? '<span class="badge" style="background:var(--success-dim);color:var(--success)">Activa</span>' : 'Inactiva'}</td><td>${S.shows.filter(s => s.workId === w.id).length || '—'}</td></tr>`
-    ).join('');
-    content = `<div class="table-wrap"><table><thead><tr><th>Obra</th><th>Estado</th><th>Funciones</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  } else if (tab === 'agreements') {
-    const rows = S.config.agreements.map(a =>
-      `<tr><td>${esc(a.name)}</td><td>${a.mode === 'percentage' ? '<span class="badge" style="background:var(--cyan-dim);color:var(--cyan)">%</span>' : '<span class="badge" style="background:var(--pink-dim);color:var(--pink)">Fijo</span>'}</td><td>${a.mode === 'percentage' ? a.value + '%' : fmt(a.value)}</td><td>${a.active !== false ? 'Activo' : 'Inactivo'}</td></tr>`
-    ).join('');
-    content = `<div class="table-wrap"><table><thead><tr><th>Acuerdo</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  } else if (tab === 'expenses') {
-    const rows = S.config.expenseTypes.map(e =>
-      `<tr><td>${esc(e.name)}</td><td>${e.active !== false ? 'Activo' : 'Inactivo'}</td></tr>`
-    ).join('');
-    content = `<div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  }
-
-  return `
-    <div class="section-top">
-      <div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde Google Sheets</p></div>
-      <button class="btn btn-secondary btn-sm" data-action="refresh" ${S.isLoading || S.isSaving ? 'disabled' : ''}>${S.isRefreshing ? '⏳ Actualizando...' : '🔄 Recargar config'}</button>
-    </div>
-    <div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>
-    ${content}
-    <p style="margin-top:16px;font-size:12px;color:var(--text-dim)">ℹ️ La configuración se gestiona en la hoja CONFIG del Google Sheet. Usa el botón "Recargar" para ver cambios.</p>
-  `;
-}
-
-// ══════════════════════════════════════════════════════════════
-// EVENT BINDING
-// ══════════════════════════════════════════════════════════════
-function bindEvents() {
-  // Nav buttons
-  document.querySelectorAll('[data-view]').forEach(btn => {
-    btn.onclick = () => {
-      if (S.isSaving || S.isUserSaving) {
-        showToast('Espera a que termine el guardado.', 'warn');
-        return;
-      }
-
-      const nextView = btn.dataset.view;
-
-      if (nextView === 'users' && !requireAdmin()) {
-        showToast('Solo un administrador puede gestionar usuarios.', 'error');
-        return;
-      }
-
-      S.view = nextView;
-      S.selectedId = null;
-      render();
-
-      if (nextView === 'users' && (!S.users || S.users.length === 0)) {
-        loadUsers();
-      }
-    };
-  });
-
-  // Actions
-  document.querySelectorAll('[data-action]').forEach(btn => {
-    btn.onclick = () => {
-      const action = btn.dataset.action;
-
-      if (action === 'logout') {
-        logoutAndClear();
-        return;
-      }
-
-      if (action === 'refresh') {
-        loadFromSheet({ manual: true });
-        return;
-      }
-
-      if (action === 'refreshUsers') {
-        loadUsers();
-        return;
-      }
-
-      if (action === 'createUser') {
-        createUserFromForm();
-        return;
-      }
-
-      if (action === 'saveNewShow') {
-        btn.disabled = true;
-        btn.innerHTML = '⏳ Guardando...';
-        handleSaveNewShow();
-        return;
-      }
-    };
-  });
-
-  // Admin tabs
-  document.querySelectorAll('[data-admin-tab]').forEach(btn => {
-    btn.onclick = () => { S.adminTab = btn.dataset.adminTab; render(); };
-  });
-
-  // User create form fields
-  document.querySelectorAll('[data-user-field]').forEach(el => {
-    el.onchange = el.oninput = () => {
-      if (!S.newUserDraft) S.newUserDraft = { email: '', password: '', role: 'user' };
-      S.newUserDraft[el.dataset.userField] = el.value;
-    };
-
-    el.onkeydown = (ev) => {
-      if (ev.key === 'Enter') {
-        ev.preventDefault();
-        createUserFromForm();
-      }
-    };
-  });
-
-  // User table actions
-  document.querySelectorAll('[data-user-action]').forEach(btn => {
-    btn.onclick = () => {
-      const id = btn.dataset.userId;
-      const userAction = btn.dataset.userAction;
-
-      if (userAction === 'toggleActive') {
-        updateUserFromButton(id, { active: btn.dataset.nextActive === 'true' });
-      }
-
-      if (userAction === 'toggleRole') {
-        updateUserFromButton(id, { role: btn.dataset.nextRole === 'admin' ? 'admin' : 'user' });
-      }
-
-      if (userAction === 'delete') {
-        deleteUserFromButton(id);
-      }
-    };
-  });
-
-  // Search binding
-  const searchInput = document.querySelector('[data-bind="search"]');
-  if (searchInput) {
-    searchInput.oninput = () => { S.search = searchInput.value; render(); };
-  }
-
-  // Summary month
-  const summarySelect = document.querySelector('[data-bind="summaryMonth"]');
-  if (summarySelect) {
-    summarySelect.onchange = () => { S.summaryMonth = summarySelect.value; render(); };
-  }
-
-  // Show row clicks
-  document.querySelectorAll('[data-show-id]').forEach(tr => {
-    tr.onclick = () => { S.selectedId = tr.dataset.showId; S.view = 'detail'; render(); };
-  });
-
-  // New show form fields
-  document.querySelectorAll('[data-field]').forEach(el => {
-    el.onchange = el.oninput = () => {
-      if (!S.newShowDraft) S.newShowDraft = { workId: '', venueId: '', date: '', time: '', agreementId: '', notes: '', income: {} };
-      S.newShowDraft[el.dataset.field] = el.value;
-    };
-  });
-
-  // Platform income fields
-  document.querySelectorAll('[data-plat-id]').forEach(el => {
-    el.onchange = el.oninput = () => {
-      if (!S.newShowDraft) S.newShowDraft = { workId: '', venueId: '', date: '', time: '', agreementId: '', notes: '', income: {} };
-      S.newShowDraft.income[el.dataset.platId] = el.value;
-    };
-  });
-}
-
-// ── SAVE NEW SHOW ────────────────────────────────────────────
-async function handleSaveNewShow() {
-  if (SAVE_LOCK || S.isSaving) {
-    showToast('Ya se está guardando. Espera a que termine.', 'warn');
-    return;
-  }
-
-  const d = S.newShowDraft;
-  if (!d) return showToast('Rellena el formulario', 'error');
-  if (!d.workId) return showToast('Selecciona una obra', 'error');
-  if (!d.venueId) return showToast('Selecciona una sala', 'error');
-  if (!d.date) return showToast('Introduce una fecha', 'error');
-
-  // Build full show object
-  const work = S.config.works.find(w => w.id === d.workId);
-  const venue = S.config.venues.find(v => v.id === d.venueId);
-  const agreement = S.config.agreements.find(a => a.id === d.agreementId);
-
-  const income = {};
-  S.config.platforms.forEach(p => {
-    income[p.id] = parseFloat(d.income[p.id]) || 0;
-  });
-  income.cashBox = parseFloat(d.income.cashBox) || 0;
-  income.cardBox = parseFloat(d.income.cardBox) || 0;
-
-  // Check for negatives
-  if (Object.values(income).some(v => v < 0)) return showToast('No se admiten importes negativos', 'error');
-
-  // Use one stable id for this draft. This lets the backend ignore duplicates.
-  const appId = d.appId || gid();
-  d.appId = appId;
-
-  const show = {
-    id: appId,
-    appId: appId,
-    workId: d.workId,
-    venueId: d.venueId,
-    workName: work?.name || '',
-    venueName: venue?.name || '',
-    date: d.date,
-    time: d.time || '',
-    agreementId: d.agreementId || '',
-    agreementSnapshot: agreement ? { name: agreement.name, mode: agreement.mode, value: agreement.value } : null,
-    notes: d.notes || '',
-    income,
-    platformSnapshots: {},
-    expenses: [],
-    status: {},
-  };
-
-  // Build snapshots
-  S.config.platforms.forEach(p => {
-    show.platformSnapshots[p.id] = {
-      name: p.name, commission: p.commission, ivaOnCommission: p.ivaOnCommission,
-      income: income[p.id] || 0,
-    };
-  });
-
-  // Save to Google Sheet
-  await saveShowToSheet(show);
-}
-
-// ══════════════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════════════
-async function initApp() {
-  const restored = restoreSession();
-
-  if (!restored) {
-    render();
-    return;
-  }
-
-  S.isAuthChecking = true;
-  render();
-
-  try {
-    // If the backend supports "me", this confirms the token is still valid.
-    // If it does not return a user but the token is accepted, we keep the saved user.
-    const data = await apiGet('me');
-    if (data.user) {
-      saveSession(S.token, data.user);
-    }
-    S.isAuthChecking = false;
-    render();
-    await loadFromSheet();
-  } catch (err) {
-    console.warn('[INIT] Sesión no válida:', err);
-    clearSession();
-    S.isAuthChecking = false;
-    render();
-  }
-}
-
-initApp();
+async function handleLogout(){ try{ if(S.token) await apiPost({action:'logout'}); }catch(e){} clearSession(true); }
+function getConfigItem(tab,id){ const meta=CONFIG_META[tab]; return (S.config[meta.key]||[]).find(x=>x.id===id); }
+function updateConfigFromInput(el){ const item=getConfigItem(el.dataset.cfgTab,el.dataset.cfgId); if(!item)return; const field=el.dataset.cfgField; let value=el.type==='checkbox'?el.checked:el.value; if(['commission','value'].includes(field))value=Number(value||0); if(field==='ivaOnCommission')value=value==='true'; item[field]=value; S.configDirty=true; }
+function addConfigItem(tab){ const meta=CONFIG_META[tab]; const inputs=[...document.querySelectorAll(`[data-add-tab="${tab}"]`)]; const values={}; inputs.forEach(i=>values[i.dataset.add]=i.value); const name=String(values.name||'').trim(); if(!name)return showToast('Introduce un nombre.','error'); let item={id:gid(meta.prefix),name,active:true}; if(tab==='platforms')item={...item,commission:Number(values.commission||0),ivaOnCommission:values.ivaOnCommission==='true'}; if(tab==='agreements')item={...item,mode:values.mode||'percentage',value:Number(values.value||0)}; S.config[meta.key].push(item); S.configDirty=true; inputs.forEach(i=>{if(i.tagName==='INPUT')i.value='';}); showToast(`${meta.singular[0].toUpperCase()+meta.singular.slice(1)} añadido. Guarda los cambios.`, 'success'); render(); }
+async function handleCreateUser(){ const email=document.getElementById('new-user-email')?.value.trim(); const password=document.getElementById('new-user-password')?.value; const role=document.getElementById('new-user-role')?.value||'user'; if(!email||!password)return showToast('Introduce email y contraseña.','error'); try{ await apiPost({action:'createUser',email,password,role,active:true}); showToast('Usuario creado','success'); await loadUsers(); }catch(err){showToast(err.message,'error');} }
+async function handleUpdateUser(id){ const role=document.querySelector(`[data-user-role="${id}"]`)?.value; const active=document.querySelector(`[data-user-active="${id}"]`)?.checked; const password=document.querySelector(`[data-user-pass="${id}"]`)?.value; const payload={action:'updateUser',id,role,active}; if(password)payload.password=password; try{ await apiPost(payload); showToast('Usuario actualizado','success'); await loadUsers(); }catch(err){showToast(err.message,'error');} }
+
+async function handleSaveNewShow(){ if(SAVE_LOCK||S.isSaving)return showToast('Ya se está guardando. Espera a que termine.','warn'); const d=S.newShowDraft; if(!d)return showToast('Rellena el formulario','error'); if(!d.workId)return showToast('Selecciona una obra','error'); if(!d.venueId)return showToast('Selecciona una sala','error'); if(!d.date)return showToast('Introduce una fecha','error'); const work=S.config.works.find(w=>w.id===d.workId); const venue=S.config.venues.find(v=>v.id===d.venueId); const agreement=S.config.agreements.find(a=>a.id===d.agreementId); const income={}; S.config.platforms.forEach(p=>{income[p.id]=parseFloat(d.income[p.id])||0;}); income.cashBox=parseFloat(d.income.cashBox)||0; income.cardBox=parseFloat(d.income.cardBox)||0; if(Object.values(income).some(v=>v<0))return showToast('No se admiten importes negativos','error'); const appId=d.appId||gid('s'); d.appId=appId; const show={id:appId,appId,workId:d.workId,venueId:d.venueId,workName:work?.name||'',venueName:venue?.name||'',date:d.date,time:d.time||'',agreementId:d.agreementId||'',agreementSnapshot:agreement?{name:agreement.name,mode:agreement.mode,value:agreement.value}:null,notes:d.notes||'',income,platformSnapshots:{},expenses:[],status:{}}; S.config.platforms.forEach(p=>{show.platformSnapshots[p.id]={name:p.name,commission:p.commission,ivaOnCommission:p.ivaOnCommission,income:income[p.id]||0};}); await saveShowToSheet(show); }
+
+boot();
 </script>
 </body>
 </html>
