@@ -219,6 +219,8 @@ const S = {
   summaryMonth: '',
   isLoading: false,
   isSaving: false,
+  isRefreshing: false,
+  lastSyncAt: '',
   loadError: null,
   // Form states
   newShowDraft: null,
@@ -235,6 +237,11 @@ const S = {
 };
 
 const $app = document.getElementById('app');
+
+// Hard locks that do not depend on re-rendering the DOM.
+// They prevent double-clicks, Enter-repeat and slow network duplicate submissions.
+let SAVE_LOCK = false;
+let REFRESH_LOCK = false;
 
 // ── UTILS ────────────────────────────────────────────────────
 function gid() { return (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)).slice(0, 8); }
@@ -426,7 +433,10 @@ function calcShow(show) {
 // ══════════════════════════════════════════════════════════════
 async function apiGet(action = 'getAll') {
   const url = `${API_URL}?action=${action}&t=${Date.now()}`;
-  const resp = await fetch(url);
+  const resp = await fetch(url, {
+    method: 'GET',
+    cache: 'no-store',
+  });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const data = await resp.json();
   if (!data.ok) throw new Error(data.error || 'Error desconocido');
@@ -437,6 +447,7 @@ async function apiPost(payload) {
   const resp = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' }, // Apps Script needs text/plain for CORS
+    cache: 'no-store',
     body: JSON.stringify(payload),
   });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -448,8 +459,15 @@ async function apiPost(payload) {
 // ══════════════════════════════════════════════════════════════
 // SYNC: Load everything from Google Sheets
 // ══════════════════════════════════════════════════════════════
-async function loadFromSheet() {
-  S.isLoading = true;
+async function loadFromSheet(opts = {}) {
+  const manual = !!opts.manual;
+
+  // Avoid multiple refresh calls fighting each other.
+  if (REFRESH_LOCK) return;
+  REFRESH_LOCK = true;
+
+  S.isLoading = !S.isSaving;
+  S.isRefreshing = manual;
   S.loadError = null;
   render();
 
@@ -467,7 +485,11 @@ async function loadFromSheet() {
 
     // Shows: transform from sheet format to app format
     if (data.shows && Array.isArray(data.shows)) {
+      // Replace local data completely with Sheet data.
+      // This makes the dashboard reliable after clearing cache or opening another device.
       S.shows = data.shows.map(raw => sheetShowToAppShow(raw, S.config));
+    } else {
+      S.shows = [];
     }
 
     // Set default summary month
@@ -476,37 +498,58 @@ async function loadFromSheet() {
       S.summaryMonth = months[0] || '';
     }
 
+    S.lastSyncAt = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
     console.log(`[SYNC] Loaded ${S.config.platforms.length} platforms, ${S.config.venues.length} venues, ${S.config.works.length} works, ${S.shows.length} shows`);
+
+    if (manual) {
+      showToast(`Datos actualizados desde el Sheet (${S.shows.length} funciones)`, 'success');
+    }
   } catch (err) {
     console.error('[SYNC] Error:', err);
     S.loadError = err.message;
     showToast('Error al cargar datos: ' + err.message, 'error');
+  } finally {
+    S.isLoading = false;
+    S.isRefreshing = false;
+    REFRESH_LOCK = false;
+    render();
   }
-
-  S.isLoading = false;
-  render();
 }
 
 async function saveShowToSheet(show) {
-  if (S.isSaving) return; // Anti-duplicate: block while saving
+  // Strong anti-duplicate guard: works even before the button visually changes.
+  if (SAVE_LOCK || S.isSaving) {
+    showToast('Ya se está guardando. Espera a que termine.', 'warn');
+    return;
+  }
+
+  SAVE_LOCK = true;
   S.isSaving = true;
+  S.loadError = null;
   render();
 
   try {
     const payload = appShowToSheetData(show, S.config);
+    payload.appId = show.appId || show.id; // idempotency key for Apps Script
+
     await apiPost(payload);
-    showToast('Función guardada correctamente', 'success');
-    // Reload fresh data
+
+    // After saving, always read the Sheet again. The Sheet is the source of truth.
     await loadFromSheet();
+
     S.view = 'shows';
+    S.selectedId = null;
     S.newShowDraft = null;
+    showToast('Función guardada correctamente', 'success');
   } catch (err) {
     console.error('[SAVE] Error:', err);
     showToast('Error al guardar: ' + err.message, 'error');
+  } finally {
+    S.isSaving = false;
+    SAVE_LOCK = false;
+    render();
   }
-
-  S.isSaving = false;
-  render();
 }
 
 async function saveConfigToSheet() {
@@ -659,7 +702,7 @@ function renderDashboard() {
       <div class="card"><div class="empty">
         <p style="font-size:16px;margin-bottom:8px">Sin datos todavía</p>
         <p style="color:var(--text-dim);font-size:13px">Los datos se cargan desde Google Sheets. Si es la primera vez, registra una función.</p>
-        <button class="btn btn-primary mt10" data-action="refresh">🔄 Recargar datos</button>
+        <button class="btn btn-primary mt10" data-action="refresh" ${S.isLoading || S.isSaving ? 'disabled' : ''}>${S.isRefreshing ? '⏳ Actualizando...' : '🔄 Actualizar desde Sheet'}</button>
       </div></div>
     `;
   }
@@ -705,8 +748,11 @@ function renderDashboard() {
 
   return `
     <div class="section-top">
-      <div><h1 class="page-title">Dashboard</h1><p class="page-sub">La Opción Producciones · ${S.shows.length} funciones</p></div>
-      <button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Actualizar</button>
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-sub">La Opción Producciones · ${S.shows.length} funciones${S.lastSyncAt ? ` · Última actualización: ${S.lastSyncAt}` : ''}</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" data-action="refresh" ${S.isLoading || S.isSaving ? 'disabled' : ''}>${S.isRefreshing ? '⏳ Actualizando...' : '🔄 Actualizar desde Sheet'}</button>
     </div>
 
     <div class="grid grid-kpis mb20">
@@ -753,7 +799,7 @@ function renderShowList() {
     <div class="section-top">
       <div><h1 class="page-title">Funciones</h1><p class="page-sub">${S.shows.length} registradas</p></div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-secondary btn-sm" data-action="refresh">🔄</button>
+        <button class="btn btn-secondary btn-sm" data-action="refresh" ${S.isLoading || S.isSaving ? 'disabled' : ''}>${S.isRefreshing ? '⏳' : '🔄'}</button>
         <button class="btn btn-primary" data-view="newshow">➕ Nueva</button>
       </div>
     </div>
@@ -889,8 +935,8 @@ function renderNewShow() {
     </div>
 
     <div style="display:flex;gap:10px">
-      <button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving ? 'disabled' : ''}>💾 Guardar</button>
-      <button class="btn btn-secondary" data-view="shows">Cancelar</button>
+      <button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving ? 'disabled' : ''}>${S.isSaving ? '⏳ Guardando...' : '💾 Guardar'}</button>
+      <button class="btn btn-secondary" data-view="shows" ${S.isSaving ? 'disabled' : ''}>Cancelar</button>
     </div>
   `;
 }
@@ -1036,7 +1082,7 @@ function renderAdmin() {
   return `
     <div class="section-top">
       <div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde Google Sheets</p></div>
-      <button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar config</button>
+      <button class="btn btn-secondary btn-sm" data-action="refresh" ${S.isLoading || S.isSaving ? 'disabled' : ''}>${S.isRefreshing ? '⏳ Actualizando...' : '🔄 Recargar config'}</button>
     </div>
     <div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>
     ${content}
@@ -1050,7 +1096,15 @@ function renderAdmin() {
 function bindEvents() {
   // Nav buttons
   document.querySelectorAll('[data-view]').forEach(btn => {
-    btn.onclick = () => { S.view = btn.dataset.view; S.selectedId = null; render(); };
+    btn.onclick = () => {
+      if (S.isSaving) {
+        showToast('Espera a que termine el guardado.', 'warn');
+        return;
+      }
+      S.view = btn.dataset.view;
+      S.selectedId = null;
+      render();
+    };
   });
 
   // Actions
@@ -1058,8 +1112,12 @@ function bindEvents() {
     btn.onclick = () => {
       const action = btn.dataset.action;
       if (action === 'logout') { S.role = null; S.view = 'dashboard'; S.selectedId = null; S.newShowDraft = null; render(); }
-      if (action === 'refresh') { loadFromSheet(); }
-      if (action === 'saveNewShow') { handleSaveNewShow(); }
+      if (action === 'refresh') { loadFromSheet({ manual: true }); }
+      if (action === 'saveNewShow') {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Guardando...';
+        handleSaveNewShow();
+      }
     };
   });
 
@@ -1103,7 +1161,12 @@ function bindEvents() {
 }
 
 // ── SAVE NEW SHOW ────────────────────────────────────────────
-function handleSaveNewShow() {
+async function handleSaveNewShow() {
+  if (SAVE_LOCK || S.isSaving) {
+    showToast('Ya se está guardando. Espera a que termine.', 'warn');
+    return;
+  }
+
   const d = S.newShowDraft;
   if (!d) return showToast('Rellena el formulario', 'error');
   if (!d.workId) return showToast('Selecciona una obra', 'error');
@@ -1125,9 +1188,13 @@ function handleSaveNewShow() {
   // Check for negatives
   if (Object.values(income).some(v => v < 0)) return showToast('No se admiten importes negativos', 'error');
 
+  // Use one stable id for this draft. This lets the backend ignore duplicates.
+  const appId = d.appId || gid();
+  d.appId = appId;
+
   const show = {
-    id: gid(),
-    appId: gid(),
+    id: appId,
+    appId: appId,
     workId: d.workId,
     venueId: d.venueId,
     workName: work?.name || '',
@@ -1152,7 +1219,7 @@ function handleSaveNewShow() {
   });
 
   // Save to Google Sheet
-  saveShowToSheet(show);
+  await saveShowToSheet(show);
 }
 
 // ══════════════════════════════════════════════════════════════
