@@ -23,6 +23,8 @@
     .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}.bar-label{width:90px;flex-shrink:0;color:var(--text-muted);font-size:11px}.bar-track{flex:1;height:6px;background:var(--surface-alt);border-radius:3px;overflow:hidden}.bar-fill{height:100%;border-radius:3px;background:var(--cyan)}.bar-value{min-width:75px;text-align:right;font-size:12px;font-weight:700}.empty{text-align:center;color:var(--text-dim);padding:36px 10px}.success{color:var(--success)}.danger{color:var(--danger)}.cyan{color:var(--cyan)}.pink{color:var(--pink)}.yellow{color:var(--yellow)}.purple{color:var(--purple)}.fw700{font-weight:700}.mb20{margin-bottom:20px}.mt10{margin-top:10px}.muted{color:var(--text-muted)}.dim{color:var(--text-dim)}
     .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 20%,var(--cyan-dim) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,var(--pink-dim) 0%,transparent 50%),var(--bg);padding:clamp(18px,4vw,42px);overflow:auto}.login-box{width:100%;max-width:430px;text-align:center}.login-logo{width:min(100%,340px);margin:0 auto 30px;display:flex;align-items:center;justify-content:center}.login-logo svg{display:block;width:100%;height:auto;max-height:170px;overflow:visible}.sidebar-header svg{max-width:100%;height:auto;overflow:visible}.toast{position:fixed;top:18px;right:18px;z-index:200;padding:11px 18px;border-radius:10px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;max-width:420px}.toast.success{border-color:rgba(74,222,128,.3);color:var(--success)}.toast.error{border-color:rgba(248,113,113,.3);color:var(--danger)}.toast.warn{border-color:rgba(251,191,36,.3);color:var(--warn)}.loading-overlay{position:fixed;inset:0;background:rgba(10,10,15,.85);z-index:150;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-text{color:var(--text-muted);font-size:14px}.dirty-note{background:var(--warn-dim);border:1px solid rgba(251,191,36,.25);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:12px;margin-bottom:14px}
     .dashboard-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}.dashboard-filters .field{margin-bottom:0}.mini-series{display:grid;grid-template-columns:52px 1fr 88px;align-items:center;gap:8px;margin:5px 0;font-size:11px;color:var(--text-muted)}.mini-series .bar-track{height:5px}.finance-split{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}.finance-split.total{border-bottom:0;border-top:1px solid var(--border-light);margin-top:6px;padding-top:14px;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800}.bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .show-toolbar{display:grid;grid-template-columns:1.4fr repeat(5,minmax(120px,.7fr));gap:10px;align-items:end;margin-bottom:14px}.search-wrap{position:relative}.search-wrap .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}.search-wrap input{padding-left:38px}.show-count-pill{display:inline-flex;align-items:center;gap:6px;background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(110,200,228,.22);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}.row-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.show-mobile-card{display:none}.show-result-note{color:var(--text-dim);font-size:12px;margin:0 0 12px}.show-list-card{padding:16px}.filter-label{display:block;margin-bottom:4px;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+    @media(max-width:1050px){.show-toolbar{grid-template-columns:1fr 1fr}.show-toolbar .search-wrap{grid-column:1/-1}}@media(max-width:700px){.show-toolbar{grid-template-columns:1fr}.show-mobile-card{display:block}.show-table-desktop{display:none}.row-actions{justify-content:flex-start}}
     @media(max-width:1100px){.grid-2{grid-template-columns:1fr}}@media(max-width:900px){:root{--sidebar-w:0}.sidebar{position:static;width:100%;min-height:auto}.app{flex-direction:column}.main{margin-left:0;padding:18px}}
   </style>
 </head>
@@ -35,7 +37,7 @@ const $app = document.getElementById('app');
 
 const S = {
   token:'', user:null, role:null, view:'dashboard', selectedId:null, editShowId:null,
-  search:'', toast:null, toastTimer:null,
+  search:'', showFilters:{month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'}, toast:null, toastTimer:null,
   adminTab:'platforms', summaryMonth:'', isLoading:false, isSaving:false, isRefreshing:false,
   isBooting:false, isLoggingIn:false, lastSyncAt:'', loadError:null, configDirty:false,
   users:[], newShowDraft:null, isDuplicating:false, duplicateSourceId:null,
@@ -93,7 +95,7 @@ function saveSession(token,user){
   normalizeCurrentView();
   localStorage.setItem(STORAGE_KEY,JSON.stringify({token,user}));
 }
-function clearSession(rn=true){ S.token='';S.user=null;S.role=null;S.view='dashboard';S.selectedId=null;S.editShowId=null;S.users=[];S.newShowDraft=null;S.isDuplicating=false;S.duplicateSourceId=null;localStorage.removeItem(STORAGE_KEY);if(rn)render(); }
+function clearSession(rn=true){ S.token='';S.user=null;S.role=null;S.view='dashboard';S.selectedId=null;S.editShowId=null;S.users=[];S.newShowDraft=null;S.search='';S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};S.isDuplicating=false;S.duplicateSourceId=null;localStorage.removeItem(STORAGE_KEY);if(rn)render(); }
 
 async function boot(){
   const raw=localStorage.getItem(STORAGE_KEY);
@@ -504,15 +506,93 @@ function renderDashboard(){
   </div>`;
 }
 
+function ensureShowFilters(){
+  if(!S.showFilters) S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};
+  if(S.search===undefined||S.search===null) S.search='';
+  return S.showFilters;
+}
+function getShowMonths(){
+  return [...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
+}
+function getFilteredShowList(){
+  const f=ensureShowFilters();
+  const q=normalize(S.search);
+  let cs=S.shows.map(s=>({...s,c:calcShow(s)})).filter(s=>{
+    const searchText=normalize([s.date,s.workName,s.venueName,s.agreementSnapshot?.name,s.notes].join(' '));
+    if(q && !searchText.includes(q)) return false;
+    if(f.month && !(s.date||'').startsWith(f.month)) return false;
+    if(f.venueId && s.venueId!==f.venueId) return false;
+    if(f.workId && s.workId!==f.workId) return false;
+    if(f.agreementId && s.agreementId!==f.agreementId) return false;
+    return true;
+  });
+  const sort=f.sort||'dateDesc';
+  cs.sort((a,b)=>{
+    if(sort==='dateAsc') return (a.date||'').localeCompare(b.date||'');
+    if(sort==='workAsc') return (a.workName||'').localeCompare(b.workName||'','es') || (b.date||'').localeCompare(a.date||'');
+    if(sort==='venueAsc') return (a.venueName||'').localeCompare(b.venueName||'','es') || (b.date||'').localeCompare(a.date||'');
+    if(sort==='restDesc') return (b.c.restanteOpcion||0)-(a.c.restanteOpcion||0);
+    if(sort==='ventaDesc') return (b.c.ventaNeta||0)-(a.c.ventaNeta||0);
+    return (b.date||'').localeCompare(a.date||'');
+  });
+  return cs;
+}
+function updateShowSearchLive(){
+  const input=document.querySelector('[data-bind="search"]');
+  if(input) S.search=input.value;
+  const q=normalize(S.search);
+  let visible=0;
+  document.querySelectorAll('[data-show-row="1"]').forEach(row=>{
+    const ok=!q || normalize(row.dataset.searchText||'').includes(q);
+    row.style.display=ok?'':'none';
+    if(ok) visible++;
+  });
+  document.querySelectorAll('[data-show-card="1"]').forEach(card=>{
+    const ok=!q || normalize(card.dataset.searchText||'').includes(q);
+    card.style.display=ok?'':'none';
+  });
+  const count=document.getElementById('show-list-count');
+  if(count) count.textContent=`${visible} de ${S.shows.length} funciones`;
+  const empty=document.getElementById('show-list-empty-live');
+  if(empty) empty.style.display=visible===0?'table-row':'none';
+  const emptyCards=document.getElementById('show-list-empty-cards');
+  if(emptyCards) emptyCards.style.display=visible===0?'block':'none';
+}
+
 function renderShowList(){
-  const q=S.search.toLowerCase();
-  const cs=S.shows.map(s=>({...s,c:calcShow(s)})).filter(s=>!q||(s.workName||'').toLowerCase().includes(q)||(s.venueName||'').toLowerCase().includes(q)||(s.date||'').includes(q)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  ensureShowFilters();
+  const cs=getFilteredShowList();
   const isAdmin=S.role==='admin';
-  // Usuario: no ve V.Bruta, V.Neta ni Restante — solo fecha, obra, sala
+  const months=getShowMonths();
+  const monthOpts=months.map(m=>`<option value="${m}" ${S.showFilters.month===m?'selected':''}>${m}</option>`).join('');
+  const venueOpts=S.config.venues.filter(v=>v.active!==false).map(v=>`<option value="${v.id}" ${S.showFilters.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join('');
+  const workOpts=S.config.works.filter(w=>w.active!==false).map(w=>`<option value="${w.id}" ${S.showFilters.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join('');
+  const agrOpts=S.config.agreements.filter(a=>a.active!==false).map(a=>`<option value="${a.id}" ${S.showFilters.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
+  const activeFilters=Number(!!S.search)+['month','venueId','workId','agreementId'].reduce((n,k)=>n+Number(!!S.showFilters[k]),0);
   const thAdmin=`<th class="right">V.Bruta</th><th class="right">V.Neta</th><th class="right">Restante</th>`;
-  const thUser=``;
-  const rowsHtml=cs.map(s=>`<tr><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td>${isAdmin?`<td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td>`:''}<td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button></div></td></tr>`).join('');
-  return `<div class="section-top"><div><h1 class="page-title">Funciones</h1><p class="page-sub">${S.shows.length} registradas</p></div><div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄</button><button class="btn btn-primary" data-view="newshow">➕ Nueva</button></div></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><span class="dim">🔍</span><input class="inline-input" type="text" placeholder="Buscar por obra, sala o fecha..." value="${esc(S.search)}" data-bind="search" style="max-width:300px"/></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th>${isAdmin?thAdmin:thUser}<th></th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="8" class="empty">Sin funciones</td></tr>'}</tbody></table></div>`;
+  const rowsHtml=cs.map(s=>{
+    const txt=esc([s.date,s.workName,s.venueName,s.agreementSnapshot?.name,s.notes].join(' '));
+    return `<tr data-show-row="1" data-search-text="${txt}"><td>${esc(s.date)}</td><td><strong>${esc(s.workName||'—')}</strong></td><td>${esc(s.venueName||'—')}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td>${isAdmin?`<td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td>`:''}<td><div class="row-actions"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button></div></td></tr>`;
+  }).join('');
+  const cardsHtml=cs.map(s=>{
+    const txt=esc([s.date,s.workName,s.venueName,s.agreementSnapshot?.name,s.notes].join(' '));
+    return `<div class="card show-mobile-card" data-show-card="1" data-search-text="${txt}" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="fw700">${esc(s.workName||'—')}</div><div class="muted" style="font-size:12px">${esc(s.venueName||'—')} · ${esc(s.date||'—')}</div><div class="dim" style="font-size:11px;margin-top:4px">${esc(s.agreementSnapshot?.name||'Sin acuerdo')}</div></div>${isAdmin?`<div style="text-align:right"><div class="success fw700">${fmt(s.c.restanteOpcion)}</div><div class="dim" style="font-size:11px">Restante</div></div>`:''}</div><div class="row-actions" style="margin-top:12px"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button></div></div>`;
+  }).join('');
+  const colspan=isAdmin?8:5;
+  return `<div class="section-top"><div><h1 class="page-title">Funciones</h1><p class="page-sub"><span id="show-list-count">${cs.length} de ${S.shows.length} funciones</span>${activeFilters?` · ${activeFilters} filtro${activeFilters>1?'s':''} activo${activeFilters>1?'s':''}`:''}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Actualizar</button><button class="btn btn-primary" data-view="newshow">➕ Nueva</button></div></div>
+  <div class="card show-list-card mb20">
+    <div class="show-toolbar">
+      <div class="search-wrap"><label class="filter-label">Buscar</label><span class="search-icon">🔍</span><input id="show-search-input" class="inline-input" type="search" autocomplete="off" placeholder="Obra, sala, fecha, acuerdo o notas..." value="${esc(S.search)}" data-bind="search"/></div>
+      <div><label class="filter-label">Mes</label><select class="inline-input" data-show-filter="month"><option value="">Todos</option>${monthOpts}</select></div>
+      <div><label class="filter-label">Sala</label><select class="inline-input" data-show-filter="venueId"><option value="">Todas</option>${venueOpts}</select></div>
+      <div><label class="filter-label">Obra</label><select class="inline-input" data-show-filter="workId"><option value="">Todas</option>${workOpts}</select></div>
+      <div><label class="filter-label">Acuerdo</label><select class="inline-input" data-show-filter="agreementId"><option value="">Todos</option>${agrOpts}</select></div>
+      <div><label class="filter-label">Orden</label><select class="inline-input" data-show-filter="sort"><option value="dateDesc" ${S.showFilters.sort==='dateDesc'?'selected':''}>Fecha reciente</option><option value="dateAsc" ${S.showFilters.sort==='dateAsc'?'selected':''}>Fecha antigua</option><option value="workAsc" ${S.showFilters.sort==='workAsc'?'selected':''}>Obra A-Z</option><option value="venueAsc" ${S.showFilters.sort==='venueAsc'?'selected':''}>Sala A-Z</option>${isAdmin?`<option value="restDesc" ${S.showFilters.sort==='restDesc'?'selected':''}>Mayor restante</option><option value="ventaDesc" ${S.showFilters.sort==='ventaDesc'?'selected':''}>Mayor venta neta</option>`:''}</select></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><p class="show-result-note">Busca sin perder el foco y combina filtros para encontrar funciones rápido.</p><button class="btn btn-ghost btn-sm" data-action="clearShowFilters">Limpiar filtros</button></div>
+  </div>
+  <div class="show-table-desktop table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th>${isAdmin?thAdmin:''}<th class="right">Acciones</th></tr></thead><tbody>${rowsHtml}<tr id="show-list-empty-live" style="display:${cs.length?'none':''}"><td colspan="${colspan}" class="empty">Sin funciones con estos filtros</td></tr></tbody></table></div>
+  <div>${cardsHtml}<div id="show-list-empty-cards" class="card show-mobile-card" style="display:${cs.length?'none':'block'}"><div class="empty">Sin funciones con estos filtros</div></div></div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -655,6 +735,7 @@ function bindEvents(){
       if(a==='logout')       return handleLogout();
       if(a==='refresh')      return loadFromSheet({manual:true});
       if(a==='resetDashboardFilters'){resetDashboardFilters();return render();}
+      if(a==='clearShowFilters'){S.search='';S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};return render();}
       if(a==='saveNewShow')  {btn.disabled=true;btn.innerHTML='⏳ Guardando...';return handleSaveShow();}
       if(a==='saveConfig')   return saveConfigToSheet();
       if(a==='addConfig')    return addConfigItem(btn.dataset.addConfigTab);
@@ -707,8 +788,19 @@ function bindEvents(){
     };
   });
 
+  document.querySelectorAll('[data-show-filter]').forEach(el=>{
+    el.onchange=()=>{
+      ensureShowFilters();
+      S.showFilters[el.dataset.showFilter]=el.value;
+      render();
+    };
+  });
+
   const si=document.querySelector('[data-bind="search"]');
-  if(si) si.oninput=()=>{S.search=si.value;render();};
+  if(si){
+    si.oninput=()=>updateShowSearchLive();
+    si.onsearch=()=>updateShowSearchLive();
+  }
   const sm=document.querySelector('[data-bind="summaryMonth"]');
   if(sm) sm.onchange=()=>{S.summaryMonth=sm.value;render();};
   // campos básicos — solo 'input', nunca 'change'+'input' juntos (evita doble disparo)
