@@ -61,6 +61,19 @@ function normalize(t){ return String(t||'').toLowerCase().normalize('NFD').repla
 function showToast(msg,type='success'){ S.toast={message:msg,type}; clearTimeout(S.toastTimer); S.toastTimer=setTimeout(()=>{S.toast=null;render();},3500); render(); }
 function logoSVG(w=150){ const h=w*.55; return `<svg width="${w}" height="${h}" viewBox="-28 -8 336 174" preserveAspectRatio="xMidYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible"><text x="140" y="68" text-anchor="middle" font-family="'Outfit','Arial Black',sans-serif" font-size="48" font-weight="900" letter-spacing="4" fill="var(--text)">LA OPCIÓN</text><line x1="4" y1="82" x2="276" y2="82" stroke="var(--cyan)" stroke-width="4"/><line x1="4" y1="92" x2="276" y2="92" stroke="var(--pink)" stroke-width="4"/><line x1="4" y1="102" x2="276" y2="102" stroke="var(--yellow)" stroke-width="4"/><text x="140" y="132" text-anchor="middle" font-family="'Outfit','Arial',sans-serif" font-size="20" font-weight="300" letter-spacing="9" fill="var(--text-muted)">PRODUCCIONES</text></svg>`; }
 function roleLabel(r){ return r==='admin'?'Administrador':'Usuario'; }
+function defaultViewForRole(role){ return role==='admin'?'dashboard':'shows'; }
+function isAdminOnlyView(view){ return ['dashboard','summary','admin'].includes(view); }
+function isViewAllowedForRole(view,role){ return role==='admin'||!isAdminOnlyView(view); }
+function normalizeCurrentView(){
+  if(S.user && !isViewAllowedForRole(S.view,S.role)){
+    S.view=defaultViewForRole(S.role);
+    S.selectedId=null;
+    S.editShowId=null;
+    S.newShowDraft=null;
+    S.isDuplicating=false;
+    S.duplicateSourceId=null;
+  }
+}
 
 async function apiPost(payload){
   const body={...payload};
@@ -73,7 +86,13 @@ async function apiPost(payload){
   return data;
 }
 
-function saveSession(token,user){ S.token=token; S.user=user; S.role=user.role; localStorage.setItem(STORAGE_KEY,JSON.stringify({token,user})); }
+function saveSession(token,user){
+  S.token=token;
+  S.user=user;
+  S.role=user.role;
+  normalizeCurrentView();
+  localStorage.setItem(STORAGE_KEY,JSON.stringify({token,user}));
+}
 function clearSession(rn=true){ S.token='';S.user=null;S.role=null;S.view='dashboard';S.selectedId=null;S.editShowId=null;S.users=[];S.newShowDraft=null;S.isDuplicating=false;S.duplicateSourceId=null;localStorage.removeItem(STORAGE_KEY);if(rn)render(); }
 
 async function boot(){
@@ -82,7 +101,7 @@ async function boot(){
   try{
     const saved=JSON.parse(raw);
     if(!saved.token) throw new Error('Sin token');
-    S.token=saved.token;S.user=saved.user||null;S.role=saved.user?.role||null;S.isBooting=true;render();
+    S.token=saved.token;S.user=saved.user||null;S.role=saved.user?.role||null;normalizeCurrentView();S.isBooting=true;render();
     const me=await apiPost({action:'me'});
     saveSession(S.token,me.user);
     await loadFromSheet();
@@ -313,6 +332,7 @@ async function loadUsers(){
 function render(){
   if(S.isBooting&&!S.user){$app.innerHTML=`<div class="login-screen"><div class="spinner"></div><div class="loading-text">Comprobando sesión...</div></div>`;return;}
   if(!S.user){$app.innerHTML=renderLogin();bindLogin();return;}
+  normalizeCurrentView();
   const toastHtml=S.toast?`<div class="toast ${S.toast.type}">${esc(S.toast.message)}</div>`:'';
   const loadingHtml=(S.isLoading||S.isSaving)?`<div class="loading-overlay"><div class="spinner"></div><div class="loading-text">${S.isSaving?'Guardando...':'Cargando datos...'}</div></div>`:'';
   $app.innerHTML=`<div class="app">${renderSidebar()}<div class="main">${renderView()}</div></div>${toastHtml}${loadingHtml}`;
@@ -342,13 +362,16 @@ function renderSidebar(){
   const isAdmin=S.role==='admin';
   const items=isAdmin
     ?[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Nueva Función',icon:'➕'},{id:'summary',label:'Resumen Mensual',icon:'📋'},{id:'admin',label:'Administración',icon:'⚙️'}]
-    :[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar Ingreso',icon:'➕'}];
+    :[{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar Ingreso',icon:'➕'}];
   const navBtns=items.map(it=>`<button class="nav-btn ${S.view===it.id?'active':''}" data-view="${it.id}">${it.icon} ${it.label}</button>`).join('');
   const rc=isAdmin?'var(--pink-dim)':'var(--cyan-dim)',rt=isAdmin?'var(--pink)':'var(--cyan)';
   return `<div class="sidebar"><div class="sidebar-header">${logoSVG(155)}</div><div class="nav">${navBtns}</div><div class="sidebar-footer"><div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><div class="role-pill" style="background:${rc};color:${rt}">${isAdmin?'A':'U'}</div><div><div style="font-size:12px;font-weight:600">${esc(S.user.email)}</div><div style="font-size:10px;color:var(--text-dim)">${roleLabel(S.role)}</div></div></div><button class="btn btn-ghost btn-sm" data-action="logout" style="width:100%;justify-content:flex-start;gap:7px">🚪 Cerrar sesión</button></div></div>`;
 }
 
 function renderView(){
+  if(!isViewAllowedForRole(S.view,S.role)){
+    S.view=defaultViewForRole(S.role);
+  }
   switch(S.view){
     case 'dashboard': return renderDashboard();
     case 'shows':     return renderShowList();
@@ -609,7 +632,13 @@ function bindEvents(){
   document.querySelectorAll('[data-view]').forEach(btn=>{
     btn.onclick=()=>{
       if(S.isSaving)return showToast('Espera a que termine el guardado.','warn');
-      S.view=btn.dataset.view;
+      const targetView=btn.dataset.view;
+      if(!isViewAllowedForRole(targetView,S.role)){
+        S.view=defaultViewForRole(S.role);
+        showToast('No tienes permisos para acceder a esa sección.','error');
+        return render();
+      }
+      S.view=targetView;
       S.selectedId=null;
       S.editShowId=null;
       S.isDuplicating=false;
