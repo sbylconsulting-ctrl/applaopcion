@@ -476,30 +476,32 @@ function bindEvents(){
   if(si) si.oninput=()=>{S.search=si.value;render();};
   const sm=document.querySelector('[data-bind="summaryMonth"]');
   if(sm) sm.onchange=()=>{S.summaryMonth=sm.value;render();};
-  // campos básicos
+  // campos básicos — solo 'input', nunca 'change'+'input' juntos (evita doble disparo)
   document.querySelectorAll('[data-field]').forEach(el=>{
-    el.onchange=el.oninput=()=>{
+    el.oninput=()=>{
       if(!S.newShowDraft) S.newShowDraft=emptyDraft();
       S.newShowDraft[el.dataset.field]=el.value;
     };
   });
   // ingresos plataformas
   document.querySelectorAll('[data-plat-id]').forEach(el=>{
-    el.onchange=el.oninput=()=>{
+    el.oninput=()=>{
       if(!S.newShowDraft) S.newShowDraft=emptyDraft();
       if(!S.newShowDraft.income) S.newShowDraft.income={};
-      S.newShowDraft.income[el.dataset.platId]=el.value;
+      // Guardar como número directamente, nunca como string
+      S.newShowDraft.income[el.dataset.platId]=parseFloat(el.value)||0;
     };
   });
-  // gastos planos
+  // gastos planos: UN SOLO evento, valor numérico inmediato
   document.querySelectorAll('[data-expense-flat]').forEach(el=>{
-    el.onchange=el.oninput=()=>{
+    el.oninput=()=>{
       if(!S.newShowDraft) S.newShowDraft=emptyDraft();
+      // parseFloat una sola vez, nunca acumular
       S.newShowDraft[el.dataset.expenseFlat]=parseFloat(el.value)||0;
     };
   });
   document.querySelectorAll('[data-cfg-field]').forEach(el=>{
-    el.onchange=el.oninput=()=>updateConfigFromInput(el);
+    el.onchange=()=>updateConfigFromInput(el);
   });
 }
 
@@ -568,9 +570,12 @@ async function handleSaveShow(){
 
   if(Object.values(income).some(v=>v<0))return showToast('No se admiten importes negativos','error');
 
-  const autorPct=Math.max(0,parseFloat(d.autorPct)||0);
-  const otrosGastos=Math.max(0,parseFloat(d.otrosGastos)||0);
-  const venueRental=Number(venue?.alquiler||0);
+  // Sanitizar al guardar: parseFloat sobre el valor crudo del draft,
+  // nunca Number(string_acumulado). Si el draft tiene "4.424.42" por
+  // doble disparo, parseFloat devuelve 4.42 (para en el primer punto).
+  const autorPct   = Math.max(0, parseFloat(String(d.autorPct    ?? 0)) || 0);
+  const otrosGastos= Math.max(0, parseFloat(String(d.otrosGastos ?? 0)) || 0);
+  const venueRental= Number(venue?.alquiler || 0);
 
   // Si es edición, mantiene el appId existente; si es nuevo, genera uno
   const appId=d.appId||gid('s');
