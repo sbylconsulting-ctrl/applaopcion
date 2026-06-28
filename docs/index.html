@@ -6,7 +6,6 @@
   <title>La Opción Producciones</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-
     :root {
       --bg:#0A0A0F; --surface:#111118; --surface-alt:#16161F; --card:#1A1A24;
       --border:#2A2A3A; --border-light:#35354A; --text:#EEEEF4; --text-muted:#9090AA; --text-dim:#606078;
@@ -34,266 +33,566 @@ const STORAGE_KEY = 'laopcion_session_v3';
 const $app = document.getElementById('app');
 
 const S = {
-  token: '', user: null, role: null, view: 'dashboard', selectedId: null, search: '', toast: null, toastTimer: null,
-  adminTab: 'platforms', summaryMonth: '', isLoading: false, isSaving: false, isRefreshing: false, isBooting: false, isLoggingIn: false,
-  lastSyncAt: '', loadError: null, configDirty: false, users: [], newShowDraft: null,
-  config: { platforms: [], venues: [], works: [], expenseTypes: [], agreements: [] }, shows: []
+  token:'', user:null, role:null, view:'dashboard', selectedId:null, editShowId:null,
+  search:'', toast:null, toastTimer:null,
+  adminTab:'platforms', summaryMonth:'', isLoading:false, isSaving:false, isRefreshing:false,
+  isBooting:false, isLoggingIn:false, lastSyncAt:'', loadError:null, configDirty:false,
+  users:[], newShowDraft:null,
+  config:{ platforms:[], venues:[], works:[], expenseTypes:[], agreements:[] }, shows:[]
 };
-let SAVE_LOCK = false; let REFRESH_LOCK = false; let LOGIN_LOCK = false;
+let SAVE_LOCK=false; let REFRESH_LOCK=false; let LOGIN_LOCK=false;
 
 const CONFIG_META = {
-  platforms: { key:'platforms', title:'Plataformas', singular:'plataforma', prefix:'p' },
-  venues: { key:'venues', title:'Salas', singular:'sala', prefix:'v' },
-  works: { key:'works', title:'Obras', singular:'obra', prefix:'w' },
-  agreements: { key:'agreements', title:'Acuerdos', singular:'acuerdo', prefix:'a' },
-  expenses: { key:'expenseTypes', title:'Gastos', singular:'gasto', prefix:'et' },
+  platforms: { key:'platforms',  title:'Plataformas', singular:'plataforma', prefix:'p'  },
+  venues:    { key:'venues',     title:'Salas',        singular:'sala',       prefix:'v'  },
+  works:     { key:'works',      title:'Obras',        singular:'obra',       prefix:'w'  },
+  agreements:{ key:'agreements', title:'Acuerdos',     singular:'acuerdo',    prefix:'a'  },
+  expenses:  { key:'expenseTypes',title:'Gastos',      singular:'gasto',      prefix:'et' },
 };
 
-function gid(prefix='id') { return prefix + '_' + (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)).slice(0, 8); }
-function fmt(n) { return new Intl.NumberFormat('es-ES', { style:'currency', currency:'EUR', minimumFractionDigits:2 }).format(Number(n || 0)); }
-function fmtPct(n) { return `${Number(n || 0).toFixed(2)}%`; }
-function r2(n) { return Math.round(Number(n || 0) * 100) / 100; }
-function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-function normalize(text) { return String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
-function showToast(message, type='success') { S.toast = { message, type }; clearTimeout(S.toastTimer); S.toastTimer = setTimeout(() => { S.toast = null; render(); }, 3500); render(); }
+function gid(p='id'){ return p+'_'+(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36)).slice(0,8); }
+function fmt(n){ return new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(Number(n||0)); }
+function fmtPct(n){ return `${Number(n||0).toFixed(2)}%`; }
+function r2(n){ return Math.round(Number(n||0)*100)/100; }
+function esc(s){ return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function normalize(t){ return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+function showToast(msg,type='success'){ S.toast={message:msg,type}; clearTimeout(S.toastTimer); S.toastTimer=setTimeout(()=>{S.toast=null;render();},3500); render(); }
 function logoSVG(w=150){ const h=w*.55; return `<svg width="${w}" height="${h}" viewBox="0 0 280 154" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="140" y="68" text-anchor="middle" font-family="'Outfit','Arial Black',sans-serif" font-size="52" font-weight="900" letter-spacing="6" fill="var(--text)">LA OPCIÓN</text><line x1="10" y1="82" x2="270" y2="82" stroke="var(--cyan)" stroke-width="4"/><line x1="10" y1="92" x2="270" y2="92" stroke="var(--pink)" stroke-width="4"/><line x1="10" y1="102" x2="270" y2="102" stroke="var(--yellow)" stroke-width="4"/><text x="140" y="132" text-anchor="middle" font-family="'Outfit','Arial',sans-serif" font-size="22" font-weight="300" letter-spacing="12" fill="var(--text-muted)">PRODUCCIONES</text></svg>`; }
-function roleLabel(role){ return role === 'admin' ? 'Administrador' : 'Usuario'; }
+function roleLabel(r){ return r==='admin'?'Administrador':'Usuario'; }
 
-async function apiPost(payload) {
-  const body = { ...payload };
-  if (S.token && body.action !== 'login' && body.token === undefined) body.token = S.token;
-  const resp = await fetch(API_URL, { method:'POST', headers:{ 'Content-Type':'text/plain' }, cache:'no-store', body: JSON.stringify(body) });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const data = await resp.json();
-  if (!data.ok) {
-    const msg = data.error || 'Error desconocido';
-    if (/sesión|sesion|token|caducado/i.test(msg)) clearSession(false);
-    throw new Error(msg);
-  }
-  if (data.user) { S.user = data.user; S.role = data.user.role; }
+async function apiPost(payload){
+  const body={...payload};
+  if(S.token&&body.action!=='login'&&body.token===undefined) body.token=S.token;
+  const resp=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},cache:'no-store',body:JSON.stringify(body)});
+  if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const data=await resp.json();
+  if(!data.ok){ const msg=data.error||'Error desconocido'; if(/sesión|sesion|token|caducado/i.test(msg)) clearSession(false); throw new Error(msg); }
+  if(data.user){ S.user=data.user; S.role=data.user.role; }
   return data;
 }
 
-function saveSession(token, user){ S.token = token; S.user = user; S.role = user.role; localStorage.setItem(STORAGE_KEY, JSON.stringify({ token, user })); }
-function clearSession(renderNow=true){ S.token=''; S.user=null; S.role=null; S.view='dashboard'; S.selectedId=null; S.users=[]; S.newShowDraft=null; localStorage.removeItem(STORAGE_KEY); if (renderNow) render(); }
+function saveSession(token,user){ S.token=token; S.user=user; S.role=user.role; localStorage.setItem(STORAGE_KEY,JSON.stringify({token,user})); }
+function clearSession(rn=true){ S.token='';S.user=null;S.role=null;S.view='dashboard';S.selectedId=null;S.editShowId=null;S.users=[];S.newShowDraft=null;localStorage.removeItem(STORAGE_KEY);if(rn)render(); }
+
 async function boot(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) { render(); return; }
-  try {
-    const saved = JSON.parse(raw);
-    if (!saved.token) throw new Error('Sin token');
-    S.token = saved.token; S.user = saved.user || null; S.role = saved.user?.role || null; S.isBooting = true; render();
-    const me = await apiPost({ action:'me' });
-    saveSession(S.token, me.user);
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(!raw){render();return;}
+  try{
+    const saved=JSON.parse(raw);
+    if(!saved.token) throw new Error('Sin token');
+    S.token=saved.token;S.user=saved.user||null;S.role=saved.user?.role||null;S.isBooting=true;render();
+    const me=await apiPost({action:'me'});
+    saveSession(S.token,me.user);
     await loadFromSheet();
-    if (S.role === 'admin') await loadUsers();
-  } catch (err) { clearSession(false); }
-  S.isBooting = false; render();
+    if(S.role==='admin') await loadUsers();
+  }catch(err){clearSession(false);}
+  S.isBooting=false;render();
 }
 
-function sheetShowToAppShow(raw, config) {
-  const venue = config.venues.find(v => normalize(v.name) === normalize(raw.sala)) || null;
-  const work = config.works.find(w => normalize(w.name) === normalize(raw.obra)) || null;
-  const agreement = config.agreements.find(a => normalize(a.name) === normalize(raw.acuerdo)) || null;
-  const platformSnapshots = {}; const income = {};
+// ══════════════════════════════════════════════════════════════
+// CONVERSIÓN SHEET → APP
+// ══════════════════════════════════════════════════════════════
+function sheetShowToAppShow(raw,config){
+  const venue=config.venues.find(v=>normalize(v.name)===normalize(raw.sala))||null;
+  const work=config.works.find(w=>normalize(w.name)===normalize(raw.obra))||null;
+  const agreement=config.agreements.find(a=>normalize(a.name)===normalize(raw.acuerdo))||null;
+  const platformSnapshots={},income={};
 
-  if (Array.isArray(raw.platformData) && raw.platformData.length) {
-    raw.platformData.forEach(p => {
-      const id = p.id || gid('p');
-      const cfg = config.platforms.find(x => x.id === id || normalize(x.name) === normalize(p.name));
-      const pid = cfg?.id || id;
-      const amt = Number(p.income || 0);
-      income[pid] = amt;
-      platformSnapshots[pid] = { name: cfg?.name || p.name || 'Plataforma', commission: Number(p.commission ?? cfg?.commission ?? 0), ivaOnCommission: Boolean(p.ivaOnCommission ?? cfg?.ivaOnCommission), income: amt };
+  if(Array.isArray(raw.platformData)&&raw.platformData.length){
+    raw.platformData.forEach(p=>{
+      const cfg=config.platforms.find(x=>x.id===p.id||normalize(x.name)===normalize(p.name));
+      const pid=cfg?.id||p.id||gid('p');
+      const amt=Number(p.income||0);
+      income[pid]=amt;
+      platformSnapshots[pid]={name:cfg?.name||p.name||'Plataforma',commission:Number(p.commission??cfg?.commission??0),ivaOnCommission:Boolean(p.ivaOnCommission??cfg?.ivaOnCommission),income:amt};
     });
   } else {
-    const platMap = { atrapalo:'Atrápalo', fever:'Fever', kultur:'Kultur', abonoteatro:'Abonoteatro', laopcion:'Laopcion', universe:'Universe' };
-    Object.entries(platMap).forEach(([sheetKey, platName]) => {
-      const amt = Number(raw[sheetKey] || 0); const pl = config.platforms.find(p => normalize(p.name) === normalize(platName));
-      if (pl) { income[pl.id] = amt; platformSnapshots[pl.id] = { name: pl.name, commission: pl.commission, ivaOnCommission: pl.ivaOnCommission, income: amt }; }
+    const platMap={atrapalo:'Atrápalo',fever:'Fever',kultur:'Kultur',abonoteatro:'Abonoteatro',laopcion:'Laopcion',universe:'Universe'};
+    Object.entries(platMap).forEach(([k,platName])=>{
+      const amt=Number(raw[k]||0);
+      const pl=config.platforms.find(p=>normalize(p.name)===normalize(platName));
+      if(pl){income[pl.id]=amt;platformSnapshots[pl.id]={name:pl.name,commission:pl.commission,ivaOnCommission:pl.ivaOnCommission,income:amt};}
     });
   }
-  income.cashBox = Number(raw.efectivo || 0); income.cardBox = Number(raw.tarjeta || 0);
-  const expenses = [];
-  if (Number(raw.autor || 0) > 0) expenses.push({ id:'et_autor', typeId:'et_autor', typeName:'Autor', amount:Number(raw.autor || 0) });
-  // El alquiler ya no se introduce como gasto manual: se toma de la sala.
-  // Para registros antiguos, usamos el alquiler guardado en la fila; para nuevos, el configurado en la sala.
-  const venueRental = Number(raw.alquiler || venue?.alquiler || 0);
-  if (Number(raw.otrosGastos || 0) > 0) expenses.push({ id:'et_otros', typeId:'et_otros', typeName:'Otros gastos', amount:Number(raw.otrosGastos || 0) });
-  return { id: raw.id || raw.appId || gid('s'), appId: raw.appId || raw.id || '', venueId: venue?.id || '', workId: work?.id || '', venueName: raw.sala || '', workName: raw.obra || '', date: raw.fecha || '', time:'', agreementId: agreement?.id || '', agreementSnapshot: agreement ? { name:agreement.name, mode:agreement.mode, value:agreement.value } : null, notes: raw.observaciones || '', income, platformSnapshots, expenses, venueRental, status:{} };
-}
+  income.cashBox=Number(raw.efectivo||0);
+  income.cardBox=Number(raw.tarjeta||0);
 
-function appShowToSheetData(show, config) {
-  const ps = show.platformSnapshots || {}; const inc = show.income || {}; const expenses = show.expenses || [];
-  function findAmount(platName){ const pl = config.platforms.find(p => normalize(p.name) === normalize(platName)); return pl ? Number(inc[pl.id] ?? ps[pl.id]?.income ?? 0) : 0; }
-  const platformData = Object.entries(ps).map(([id, snap]) => ({ id, name:snap.name, income:Number(inc[id] ?? snap.income ?? 0), commission:Number(snap.commission || 0), ivaOnCommission:snap.ivaOnCommission === true }));
-  const expenseData = expenses.map(e => ({ id:e.id || e.typeId || gid('ex'), typeId:e.typeId || e.id || '', name:e.typeName || e.name || 'Gasto', amount:Number(e.amount || 0) })).filter(e => e.amount > 0 && !normalize(e.name).includes('alquiler'));
-  const autor = expenseData.filter(e => normalize(e.name).includes('autor')).reduce((sum,e)=>sum+Number(e.amount||0),0);
-  const otrosGastos = expenseData.filter(e => !normalize(e.name).includes('autor')).reduce((sum,e)=>sum+Number(e.amount||0),0);
-  const venue = config.venues.find(v => v.id === show.venueId || normalize(v.name) === normalize(show.venueName));
-  const alquiler = Number(show.venueRental ?? venue?.alquiler ?? 0);
-  const c = calcShow(show);
-  return { action:'saveShow', appId: show.appId || show.id || gid('s'), sala: show.venueName || '', obra: show.workName || '', fecha: show.date || '',
-    atrapalo: findAmount('Atrápalo'), fever: findAmount('Fever'), kultur: findAmount('Kultur'), abonoteatro: findAmount('Abonoteatro'), laopcion: findAmount('Laopcion'), universe: findAmount('Universe'),
-    efectivo: Number(inc.cashBox || 0), tarjeta: Number(inc.cardBox || 0), autor:r2(autor), otrosGastos:r2(otrosGastos), alquiler:r2(alquiler), cache:c.cache, acuerdo:c.agreement?.name || '', observaciones: show.notes || '', platformData, expenseData };
-}
-
-function calcShow(show) {
-  const ps = show.platformSnapshots || {}; const inc = show.income || {}; const commissions = [];
-  let totalPlatIncome = 0; let totalComm = 0;
-  Object.entries(ps).forEach(([pid, snap]) => {
-    const amt = r2(Number(inc[pid] ?? snap.income ?? 0)); totalPlatIncome += amt;
-    const base = r2(amt * Number(snap.commission || 0) / 100); const iva = snap.ivaOnCommission ? r2(base * 0.21) : 0; const total = r2(base + iva);
-    commissions.push({ id:pid, name:snap.name, income:amt, commBase:base, commIva:iva, commTotal:total }); totalComm += total;
-  });
-  const cashBox = r2(parseFloat(inc.cashBox) || 0); const cardBox = r2(parseFloat(inc.cardBox) || 0);
-  const ventaBruta = r2(totalPlatIncome + cashBox + cardBox); const ventaNeta = r2(ventaBruta / 1.10);
-  const manualExp = (show.expenses || []).filter(e=>!normalize(e.typeName || e.name).includes('alquiler')).reduce((s,e)=>s+r2(parseFloat(e.amount)||0),0);
-  const venueRental = r2(Number(show.venueRental || 0));
-  const totalGastos = r2(totalComm + manualExp + venueRental); const totalNeto = r2(ventaNeta - totalGastos); const agr = show.agreementSnapshot; let cache = 0;
-  if (agr) cache = agr.mode === 'percentage' ? r2(totalNeto * agr.value / 100) : r2(agr.value);
-  return { commissions, cashBox, cardBox, ventaBruta, ventaNeta, totalComm:r2(totalComm), manualExp:r2(manualExp), venueRental, totalGastos, totalNeto, cache, restanteOpcion:r2(totalNeto-cache), agreement:agr };
-}
-
-async function loadFromSheet(opts={}) {
-  const manual = !!opts.manual; if (REFRESH_LOCK) return; REFRESH_LOCK = true; S.isLoading = !S.isSaving; S.isRefreshing = manual; S.loadError = null; render();
-  try {
-    const data = await apiPost({ action:'getAll' });
-    if (data.config) S.config = { platforms:data.config.platforms||[], venues:data.config.venues||[], works:data.config.works||[], expenseTypes:data.config.expenseTypes||[], agreements:data.config.agreements||[] };
-    S.shows = Array.isArray(data.shows) ? data.shows.map(raw => sheetShowToAppShow(raw, S.config)) : [];
-    if (S.shows.length > 0 && !S.summaryMonth) { const months = [...new Set(S.shows.map(s => (s.date||'').slice(0,7)).filter(Boolean))].sort().reverse(); S.summaryMonth = months[0] || ''; }
-    S.lastSyncAt = new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-    if (manual) showToast(`Datos actualizados desde el Sheet (${S.shows.length} funciones)`, 'success');
-  } catch (err) { S.loadError = err.message; showToast('Error al cargar datos: ' + err.message, 'error'); }
-  finally { S.isLoading = false; S.isRefreshing = false; REFRESH_LOCK = false; render(); }
-}
-
-async function saveShowToSheet(show) {
-  if (SAVE_LOCK || S.isSaving) { showToast('Ya se está guardando. Espera a que termine.', 'warn'); return; }
-  SAVE_LOCK = true; S.isSaving = true; render();
-  try { await apiPost(appShowToSheetData(show, S.config)); await loadFromSheet(); S.view='shows'; S.selectedId=null; S.newShowDraft=null; showToast('Función guardada correctamente','success'); }
-  catch(err){ showToast('Error al guardar: ' + err.message, 'error'); }
-  finally { S.isSaving = false; SAVE_LOCK = false; render(); }
-}
-
-async function saveConfigToSheet() {
-  if (S.role !== 'admin') return showToast('No tienes permisos.', 'error');
-  S.isSaving = true; render();
-  try { await apiPost({ action:'saveConfig', config:S.config }); S.configDirty = false; showToast('Configuración guardada', 'success'); await loadFromSheet(); }
-  catch(err){ showToast('Error al guardar configuración: ' + err.message, 'error'); }
-  finally { S.isSaving = false; render(); }
-}
-async function loadUsers() { if (S.role !== 'admin') return; try { const data = await apiPost({ action:'listUsers' }); S.users = data.users || []; } catch(err) { showToast('Error al cargar usuarios: ' + err.message, 'error'); } render(); }
-
-function render() {
-  if (S.isBooting && !S.user) { $app.innerHTML = `<div class="login-screen"><div class="spinner"></div><div class="loading-text">Comprobando sesión...</div></div>`; return; }
-  if (!S.user) { $app.innerHTML = renderLogin(); bindLogin(); return; }
-  const toastHtml = S.toast ? `<div class="toast ${S.toast.type}">${esc(S.toast.message)}</div>` : '';
-  const loadingHtml = S.isLoading || S.isSaving ? `<div class="loading-overlay"><div class="spinner"></div><div class="loading-text">${S.isSaving ? 'Guardando...' : 'Cargando datos del Sheet...'}</div></div>` : '';
-  $app.innerHTML = `<div class="app">${renderSidebar()}<div class="main">${renderView()}</div></div>${toastHtml}${loadingHtml}`;
-  bindEvents();
-}
-
-function renderLogin() {
-  const loading = S.isLoggingIn === true;
-  return `<div class="login-screen"><div class="login-box"><div style="margin-bottom:36px">${logoSVG(220)}</div><div class="card" style="padding:28px;text-align:left"><p style="color:var(--text-muted);margin:0 0 20px;font-size:13px;text-align:center">Acceso privado · La Opción Producciones</p><form id="login-form"><div class="field"><label>Correo electrónico</label><input type="email" id="login-email" autocomplete="username" placeholder="correo@ejemplo.com" required ${loading?'disabled':''} /></div><div class="field"><label>Contraseña</label><input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••" required ${loading?'disabled':''} /></div><button id="login-submit" class="btn btn-primary" style="width:100%;margin-top:6px" type="submit" ${loading?'disabled':''}>${loading?'⏳ Entrando...':'Entrar'}</button></form></div></div></div>`;
-}
-function bindLogin(){
-  const form=document.getElementById('login-form'); if(!form)return;
-  form.onsubmit=async(e)=>{
-    e.preventDefault();
-    if (LOGIN_LOCK || S.isLoggingIn) return;
-    const email=document.getElementById('login-email').value.trim();
-    const password=document.getElementById('login-password').value;
-    if(!email || !password) return showToast('Introduce email y contraseña.','error');
-    LOGIN_LOCK=true; S.isLoggingIn=true;
-    const btn=document.getElementById('login-submit'); if(btn){ btn.disabled=true; btn.innerHTML='⏳ Entrando...'; }
-    try{
-      const res=await apiPost({action:'login',email,password});
-      saveSession(res.token,res.user);
-      await loadFromSheet();
-      if(S.role==='admin') await loadUsers();
-      showToast('Sesión iniciada','success');
-    }catch(err){ showToast(err.message,'error'); }
-    finally{ S.isLoggingIn=false; LOGIN_LOCK=false; render(); }
+  return {
+    id:raw.id||raw.appId||gid('s'), appId:raw.appId||raw.id||'',
+    venueId:venue?.id||'', workId:work?.id||'',
+    venueName:raw.sala||'', workName:raw.obra||'',
+    date:raw.fecha||'', time:'',
+    agreementId:agreement?.id||'',
+    agreementSnapshot:agreement?{name:agreement.name,mode:agreement.mode,value:agreement.value}:null,
+    notes:raw.observaciones||'',
+    income, platformSnapshots,
+    autorPct:Number(raw.autorPct||0),
+    otrosGastos:Number(raw.otrosGastos||0),
+    venueRental:Number(raw.alquiler||venue?.alquiler||0),
+    status:{}
   };
 }
 
-function renderSidebar(){ const isAdmin=S.role==='admin'; const items=isAdmin ? [{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Nueva Función',icon:'➕'},{id:'summary',label:'Resumen Mensual',icon:'📋'},{id:'admin',label:'Administración',icon:'⚙️'}] : [{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar Ingreso',icon:'➕'}]; const navBtns=items.map(it=>`<button class="nav-btn ${S.view===it.id?'active':''}" data-view="${it.id}">${it.icon} ${it.label}</button>`).join(''); const roleColor=isAdmin?'var(--pink-dim)':'var(--cyan-dim)'; const roleText=isAdmin?'var(--pink)':'var(--cyan)'; return `<div class="sidebar"><div class="sidebar-header">${logoSVG(155)}</div><div class="nav">${navBtns}</div><div class="sidebar-footer"><div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><div class="role-pill" style="background:${roleColor};color:${roleText}">${isAdmin?'A':'U'}</div><div><div style="font-size:12px;font-weight:600">${esc(S.user.email)}</div><div style="font-size:10px;color:var(--text-dim)">${roleLabel(S.role)}</div></div></div><button class="btn btn-ghost btn-sm" data-action="logout" style="width:100%;justify-content:flex-start;gap:7px">🚪 Cerrar sesión</button></div></div>`; }
-function renderView(){ switch(S.view){ case 'dashboard':return renderDashboard(); case 'shows':return renderShowList(); case 'newshow':return renderNewShow(); case 'detail':return renderShowDetail(); case 'summary':return renderSummary(); case 'admin':return renderAdmin(); default:return '<p>Vista no encontrada</p>'; } }
+// ══════════════════════════════════════════════════════════════
+// CONVERSIÓN APP → SHEET
+// autorPct = % sobre ventaNeta (backend calcula €)
+// otrosGastos = importe directo en € que se resta a la venta neta
+// ══════════════════════════════════════════════════════════════
+function appShowToSheetData(show,config){
+  const ps=show.platformSnapshots||{};
+  const inc=show.income||{};
+  const platformData=Object.entries(ps).map(([id,snap])=>({
+    id, name:snap.name, income:Number(inc[id]??snap.income??0),
+    commission:Number(snap.commission||0), ivaOnCommission:snap.ivaOnCommission===true
+  }));
+  function findAmount(platName){ const pl=config.platforms.find(p=>normalize(p.name)===normalize(platName)); return pl?Number(inc[pl.id]??ps[pl.id]?.income??0):0; }
+  const autorPct=r2(Number(show.autorPct||0));
+  const otrosGastos=r2(Number(show.otrosGastos||0));
+  const venue=config.venues.find(v=>v.id===show.venueId||normalize(v.name)===normalize(show.venueName));
+  const alquiler=r2(Number(show.venueRental??venue?.alquiler??0));
+  const c=calcShow(show);
+  return {
+    action:'saveShow', appId:show.appId||show.id||gid('s'),
+    sala:show.venueName||'', obra:show.workName||'', fecha:show.date||'',
+    atrapalo:findAmount('Atrápalo'), fever:findAmount('Fever'), kultur:findAmount('Kultur'),
+    abonoteatro:findAmount('Abonoteatro'), laopcion:findAmount('Laopcion'), universe:findAmount('Universe'),
+    efectivo:Number(inc.cashBox||0), tarjeta:Number(inc.cardBox||0),
+    autorPct, otrosGastos, alquiler,
+    cache:c.cache, acuerdo:c.agreement?.name||'',
+    observaciones:show.notes||'', platformData
+  };
+}
 
-function renderDashboard(){ if(S.shows.length===0&&!S.isLoading){ return `<h1 class="page-title">Dashboard</h1><p class="page-sub mb20">La Opción Producciones</p><div class="card"><div class="empty"><p style="font-size:16px;margin-bottom:8px">Sin datos todavía</p><p class="dim" style="font-size:13px">Los datos se cargan desde Google Sheets.</p><button class="btn btn-primary mt10" data-action="refresh">🔄 Actualizar desde Sheet</button></div></div>`; }
-  const cs=S.shows.map(s=>({...s,c:calcShow(s)})); const t=cs.reduce((a,s)=>({vb:a.vb+s.c.ventaBruta,vn:a.vn+s.c.ventaNeta,g:a.g+s.c.totalGastos,tn:a.tn+s.c.totalNeto,ca:a.ca+s.c.cache,ro:a.ro+s.c.restanteOpcion}),{vb:0,vn:0,g:0,tn:0,ca:0,ro:0});
-  const pm={}; cs.forEach(s=>s.c.commissions.forEach(c=>{pm[c.name]=(pm[c.name]||0)+c.income;})); const taq=cs.reduce((s,sh)=>s+sh.c.cashBox+sh.c.cardBox,0); const pe=Object.entries(pm).sort(([,a],[,b])=>b-a); const mx=Math.max(...pe.map(([,v])=>v),taq,1);
+// ══════════════════════════════════════════════════════════════
+// CÁLCULO LOCAL
+// ══════════════════════════════════════════════════════════════
+function calcShow(show){
+  const ps=show.platformSnapshots||{}, inc=show.income||{};
+  const commissions=[]; let totalPlatIncome=0, totalComm=0;
+  Object.entries(ps).forEach(([pid,snap])=>{
+    const amt=r2(Number(inc[pid]??snap.income??0)); totalPlatIncome+=amt;
+    const base=r2(amt*Number(snap.commission||0)/100);
+    const iva=snap.ivaOnCommission?r2(base*0.21):0;
+    const total=r2(base+iva);
+    commissions.push({id:pid,name:snap.name,income:amt,commBase:base,commIva:iva,commTotal:total});
+    totalComm+=total;
+  });
+  const cashBox=r2(parseFloat(inc.cashBox)||0);
+  const cardBox=r2(parseFloat(inc.cardBox)||0);
+  const ventaBruta=r2(totalPlatIncome+cashBox+cardBox);
+  const ventaNeta=r2(ventaBruta/1.10);
+  const autorPct=r2(Number(show.autorPct||0));
+  const autorImporte=r2(ventaNeta*autorPct/100);
+  const otrosGastos=r2(Number(show.otrosGastos||0));
+  const venueRental=r2(Number(show.venueRental||0));
+  const totalGastos=r2(totalComm+autorImporte+otrosGastos+venueRental);
+  const totalNeto=r2(ventaNeta-totalGastos);
+  const agr=show.agreementSnapshot; let cache=0;
+  if(agr) cache=agr.mode==='percentage'?r2(totalNeto*agr.value/100):r2(agr.value);
+  return {commissions,cashBox,cardBox,ventaBruta,ventaNeta,totalComm:r2(totalComm),autorImporte,otrosGastos,venueRental,totalGastos,totalNeto,cache,restanteOpcion:r2(totalNeto-cache),agreement:agr};
+}
+
+// ══════════════════════════════════════════════════════════════
+// DRAFT HELPERS — nuevo show o edición
+// ══════════════════════════════════════════════════════════════
+function emptyDraft(){ return {appId:'',workId:'',venueId:'',date:'',time:'',agreementId:'',notes:'',income:{},autorPct:0,otrosGastos:0}; }
+
+function showToDraft(show){
+  const d={
+    appId:show.appId||show.id||'',
+    workId:show.workId||'', venueId:show.venueId||'',
+    date:show.date||'', time:show.time||'',
+    agreementId:show.agreementId||'',
+    notes:show.notes||'',
+    income:{...show.income},
+    autorPct:Number(show.autorPct||0),
+    otrosGastos:Number(show.otrosGastos||0),
+  };
+  return d;
+}
+
+async function loadFromSheet(opts={}){
+  const manual=!!opts.manual;
+  if(REFRESH_LOCK) return;
+  REFRESH_LOCK=true;S.isLoading=!S.isSaving;S.isRefreshing=manual;S.loadError=null;render();
+  try{
+    const data=await apiPost({action:'getAll'});
+    if(data.config) S.config={platforms:data.config.platforms||[],venues:data.config.venues||[],works:data.config.works||[],expenseTypes:data.config.expenseTypes||[],agreements:data.config.agreements||[]};
+    S.shows=Array.isArray(data.shows)?data.shows.map(raw=>sheetShowToAppShow(raw,S.config)):[];
+    if(S.shows.length>0&&!S.summaryMonth){const months=[...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();S.summaryMonth=months[0]||'';}
+    S.lastSyncAt=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    if(manual) showToast(`Datos actualizados (${S.shows.length} funciones)`,'success');
+  }catch(err){S.loadError=err.message;showToast('Error al cargar datos: '+err.message,'error');}
+  finally{S.isLoading=false;S.isRefreshing=false;REFRESH_LOCK=false;render();}
+}
+
+async function saveShowToSheet(show){
+  if(SAVE_LOCK||S.isSaving){showToast('Ya se está guardando. Espera.','warn');return;}
+  SAVE_LOCK=true;S.isSaving=true;render();
+  try{
+    await apiPost(appShowToSheetData(show,S.config));
+    await loadFromSheet();
+    S.view='shows';S.selectedId=null;S.editShowId=null;S.newShowDraft=null;
+    showToast('Función guardada correctamente','success');
+  }catch(err){showToast('Error al guardar: '+err.message,'error');}
+  finally{S.isSaving=false;SAVE_LOCK=false;render();}
+}
+
+async function saveConfigToSheet(){
+  if(S.role!=='admin') return showToast('No tienes permisos.','error');
+  S.isSaving=true;render();
+  try{await apiPost({action:'saveConfig',config:S.config});S.configDirty=false;showToast('Configuración guardada','success');await loadFromSheet();}
+  catch(err){showToast('Error al guardar configuración: '+err.message,'error');}
+  finally{S.isSaving=false;render();}
+}
+
+async function loadUsers(){
+  if(S.role!=='admin') return;
+  try{const data=await apiPost({action:'listUsers'});S.users=data.users||[];}
+  catch(err){showToast('Error al cargar usuarios: '+err.message,'error');}
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════
+function render(){
+  if(S.isBooting&&!S.user){$app.innerHTML=`<div class="login-screen"><div class="spinner"></div><div class="loading-text">Comprobando sesión...</div></div>`;return;}
+  if(!S.user){$app.innerHTML=renderLogin();bindLogin();return;}
+  const toastHtml=S.toast?`<div class="toast ${S.toast.type}">${esc(S.toast.message)}</div>`:'';
+  const loadingHtml=(S.isLoading||S.isSaving)?`<div class="loading-overlay"><div class="spinner"></div><div class="loading-text">${S.isSaving?'Guardando...':'Cargando datos...'}</div></div>`:'';
+  $app.innerHTML=`<div class="app">${renderSidebar()}<div class="main">${renderView()}</div></div>${toastHtml}${loadingHtml}`;
+  bindEvents();
+}
+
+function renderLogin(){
+  const loading=S.isLoggingIn===true;
+  return `<div class="login-screen"><div class="login-box"><div style="margin-bottom:36px">${logoSVG(220)}</div><div class="card" style="padding:28px;text-align:left"><p style="color:var(--text-muted);margin:0 0 20px;font-size:13px;text-align:center">Acceso privado · La Opción Producciones</p><form id="login-form"><div class="field"><label>Correo electrónico</label><input type="email" id="login-email" autocomplete="username" placeholder="correo@ejemplo.com" required ${loading?'disabled':''}/></div><div class="field"><label>Contraseña</label><input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••" required ${loading?'disabled':''}/></div><button id="login-submit" class="btn btn-primary" style="width:100%;margin-top:6px" type="submit" ${loading?'disabled':''}>${loading?'⏳ Entrando...':'Entrar'}</button></form></div></div></div>`;
+}
+function bindLogin(){
+  const form=document.getElementById('login-form');if(!form)return;
+  form.onsubmit=async(e)=>{
+    e.preventDefault();if(LOGIN_LOCK||S.isLoggingIn)return;
+    const email=document.getElementById('login-email').value.trim();
+    const password=document.getElementById('login-password').value;
+    if(!email||!password)return showToast('Introduce email y contraseña.','error');
+    LOGIN_LOCK=true;S.isLoggingIn=true;
+    const btn=document.getElementById('login-submit');if(btn){btn.disabled=true;btn.innerHTML='⏳ Entrando...';}
+    try{const res=await apiPost({action:'login',email,password});saveSession(res.token,res.user);await loadFromSheet();if(S.role==='admin')await loadUsers();showToast('Sesión iniciada','success');}
+    catch(err){showToast(err.message,'error');}
+    finally{S.isLoggingIn=false;LOGIN_LOCK=false;render();}
+  };
+}
+
+function renderSidebar(){
+  const isAdmin=S.role==='admin';
+  const items=isAdmin
+    ?[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Nueva Función',icon:'➕'},{id:'summary',label:'Resumen Mensual',icon:'📋'},{id:'admin',label:'Administración',icon:'⚙️'}]
+    :[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar Ingreso',icon:'➕'}];
+  const navBtns=items.map(it=>`<button class="nav-btn ${S.view===it.id?'active':''}" data-view="${it.id}">${it.icon} ${it.label}</button>`).join('');
+  const rc=isAdmin?'var(--pink-dim)':'var(--cyan-dim)',rt=isAdmin?'var(--pink)':'var(--cyan)';
+  return `<div class="sidebar"><div class="sidebar-header">${logoSVG(155)}</div><div class="nav">${navBtns}</div><div class="sidebar-footer"><div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><div class="role-pill" style="background:${rc};color:${rt}">${isAdmin?'A':'U'}</div><div><div style="font-size:12px;font-weight:600">${esc(S.user.email)}</div><div style="font-size:10px;color:var(--text-dim)">${roleLabel(S.role)}</div></div></div><button class="btn btn-ghost btn-sm" data-action="logout" style="width:100%;justify-content:flex-start;gap:7px">🚪 Cerrar sesión</button></div></div>`;
+}
+
+function renderView(){
+  switch(S.view){
+    case 'dashboard': return renderDashboard();
+    case 'shows':     return renderShowList();
+    case 'newshow':   return renderShowForm(false);
+    case 'editshow':  return renderShowForm(true);
+    case 'detail':    return renderShowDetail();
+    case 'summary':   return renderSummary();
+    case 'admin':     return renderAdmin();
+    default: return '<p>Vista no encontrada</p>';
+  }
+}
+
+function renderDashboard(){
+  if(S.shows.length===0&&!S.isLoading)return`<h1 class="page-title">Dashboard</h1><p class="page-sub mb20">La Opción Producciones</p><div class="card"><div class="empty"><p style="font-size:16px;margin-bottom:8px">Sin datos todavía</p><button class="btn btn-primary mt10" data-action="refresh">🔄 Actualizar desde Sheet</button></div></div>`;
+  const cs=S.shows.map(s=>({...s,c:calcShow(s)}));
+  const t=cs.reduce((a,s)=>({vb:a.vb+s.c.ventaBruta,vn:a.vn+s.c.ventaNeta,g:a.g+s.c.totalGastos,tn:a.tn+s.c.totalNeto,ca:a.ca+s.c.cache,ro:a.ro+s.c.restanteOpcion}),{vb:0,vn:0,g:0,tn:0,ca:0,ro:0});
+  const pm={};cs.forEach(s=>s.c.commissions.forEach(c=>{pm[c.name]=(pm[c.name]||0)+c.income;}));
+  const taq=cs.reduce((s,sh)=>s+sh.c.cashBox+sh.c.cardBox,0);
+  const pe=Object.entries(pm).sort(([,a],[,b])=>b-a);
+  const mx=Math.max(...pe.map(([,v])=>v),taq,1);
   const barsHtml=pe.map(([name,total])=>`<div class="bar-row"><span class="bar-label">${esc(name)}</span><div class="bar-track"><div class="bar-fill" style="width:${(total/mx*100).toFixed(1)}%"></div></div><span class="bar-value">${fmt(total)}</span></div>`).join('')+`<div class="bar-row" style="padding-top:8px;border-top:1px solid var(--border);margin-top:6px"><span class="bar-label">Taquilla</span><div class="bar-track"><div class="bar-fill" style="width:${(taq/mx*100).toFixed(1)}%;background:var(--success)"></div></div><span class="bar-value">${fmt(taq)}</span></div>`;
   const rowsHtml=cs.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10).map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.totalNeto)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td></tr>`).join('');
   return `<div class="section-top"><div><h1 class="page-title">Dashboard</h1><p class="page-sub">La Opción Producciones · ${S.shows.length} funciones${S.lastSyncAt?` · Última actualización: ${S.lastSyncAt}`:''}</p></div><button class="btn btn-secondary btn-sm" data-action="refresh">${S.isRefreshing?'⏳ Actualizando...':'🔄 Actualizar desde Sheet'}</button></div><div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">Venta Bruta</div><div class="kpi-value cyan">${fmt(t.vb)}</div><div class="kpi-sub">${S.shows.length} funciones</div></div><div class="card"><div class="kpi-label">Venta Neta</div><div class="kpi-value purple">${fmt(t.vn)}</div></div><div class="card"><div class="kpi-label">Total Gastos</div><div class="kpi-value danger">${fmt(t.g)}</div></div><div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow">${fmt(t.tn)}</div></div><div class="card"><div class="kpi-label">Caché Salas</div><div class="kpi-value pink">${fmt(t.ca)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value success">${fmt(t.ro)}</div></div></div><div class="grid grid-2 mb20"><div class="card"><h3>Ventas por plataforma</h3>${barsHtml}</div><div class="card"><h3>Últimas funciones</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th class="right">V.Bruta</th><th class="right">T.Neto</th><th class="right">Restante</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="6" class="empty">Sin funciones</td></tr>'}</tbody></table></div></div></div>`;
 }
 
-function renderShowList(){ const q=S.search.toLowerCase(); const cs=S.shows.map(s=>({...s,c:calcShow(s)})).filter(s=>!q||(s.workName||'').toLowerCase().includes(q)||(s.venueName||'').toLowerCase().includes(q)||(s.date||'').includes(q)).sort((a,b)=>(b.date||'').localeCompare(a.date||'')); const rowsHtml=cs.map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td><td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td></tr>`).join(''); return `<div class="section-top"><div><h1 class="page-title">Funciones</h1><p class="page-sub">${S.shows.length} registradas</p></div><div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄</button><button class="btn btn-primary" data-view="newshow">➕ Nueva</button></div></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><span class="dim">🔍</span><input class="inline-input" type="text" placeholder="Buscar por obra, sala o fecha..." value="${esc(S.search)}" data-bind="search" style="max-width:300px" /></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th><th class="right">V.Bruta</th><th class="right">V.Neta</th><th class="right">Restante</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="7" class="empty">Sin funciones</td></tr>'}</tbody></table></div>`; }
+function renderShowList(){
+  const q=S.search.toLowerCase();
+  const cs=S.shows.map(s=>({...s,c:calcShow(s)})).filter(s=>!q||(s.workName||'').toLowerCase().includes(q)||(s.venueName||'').toLowerCase().includes(q)||(s.date||'').includes(q)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const isAdmin=S.role==='admin';
+  // Usuario: no ve V.Bruta, V.Neta ni Restante — solo fecha, obra, sala
+  const thAdmin=`<th class="right">V.Bruta</th><th class="right">V.Neta</th><th class="right">Restante</th>`;
+  const thUser=``;
+  const rowsHtml=cs.map(s=>`<tr><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td>${isAdmin?`<td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td>`:''}<td><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button></div></td></tr>`).join('');
+  return `<div class="section-top"><div><h1 class="page-title">Funciones</h1><p class="page-sub">${S.shows.length} registradas</p></div><div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄</button><button class="btn btn-primary" data-view="newshow">➕ Nueva</button></div></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><span class="dim">🔍</span><input class="inline-input" type="text" placeholder="Buscar por obra, sala o fecha..." value="${esc(S.search)}" data-bind="search" style="max-width:300px"/></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th>${isAdmin?thAdmin:thUser}<th></th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="8" class="empty">Sin funciones</td></tr>'}</tbody></table></div>`;
+}
 
-function renderShowDetail(){ const show=S.shows.find(s=>s.id===S.selectedId); if(!show)return '<div class="card"><div class="empty">Función no encontrada</div></div>'; const c=calcShow(show); const isA=S.role==='admin'; const incomeRows=c.commissions.filter(x=>x.income>0).map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px">${esc(x.name)}</div>${isA?`<div style="font-size:10px;color:var(--text-dim)">Com: ${fmt(x.commBase)}${x.commIva>0?` +IVA ${fmt(x.commIva)}`:''} = ${fmt(x.commTotal)}</div>`:''}</div><div style="text-align:right"><div style="font-size:13px;font-weight:700;color:var(--cyan)">${fmt(x.income)}</div>${isA?`<div style="font-size:10px;color:var(--danger)">-${fmt(x.commTotal)}</div>`:''}</div></div>`).join(''); const cashRows=[]; if(c.cashBox>0)cashRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Taquilla efectivo</span><span class="fw700 success">${fmt(c.cashBox)}</span></div>`); if(c.cardBox>0)cashRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Taquilla tarjeta</span><span class="fw700 success">${fmt(c.cardBox)}</span></div>`); return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">←</button><div><h1 class="page-title" style="font-size:22px">${esc(show.workName)}</h1><p class="page-sub">${esc(show.venueName)} · ${esc(show.date)}</p></div></div><div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">V. Bruta</div><div class="kpi-value cyan">${fmt(c.ventaBruta)}</div></div><div class="card"><div class="kpi-label">V. Neta</div><div class="kpi-value purple">${fmt(c.ventaNeta)}</div></div><div class="card"><div class="kpi-label">Gastos</div><div class="kpi-value danger">${fmt(c.totalGastos)}</div></div><div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow">${fmt(c.totalNeto)}</div></div><div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink">${fmt(c.cache)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</div></div></div><div class="grid grid-2 mb20"><div class="card"><h3>Ingresos por plataforma</h3>${incomeRows||'<div class="empty">Sin ingresos de plataforma</div>'}${cashRows.length?`<div style="padding-top:6px">${cashRows.join('')}</div>`:''}</div><div class="card"><h3>Reparto (${esc(c.agreement?.name||'—')})</h3><div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Total Neto</span><span class="fw700">${fmt(c.totalNeto)}</span></div><div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Caché sala</span><span class="fw700 pink">${fmt(c.cache)}</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800;border-top:1px solid var(--border);margin-top:4px"><span>Restante La Opción</span><span class="${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</span></div></div></div>`; }
+// ══════════════════════════════════════════════════════════════
+// DETALLE — admin ve todo, usuario NO ve ingresos totales
+// ══════════════════════════════════════════════════════════════
+function renderShowDetail(){
+  const show=S.shows.find(s=>s.id===S.selectedId);
+  if(!show) return '<div class="card"><div class="empty">Función no encontrada</div></div>';
+  const c=calcShow(show);
+  const isA=S.role==='admin';
+  const incomeRows=c.commissions.filter(x=>x.income>0).map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px">${esc(x.name)}</div>${isA?`<div style="font-size:10px;color:var(--text-dim)">Com: ${fmt(x.commBase)}${x.commIva>0?` +IVA ${fmt(x.commIva)}`:''} = ${fmt(x.commTotal)}</div>`:''}</div><div style="text-align:right"><div style="font-size:13px;font-weight:700;color:var(--cyan)">${fmt(x.income)}</div>${isA?`<div style="font-size:10px;color:var(--danger)">-${fmt(x.commTotal)}</div>`:''}</div></div>`).join('');
+  const cashRows=[];
+  if(c.cashBox>0) cashRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Taquilla efectivo</span><span class="fw700 success">${fmt(c.cashBox)}</span></div>`);
+  if(c.cardBox>0) cashRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Taquilla tarjeta</span><span class="fw700 success">${fmt(c.cardBox)}</span></div>`);
+  const gastoRows=[];
+  if(c.autorImporte>0) gastoRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Autor (${fmtPct(show.autorPct)})</span><span class="fw700 danger">-${fmt(c.autorImporte)}</span></div>`);
+  if(c.otrosGastos>0)  gastoRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Otros gastos</span><span class="fw700 danger">-${fmt(c.otrosGastos)}</span></div>`);
+  if(c.venueRental>0)  gastoRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Alquiler sala</span><span class="fw700 danger">-${fmt(c.venueRental)}</span></div>`);
 
-function renderNewShow(){
+  // KPIs: admin ve todo, usuario solo ve Caché y Restante
+  const kpisAdmin=`<div class="card"><div class="kpi-label">V. Bruta</div><div class="kpi-value cyan">${fmt(c.ventaBruta)}</div></div><div class="card"><div class="kpi-label">V. Neta</div><div class="kpi-value purple">${fmt(c.ventaNeta)}</div></div><div class="card"><div class="kpi-label">Gastos</div><div class="kpi-value danger">${fmt(c.totalGastos)}</div></div><div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow">${fmt(c.totalNeto)}</div></div><div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink">${fmt(c.cache)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</div></div>`;
+  const kpisUser=`<div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink">${fmt(c.cache)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</div></div>`;
+
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">←</button><div style="flex:1"><h1 class="page-title" style="font-size:22px">${esc(show.workName)}</h1><p class="page-sub">${esc(show.venueName)} · ${esc(show.date)}</p></div><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${show.id}">✏️ Editar función</button></div><div class="grid grid-kpis mb20">${isA?kpisAdmin:kpisUser}</div><div class="grid grid-2 mb20"><div class="card"><h3>Ingresos por plataforma</h3>${incomeRows||'<div class="empty">Sin ingresos de plataforma</div>'}${cashRows.length?`<div style="padding-top:6px">${cashRows.join('')}</div>`:''}</div><div class="card"><h3>Reparto (${esc(c.agreement?.name||'—')})</h3>${isA?`<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Total Neto</span><span class="fw700">${fmt(c.totalNeto)}</span></div>`:''}${gastoRows.length?`<div style="padding-top:4px;border-top:1px solid var(--border);margin-top:4px">${gastoRows.join('')}</div>`:''}<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Caché sala</span><span class="fw700 pink">${fmt(c.cache)}</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800;border-top:1px solid var(--border);margin-top:4px"><span>Restante La Opción</span><span class="${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</span></div></div></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// FORMULARIO — sirve tanto para nueva función como para editar
+// isEdit=true carga el draft desde el show existente
+// Usuario: no ve los campos de ingresos totales calculados
+// ══════════════════════════════════════════════════════════════
+function renderShowForm(isEdit){
   const isU=S.role==='user';
-  const d=S.newShowDraft||{workId:'',venueId:'',date:'',time:'',agreementId:'',notes:'',income:{},expenses:{}};
-  if(!d.income)d.income={}; if(!d.expenses)d.expenses={}; S.newShowDraft=d;
+  const d=S.newShowDraft||(isEdit?null:emptyDraft());
+  if(!d) return '<div class="card"><div class="empty">Error al cargar el formulario.</div></div>';
+  S.newShowDraft=d;
+
   const workOpts=S.config.works.filter(w=>w.active!==false).map(w=>`<option value="${w.id}" ${d.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join('');
   const venueOpts=S.config.venues.filter(v=>v.active!==false).map(v=>`<option value="${v.id}" ${d.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join('');
   const agrOpts=S.config.agreements.filter(a=>a.active!==false).map(a=>`<option value="${a.id}" ${d.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
+
   const selectedVenue=S.config.venues.find(v=>v.id===d.venueId);
   const venueRental=Number(selectedVenue?.alquiler||0);
-  const rentalInfo=d.venueId?`<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">Alquiler configurado de la sala: <strong style="color:var(--yellow)">${fmt(venueRental)}</strong>. Se aplica automáticamente.</p>`:'';
-  const platFields=S.config.platforms.filter(p=>p.active!==false).map(p=>{ const label=isU?esc(p.name):`${esc(p.name)} (${p.commission}%${p.ivaOnCommission?' +IVA':''})`; return `<div class="field"><label>${label}</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income[p.id]||''}" data-plat-id="${p.id}" /></div>`; }).join('');
-  const expenseFields=S.config.expenseTypes.filter(e=>e.active!==false && !normalize(e.name).includes('alquiler')).map(e=>`<div class="field"><label>${esc(e.name)}</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.expenses[e.id]||''}" data-expense-id="${e.id}" /></div>`).join('');
-  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">← Volver</button><h1 class="page-title" style="font-size:22px">${isU?'Registrar ingreso':'Nueva función'}</h1></div><div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div><div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date" /></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time" /></div></div>${!isU?`<div class="field"><label>Acuerdo</label><select data-field="agreementId"><option value="">— Seleccionar —</option>${agrOpts}</select></div>`:''}<div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox" /></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox" /></div></div></div><div class="card"><h3>Gastos</h3>${expenseFields||'<p class="dim">No hay tipos de gasto activos. Puedes crearlos en Administración → Gastos.</p>'}</div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':'💾 Guardar'}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
+  const rentalInfo=d.venueId?`<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">Alquiler configurado: <strong style="color:var(--yellow)">${fmt(venueRental)}</strong> (se aplica automáticamente)</p>`:'';
+
+  const platFields=S.config.platforms.filter(p=>p.active!==false).map(p=>{
+    const label=isU?esc(p.name):`${esc(p.name)} (${p.commission}%${p.ivaOnCommission?' +IVA':''})`;
+    return `<div class="field"><label>${label}</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income[p.id]||''}" data-plat-id="${p.id}"/></div>`;
+  }).join('');
+
+  const title=isEdit?'Editar función':(isU?'Registrar ingreso':'Nueva función');
+  const btnLabel=isEdit?'💾 Guardar cambios':'💾 Guardar';
+
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="${isEdit?'shows':'shows'}">← Volver</button><h1 class="page-title" style="font-size:22px">${title}</h1></div><div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div><div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div></div>${!isU?`<div class="field"><label>Acuerdo</label><select data-field="agreementId"><option value="">— Seleccionar —</option>${agrOpts}</select></div>`:''}<div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox"/></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox"/></div></div></div><div class="card"><h3>Gastos</h3><div class="field"><label>Autor (% sobre venta neta)</label><input type="number" min="0" max="100" step="0.01" placeholder="0" value="${d.autorPct||''}" data-expense-flat="autorPct"/></div><div class="field"><label>Otros gastos (€ — se resta a la venta neta)</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.otrosGastos||''}" data-expense-flat="otrosGastos"/></div></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':btnLabel}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
 }
 
-function renderSummary(){ const months=[...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse(); const sel=S.summaryMonth||months[0]||''; const opts=months.map(m=>`<option value="${m}" ${m===sel?'selected':''}>${m}</option>`).join(''); const cs=S.shows.filter(s=>(s.date||'').startsWith(sel)).map(s=>({...s,c:calcShow(s)})); const byWork={}; cs.forEach(s=>{const k=s.workName||'Sin obra'; if(!byWork[k])byWork[k]={work:k,venue:s.venueName,ingreso:0,coste:0,beneficio:0}; byWork[k].ingreso+=s.c.totalNeto; byWork[k].coste+=s.c.cache; byWork[k].beneficio+=s.c.restanteOpcion;}); const rows=Object.values(byWork); const totI=rows.reduce((s,r)=>s+r.ingreso,0); const totC=rows.reduce((s,r)=>s+r.coste,0); const totB=rows.reduce((s,r)=>s+r.beneficio,0); rows.forEach(r=>{r.pct=totB!==0?r2(r.beneficio/totB*100):0;}); const tableRows=rows.map(r=>`<tr><td>${esc(r.venue)}</td><td>${esc(r.work)}</td><td class="right">${fmt(r.ingreso)}</td><td class="right">${fmt(r.coste)}</td><td class="right fw700 ${r.beneficio>=0?'success':'danger'}">${fmt(r.beneficio)}</td><td class="right">${fmtPct(r.pct)}</td></tr>`).join(''); const platTotals={}; cs.forEach(s=>{s.c.commissions.forEach(c=>{platTotals[c.name]=(platTotals[c.name]||0)+c.income;}); platTotals['Taq. Efectivo']=(platTotals['Taq. Efectivo']||0)+s.c.cashBox; platTotals['Taq. Tarjeta']=(platTotals['Taq. Tarjeta']||0)+s.c.cardBox;}); const platCards=Object.entries(platTotals).sort(([,a],[,b])=>b-a).map(([name,total])=>`<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;padding:14px 16px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:4px">${esc(name)}</div><div style="font-size:18px;font-family:'Outfit',sans-serif;font-weight:800;color:var(--cyan)">${fmt(total)}</div></div>`).join(''); return `<h1 class="page-title">Resumen Mensual</h1><p class="page-sub mb20">Visión por obra y plataforma</p><div style="display:flex;gap:8px;align-items:center;margin-bottom:18px"><span class="dim">📅</span><select data-bind="summaryMonth" class="inline-input" style="max-width:160px">${opts}</select><span class="dim" style="font-size:12px">${cs.length} funciones</span></div><div class="card mb20"><h3>Resumen por obra</h3><div class="table-wrap"><table><thead><tr><th>Sala</th><th>Obra</th><th class="right">Ingreso</th><th class="right">Coste CIA</th><th class="right">Beneficios</th><th class="right">%</th></tr></thead><tbody>${tableRows||'<tr><td colspan="6" class="empty">Sin datos</td></tr>'}</tbody></table></div></div><div class="card"><h3>Resumen por plataforma</h3><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${platCards||'<div class="empty">Sin datos</div>'}</div></div>`; }
+function renderSummary(){
+  const months=[...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
+  const sel=S.summaryMonth||months[0]||'';
+  const opts=months.map(m=>`<option value="${m}" ${m===sel?'selected':''}>${m}</option>`).join('');
+  const cs=S.shows.filter(s=>(s.date||'').startsWith(sel)).map(s=>({...s,c:calcShow(s)}));
+  const byWork={};
+  cs.forEach(s=>{const k=s.workName||'Sin obra';if(!byWork[k])byWork[k]={work:k,venue:s.venueName,ingreso:0,coste:0,beneficio:0};byWork[k].ingreso+=s.c.totalNeto;byWork[k].coste+=s.c.cache;byWork[k].beneficio+=s.c.restanteOpcion;});
+  const rows=Object.values(byWork);
+  const totB=rows.reduce((s,r)=>s+r.beneficio,0);
+  rows.forEach(r=>{r.pct=totB!==0?r2(r.beneficio/totB*100):0;});
+  const tableRows=rows.map(r=>`<tr><td>${esc(r.venue)}</td><td>${esc(r.work)}</td><td class="right">${fmt(r.ingreso)}</td><td class="right">${fmt(r.coste)}</td><td class="right fw700 ${r.beneficio>=0?'success':'danger'}">${fmt(r.beneficio)}</td><td class="right">${fmtPct(r.pct)}</td></tr>`).join('');
+  const platTotals={};
+  cs.forEach(s=>{s.c.commissions.forEach(c=>{platTotals[c.name]=(platTotals[c.name]||0)+c.income;});platTotals['Taq. Efectivo']=(platTotals['Taq. Efectivo']||0)+s.c.cashBox;platTotals['Taq. Tarjeta']=(platTotals['Taq. Tarjeta']||0)+s.c.cardBox;});
+  const platCards=Object.entries(platTotals).sort(([,a],[,b])=>b-a).map(([name,total])=>`<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;padding:14px 16px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:4px">${esc(name)}</div><div style="font-size:18px;font-family:'Outfit',sans-serif;font-weight:800;color:var(--cyan)">${fmt(total)}</div></div>`).join('');
+  return `<h1 class="page-title">Resumen Mensual</h1><p class="page-sub mb20">Visión por obra y plataforma</p><div style="display:flex;gap:8px;align-items:center;margin-bottom:18px"><span class="dim">📅</span><select data-bind="summaryMonth" class="inline-input" style="max-width:160px">${opts}</select><span class="dim" style="font-size:12px">${cs.length} funciones</span></div><div class="card mb20"><h3>Resumen por obra</h3><div class="table-wrap"><table><thead><tr><th>Sala</th><th>Obra</th><th class="right">Ingreso</th><th class="right">Coste CIA</th><th class="right">Beneficios</th><th class="right">%</th></tr></thead><tbody>${tableRows||'<tr><td colspan="6" class="empty">Sin datos</td></tr>'}</tbody></table></div></div><div class="card"><h3>Resumen por plataforma</h3><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${platCards||'<div class="empty">Sin datos</div>'}</div></div>`;
+}
 
-function renderAdmin(){ if(S.role!=='admin')return '<div class="card"><div class="empty">Acceso denegado</div></div>'; const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras'},{id:'agreements',label:'Acuerdos'},{id:'expenses',label:'Gastos'},{id:'users',label:'Usuarios'}]; const tabBtns=tabs.map(t=>`<button class="btn ${S.adminTab===t.id?'btn-primary':'btn-ghost'} btn-sm" data-admin-tab="${t.id}">${t.label}</button>`).join(''); const content=S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab); return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Crear y editar configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa “Guardar cambios” para enviarlos al Sheet.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`; }
+function renderAdmin(){
+  if(S.role!=='admin') return '<div class="card"><div class="empty">Acceso denegado</div></div>';
+  const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras'},{id:'agreements',label:'Acuerdos'},{id:'expenses',label:'Gastos'},{id:'users',label:'Usuarios'}];
+  const tabBtns=tabs.map(t=>`<button class="btn ${S.adminTab===t.id?'btn-primary':'btn-ghost'} btn-sm" data-admin-tab="${t.id}">${t.label}</button>`).join('');
+  const content=S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab);
+  return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
+}
+function renderConfigEditor(tab){
+  const meta=CONFIG_META[tab]||CONFIG_META.platforms;
+  const items=S.config[meta.key]||[];
+  const rows=items.map(item=>renderConfigRow(tab,item)).join('');
+  return `<div class="grid grid-2 mb20"><div class="card"><h3>Añadir ${meta.singular}</h3>${renderAddConfigForm(tab)}<p class="dim" style="font-size:12px;margin-top:10px">Añade el elemento y después guarda los cambios.</p></div><div class="card"><h3>${meta.title}</h3><div class="table-wrap"><table><thead>${renderConfigHeader(tab)}</thead><tbody>${rows||`<tr><td colspan="6" class="empty">Sin ${meta.title.toLowerCase()}</td></tr>`}</tbody></table></div><p class="dim" style="font-size:12px;margin-top:10px">Desactiva elementos en vez de borrarlos para conservar históricos.</p></div></div>`;
+}
+function renderAddConfigForm(tab){
+  if(tab==='platforms') return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva plataforma"/></div><div class="grid grid-2"><div class="field"><label>Comisión %</label><input type="number" min="0" step="0.01" data-add="commission" data-add-tab="${tab}" placeholder="0"/></div><div class="field"><label>IVA comisión</label><select data-add="ivaOnCommission" data-add-tab="${tab}"><option value="true">Sí</option><option value="false">No</option></select></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir plataforma</button>`;
+  if(tab==='venues') return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva sala"/></div><div class="field"><label>Alquiler por función</label><input type="number" min="0" step="0.01" data-add="alquiler" data-add-tab="${tab}" placeholder="0"/></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir sala</button>`;
+  if(tab==='agreements') return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nuevo acuerdo"/></div><div class="grid grid-2"><div class="field"><label>Tipo</label><select data-add="mode" data-add-tab="${tab}"><option value="percentage">Porcentaje</option><option value="fixed">Fijo</option></select></div><div class="field"><label>Valor</label><input type="number" min="0" step="0.01" data-add="value" data-add-tab="${tab}" placeholder="0"/></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir acuerdo</button>`;
+  const meta=CONFIG_META[tab];
+  return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nuevo ${meta.singular}"/></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir ${meta.singular}</button>`;
+}
+function renderConfigHeader(tab){
+  if(tab==='platforms') return '<tr><th>Nombre</th><th>Comisión</th><th>IVA</th><th>Activa</th></tr>';
+  if(tab==='venues')    return '<tr><th>Nombre</th><th>Alquiler por función</th><th>Activa</th></tr>';
+  if(tab==='agreements')return '<tr><th>Nombre</th><th>Tipo</th><th>Valor</th><th>Activo</th></tr>';
+  return '<tr><th>Nombre</th><th>Activo</th></tr>';
+}
+function renderConfigRow(tab,item){
+  if(tab==='platforms') return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="commission" value="${Number(item.commission||0)}"/></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="ivaOnCommission"><option value="true" ${item.ivaOnCommission?'selected':''}>Sí</option><option value="false" ${!item.ivaOnCommission?'selected':''}>No</option></select></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
+  if(tab==='venues')    return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="alquiler" value="${Number(item.alquiler||0)}"/></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
+  if(tab==='agreements')return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="mode"><option value="percentage" ${item.mode==='percentage'?'selected':''}>Porcentaje</option><option value="fixed" ${item.mode==='fixed'?'selected':''}>Fijo</option></select></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="value" value="${Number(item.value||0)}"/></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
+  return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
+}
+function renderUsersAdmin(){
+  const rows=(S.users||[]).map(u=>`<tr><td>${esc(u.email)}</td><td><select class="inline-input" data-user-role="${u.id}"><option value="user" ${u.role==='user'?'selected':''}>Usuario</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select></td><td><input class="inline-check" type="checkbox" data-user-active="${u.id}" ${u.active?'checked':''}/></td><td>${esc(u.lastLoginAt||'—')}</td><td><input class="inline-input" type="password" placeholder="Nueva contraseña" data-user-pass="${u.id}"/></td><td><button class="btn btn-secondary btn-sm" data-action="updateUser" data-user-id="${u.id}">Guardar</button></td></tr>`).join('');
+  return `<div class="grid grid-2 mb20"><div class="card"><h3>Crear usuario</h3><div class="field"><label>Email</label><input id="new-user-email" type="email" placeholder="correo@ejemplo.com"/></div><div class="field"><label>Contraseña</label><input id="new-user-password" type="password" placeholder="Mínimo 6 caracteres"/></div><div class="field"><label>Rol</label><select id="new-user-role"><option value="user">Usuario</option><option value="admin">Administrador</option></select></div><button class="btn btn-primary" data-action="createUser">➕ Crear usuario</button></div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">Usuarios</h3><button class="btn btn-secondary btn-sm" data-action="refreshUsers">🔄</button></div><div class="table-wrap"><table><thead><tr><th>Email</th><th>Rol</th><th>Activo</th><th>Último acceso</th><th>Nueva contraseña</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="empty">Sin usuarios</td></tr>'}</tbody></table></div></div></div>`;
+}
 
-function renderConfigEditor(tab){ const meta=CONFIG_META[tab]||CONFIG_META.platforms; const items=S.config[meta.key]||[]; const rows=items.map(item=>renderConfigRow(tab,item)).join(''); return `<div class="grid grid-2 mb20"><div class="card"><h3>Añadir ${meta.singular}</h3>${renderAddConfigForm(tab)}<p class="dim" style="font-size:12px;margin-top:10px">Añade el elemento y después guarda los cambios para que se actualice el Sheet.</p></div><div class="card"><h3>${meta.title}</h3><div class="table-wrap"><table><thead>${renderConfigHeader(tab)}</thead><tbody>${rows||`<tr><td colspan="6" class="empty">Sin ${meta.title.toLowerCase()}</td></tr>`}</tbody></table></div><p class="dim" style="font-size:12px;margin-top:10px">Para no romper históricos, desactiva elementos en vez de borrarlos.</p></div></div>`; }
-function renderAddConfigForm(tab){ if(tab==='platforms')return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva plataforma" /></div><div class="grid grid-2"><div class="field"><label>Comisión %</label><input type="number" min="0" step="0.01" data-add="commission" data-add-tab="${tab}" placeholder="0" /></div><div class="field"><label>IVA comisión</label><select data-add="ivaOnCommission" data-add-tab="${tab}"><option value="true">Sí</option><option value="false">No</option></select></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir plataforma</button>`; if(tab==='venues')return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva sala" /></div><div class="field"><label>Alquiler por función</label><input type="number" min="0" step="0.01" data-add="alquiler" data-add-tab="${tab}" placeholder="0" /></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir sala</button>`; if(tab==='agreements')return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nuevo acuerdo" /></div><div class="grid grid-2"><div class="field"><label>Tipo</label><select data-add="mode" data-add-tab="${tab}"><option value="percentage">Porcentaje</option><option value="fixed">Fijo</option></select></div><div class="field"><label>Valor</label><input type="number" min="0" step="0.01" data-add="value" data-add-tab="${tab}" placeholder="0" /></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir acuerdo</button>`; const meta=CONFIG_META[tab]; return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nuevo ${meta.singular}" /></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir ${meta.singular}</button>`; }
-function renderConfigHeader(tab){ if(tab==='platforms')return '<tr><th>Nombre</th><th>Comisión</th><th>IVA</th><th>Activa</th></tr>'; if(tab==='venues')return '<tr><th>Nombre</th><th>Alquiler por función</th><th>Activa</th></tr>'; if(tab==='agreements')return '<tr><th>Nombre</th><th>Tipo</th><th>Valor</th><th>Activo</th></tr>'; return '<tr><th>Nombre</th><th>Activo</th></tr>'; }
-function renderConfigRow(tab,item){ if(tab==='platforms')return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}" /></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="commission" value="${Number(item.commission||0)}" /></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="ivaOnCommission"><option value="true" ${item.ivaOnCommission?'selected':''}>Sí</option><option value="false" ${!item.ivaOnCommission?'selected':''}>No</option></select></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''} /></td></tr>`; if(tab==='venues')return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}" /></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="alquiler" value="${Number(item.alquiler||0)}" /></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''} /></td></tr>`; if(tab==='agreements')return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}" /></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="mode"><option value="percentage" ${item.mode==='percentage'?'selected':''}>Porcentaje</option><option value="fixed" ${item.mode==='fixed'?'selected':''}>Fijo</option></select></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="value" value="${Number(item.value||0)}" /></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''} /></td></tr>`; return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}" /></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''} /></td></tr>`; }
-
-function renderUsersAdmin(){ const rows=(S.users||[]).map(u=>`<tr><td>${esc(u.email)}</td><td><select class="inline-input" data-user-role="${u.id}"><option value="user" ${u.role==='user'?'selected':''}>Usuario</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select></td><td><input class="inline-check" type="checkbox" data-user-active="${u.id}" ${u.active?'checked':''} /></td><td>${esc(u.lastLoginAt||'—')}</td><td><input class="inline-input" type="password" placeholder="Nueva contraseña" data-user-pass="${u.id}" /></td><td><button class="btn btn-secondary btn-sm" data-action="updateUser" data-user-id="${u.id}">Guardar</button></td></tr>`).join(''); return `<div class="grid grid-2 mb20"><div class="card"><h3>Crear usuario</h3><div class="field"><label>Email</label><input id="new-user-email" type="email" placeholder="correo@ejemplo.com" /></div><div class="field"><label>Contraseña</label><input id="new-user-password" type="password" placeholder="Mínimo 6 caracteres" /></div><div class="field"><label>Rol</label><select id="new-user-role"><option value="user">Usuario</option><option value="admin">Administrador</option></select></div><button class="btn btn-primary" data-action="createUser">➕ Crear usuario</button></div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">Usuarios</h3><button class="btn btn-secondary btn-sm" data-action="refreshUsers">🔄</button></div><div class="table-wrap"><table><thead><tr><th>Email</th><th>Rol</th><th>Activo</th><th>Último acceso</th><th>Nueva contraseña</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="empty">Sin usuarios</td></tr>'}</tbody></table></div></div></div>`; }
-
+// ══════════════════════════════════════════════════════════════
+// EVENTS
+// ══════════════════════════════════════════════════════════════
 function bindEvents(){
-  document.querySelectorAll('[data-view]').forEach(btn=>{btn.onclick=()=>{if(S.isSaving)return showToast('Espera a que termine el guardado.','warn'); S.view=btn.dataset.view; S.selectedId=null; render();};});
-  document.querySelectorAll('[data-action]').forEach(btn=>{btn.onclick=()=>{const a=btn.dataset.action; if(a==='logout')return handleLogout(); if(a==='refresh')return loadFromSheet({manual:true}); if(a==='saveNewShow'){btn.disabled=true;btn.innerHTML='⏳ Guardando...';return handleSaveNewShow();} if(a==='saveConfig')return saveConfigToSheet(); if(a==='addConfig')return addConfigItem(btn.dataset.addConfigTab); if(a==='createUser')return handleCreateUser(); if(a==='updateUser')return handleUpdateUser(btn.dataset.userId); if(a==='refreshUsers')return loadUsers();};});
-  document.querySelectorAll('[data-admin-tab]').forEach(btn=>{btn.onclick=()=>{S.adminTab=btn.dataset.adminTab; if(S.adminTab==='users')loadUsers(); render();};});
-  const searchInput=document.querySelector('[data-bind="search"]'); if(searchInput)searchInput.oninput=()=>{S.search=searchInput.value; render();};
-  const summarySelect=document.querySelector('[data-bind="summaryMonth"]'); if(summarySelect)summarySelect.onchange=()=>{S.summaryMonth=summarySelect.value; render();};
-  document.querySelectorAll('[data-show-id]').forEach(tr=>{tr.onclick=()=>{S.selectedId=tr.dataset.showId; S.view='detail'; render();};});
-  document.querySelectorAll('[data-field]').forEach(el=>{el.onchange=el.oninput=()=>{if(!S.newShowDraft)S.newShowDraft={workId:'',venueId:'',date:'',time:'',agreementId:'',notes:'',income:{},expenses:{}}; S.newShowDraft[el.dataset.field]=el.value;};});
-  document.querySelectorAll('[data-plat-id]').forEach(el=>{el.onchange=el.oninput=()=>{if(!S.newShowDraft)S.newShowDraft={workId:'',venueId:'',date:'',time:'',agreementId:'',notes:'',income:{},expenses:{}}; if(!S.newShowDraft.income)S.newShowDraft.income={}; S.newShowDraft.income[el.dataset.platId]=el.value;};});
-  document.querySelectorAll('[data-expense-id]').forEach(el=>{el.onchange=el.oninput=()=>{if(!S.newShowDraft)S.newShowDraft={workId:'',venueId:'',date:'',time:'',agreementId:'',notes:'',income:{},expenses:{}}; if(!S.newShowDraft.expenses)S.newShowDraft.expenses={}; S.newShowDraft.expenses[el.dataset.expenseId]=el.value;};});
-  document.querySelectorAll('[data-cfg-field]').forEach(el=>{el.onchange=el.oninput=()=>updateConfigFromInput(el);});
+  document.querySelectorAll('[data-view]').forEach(btn=>{
+    btn.onclick=()=>{if(S.isSaving)return showToast('Espera a que termine el guardado.','warn');S.view=btn.dataset.view;S.selectedId=null;S.editShowId=null;if(S.view==='newshow'){S.newShowDraft=emptyDraft();}render();};
+  });
+  document.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.onclick=()=>{
+      const a=btn.dataset.action;
+      if(a==='logout')       return handleLogout();
+      if(a==='refresh')      return loadFromSheet({manual:true});
+      if(a==='saveNewShow')  {btn.disabled=true;btn.innerHTML='⏳ Guardando...';return handleSaveShow();}
+      if(a==='saveConfig')   return saveConfigToSheet();
+      if(a==='addConfig')    return addConfigItem(btn.dataset.addConfigTab);
+      if(a==='createUser')   return handleCreateUser();
+      if(a==='updateUser')   return handleUpdateUser(btn.dataset.userId);
+      if(a==='refreshUsers') return loadUsers();
+      if(a==='viewShow'){
+        const show=S.shows.find(s=>s.id===btn.dataset.showId);
+        if(show){S.selectedId=show.id;S.view='detail';render();}
+        return;
+      }
+      if(a==='editShow'){
+        const show=S.shows.find(s=>s.id===btn.dataset.showId);
+        if(show){S.editShowId=show.id;S.newShowDraft=showToDraft(show);S.view='editshow';render();}
+        return;
+      }
+    };
+  });
+  document.querySelectorAll('[data-admin-tab]').forEach(btn=>{
+    btn.onclick=()=>{S.adminTab=btn.dataset.adminTab;if(S.adminTab==='users')loadUsers();render();};
+  });
+  const si=document.querySelector('[data-bind="search"]');
+  if(si) si.oninput=()=>{S.search=si.value;render();};
+  const sm=document.querySelector('[data-bind="summaryMonth"]');
+  if(sm) sm.onchange=()=>{S.summaryMonth=sm.value;render();};
+  // campos básicos
+  document.querySelectorAll('[data-field]').forEach(el=>{
+    el.onchange=el.oninput=()=>{
+      if(!S.newShowDraft) S.newShowDraft=emptyDraft();
+      S.newShowDraft[el.dataset.field]=el.value;
+    };
+  });
+  // ingresos plataformas
+  document.querySelectorAll('[data-plat-id]').forEach(el=>{
+    el.onchange=el.oninput=()=>{
+      if(!S.newShowDraft) S.newShowDraft=emptyDraft();
+      if(!S.newShowDraft.income) S.newShowDraft.income={};
+      S.newShowDraft.income[el.dataset.platId]=el.value;
+    };
+  });
+  // gastos planos
+  document.querySelectorAll('[data-expense-flat]').forEach(el=>{
+    el.onchange=el.oninput=()=>{
+      if(!S.newShowDraft) S.newShowDraft=emptyDraft();
+      S.newShowDraft[el.dataset.expenseFlat]=parseFloat(el.value)||0;
+    };
+  });
+  document.querySelectorAll('[data-cfg-field]').forEach(el=>{
+    el.onchange=el.oninput=()=>updateConfigFromInput(el);
+  });
 }
 
-async function handleLogout(){ try{ if(S.token) await apiPost({action:'logout'}); }catch(e){} clearSession(true); }
+async function handleLogout(){ try{if(S.token)await apiPost({action:'logout'});}catch(e){} clearSession(true); }
 function getConfigItem(tab,id){ const meta=CONFIG_META[tab]; return (S.config[meta.key]||[]).find(x=>x.id===id); }
-function updateConfigFromInput(el){ const item=getConfigItem(el.dataset.cfgTab,el.dataset.cfgId); if(!item)return; const field=el.dataset.cfgField; let value=el.type==='checkbox'?el.checked:el.value; if(['commission','value','alquiler'].includes(field))value=Number(value||0); if(field==='ivaOnCommission')value=value==='true'; item[field]=value; S.configDirty=true; }
-function addConfigItem(tab){ const meta=CONFIG_META[tab]; const inputs=[...document.querySelectorAll(`[data-add-tab="${tab}"]`)]; const values={}; inputs.forEach(i=>values[i.dataset.add]=i.value); const name=String(values.name||'').trim(); if(!name)return showToast('Introduce un nombre.','error'); let item={id:gid(meta.prefix),name,active:true}; if(tab==='platforms')item={...item,commission:Number(values.commission||0),ivaOnCommission:values.ivaOnCommission==='true'}; if(tab==='venues')item={...item,alquiler:Number(values.alquiler||0)}; if(tab==='agreements')item={...item,mode:values.mode||'percentage',value:Number(values.value||0)}; S.config[meta.key].push(item); S.configDirty=true; inputs.forEach(i=>{if(i.tagName==='INPUT')i.value='';}); showToast(`${meta.singular[0].toUpperCase()+meta.singular.slice(1)} añadido. Guarda los cambios.`, 'success'); render(); }
-async function handleCreateUser(){ const email=document.getElementById('new-user-email')?.value.trim(); const password=document.getElementById('new-user-password')?.value; const role=document.getElementById('new-user-role')?.value||'user'; if(!email||!password)return showToast('Introduce email y contraseña.','error'); try{ await apiPost({action:'createUser',email,password,role,active:true}); showToast('Usuario creado','success'); await loadUsers(); }catch(err){showToast(err.message,'error');} }
-async function handleUpdateUser(id){ const role=document.querySelector(`[data-user-role="${id}"]`)?.value; const active=document.querySelector(`[data-user-active="${id}"]`)?.checked; const password=document.querySelector(`[data-user-pass="${id}"]`)?.value; const payload={action:'updateUser',id,role,active}; if(password)payload.password=password; try{ await apiPost(payload); showToast('Usuario actualizado','success'); await loadUsers(); }catch(err){showToast(err.message,'error');} }
+function updateConfigFromInput(el){
+  const item=getConfigItem(el.dataset.cfgTab,el.dataset.cfgId);if(!item)return;
+  const field=el.dataset.cfgField;
+  let value=el.type==='checkbox'?el.checked:el.value;
+  if(['commission','value','alquiler'].includes(field)) value=Number(value||0);
+  if(field==='ivaOnCommission') value=value==='true';
+  item[field]=value;S.configDirty=true;
+}
+function addConfigItem(tab){
+  const meta=CONFIG_META[tab];
+  const inputs=[...document.querySelectorAll(`[data-add-tab="${tab}"]`)];
+  const values={};inputs.forEach(i=>values[i.dataset.add]=i.value);
+  const name=String(values.name||'').trim();
+  if(!name)return showToast('Introduce un nombre.','error');
+  let item={id:gid(meta.prefix),name,active:true};
+  if(tab==='platforms') item={...item,commission:Number(values.commission||0),ivaOnCommission:values.ivaOnCommission==='true'};
+  if(tab==='venues')    item={...item,alquiler:Number(values.alquiler||0)};
+  if(tab==='agreements')item={...item,mode:values.mode||'percentage',value:Number(values.value||0)};
+  S.config[meta.key].push(item);S.configDirty=true;
+  inputs.forEach(i=>{if(i.tagName==='INPUT')i.value='';});
+  showToast(`${meta.singular[0].toUpperCase()+meta.singular.slice(1)} añadido. Guarda los cambios.`,'success');
+  render();
+}
+async function handleCreateUser(){
+  const email=document.getElementById('new-user-email')?.value.trim();
+  const password=document.getElementById('new-user-password')?.value;
+  const role=document.getElementById('new-user-role')?.value||'user';
+  if(!email||!password)return showToast('Introduce email y contraseña.','error');
+  try{await apiPost({action:'createUser',email,password,role,active:true});showToast('Usuario creado','success');await loadUsers();}
+  catch(err){showToast(err.message,'error');}
+}
+async function handleUpdateUser(id){
+  const role=document.querySelector(`[data-user-role="${id}"]`)?.value;
+  const active=document.querySelector(`[data-user-active="${id}"]`)?.checked;
+  const password=document.querySelector(`[data-user-pass="${id}"]`)?.value;
+  const payload={action:'updateUser',id,role,active};
+  if(password)payload.password=password;
+  try{await apiPost(payload);showToast('Usuario actualizado','success');await loadUsers();}
+  catch(err){showToast(err.message,'error');}
+}
 
-async function handleSaveNewShow(){
-  if(SAVE_LOCK||S.isSaving)return showToast('Ya se está guardando. Espera a que termine.','warn');
+// ══════════════════════════════════════════════════════════════
+// GUARDAR FUNCIÓN (nueva o edición)
+// ══════════════════════════════════════════════════════════════
+async function handleSaveShow(){
+  if(SAVE_LOCK||S.isSaving)return showToast('Ya se está guardando. Espera.','warn');
   const d=S.newShowDraft;
-  if(!d)return showToast('Rellena el formulario','error');
-  if(!d.workId)return showToast('Selecciona una obra','error');
-  if(!d.venueId)return showToast('Selecciona una sala','error');
-  if(!d.date)return showToast('Introduce una fecha','error');
-  const work=S.config.works.find(w=>w.id===d.workId); const venue=S.config.venues.find(v=>v.id===d.venueId); const agreement=S.config.agreements.find(a=>a.id===d.agreementId);
-  const income={}; S.config.platforms.forEach(p=>{income[p.id]=parseFloat(d.income?.[p.id])||0;}); income.cashBox=parseFloat(d.income?.cashBox)||0; income.cardBox=parseFloat(d.income?.cardBox)||0;
-  const expenses=S.config.expenseTypes.filter(e=>e.active!==false && !normalize(e.name).includes('alquiler')).map(e=>({id:gid('ex'),typeId:e.id,typeName:e.name,amount:parseFloat(d.expenses?.[e.id])||0})).filter(e=>e.amount>0);
-  if(Object.values(income).some(v=>v<0) || expenses.some(e=>e.amount<0))return showToast('No se admiten importes negativos','error');
-  const appId=d.appId||gid('s'); d.appId=appId;
-  const show={id:appId,appId,workId:d.workId,venueId:d.venueId,workName:work?.name||'',venueName:venue?.name||'',date:d.date,time:d.time||'',agreementId:d.agreementId||'',agreementSnapshot:agreement?{name:agreement.name,mode:agreement.mode,value:agreement.value}:null,notes:d.notes||'',income,platformSnapshots:{},expenses,venueRental:Number(venue?.alquiler||0),status:{}};
-  S.config.platforms.forEach(p=>{show.platformSnapshots[p.id]={name:p.name,commission:p.commission,ivaOnCommission:p.ivaOnCommission,income:income[p.id]||0};});
+  if(!d)          return showToast('Rellena el formulario','error');
+  if(!d.workId)   return showToast('Selecciona una obra','error');
+  if(!d.venueId)  return showToast('Selecciona una sala','error');
+  if(!d.date)     return showToast('Introduce una fecha','error');
+
+  const work=S.config.works.find(w=>w.id===d.workId);
+  const venue=S.config.venues.find(v=>v.id===d.venueId);
+  const agreement=S.config.agreements.find(a=>a.id===d.agreementId);
+
+  const income={};
+  S.config.platforms.forEach(p=>{income[p.id]=parseFloat(d.income?.[p.id])||0;});
+  income.cashBox=parseFloat(d.income?.cashBox)||0;
+  income.cardBox=parseFloat(d.income?.cardBox)||0;
+
+  if(Object.values(income).some(v=>v<0))return showToast('No se admiten importes negativos','error');
+
+  const autorPct=Math.max(0,parseFloat(d.autorPct)||0);
+  const otrosGastos=Math.max(0,parseFloat(d.otrosGastos)||0);
+  const venueRental=Number(venue?.alquiler||0);
+
+  // Si es edición, mantiene el appId existente; si es nuevo, genera uno
+  const appId=d.appId||gid('s');
+  d.appId=appId;
+
+  const show={
+    id:appId, appId,
+    workId:d.workId, venueId:d.venueId,
+    workName:work?.name||'', venueName:venue?.name||'',
+    date:d.date, time:d.time||'',
+    agreementId:d.agreementId||'',
+    agreementSnapshot:agreement?{name:agreement.name,mode:agreement.mode,value:agreement.value}:null,
+    notes:d.notes||'',
+    income, platformSnapshots:{},
+    autorPct, otrosGastos, venueRental,
+    status:{}
+  };
+
+  S.config.platforms.forEach(p=>{
+    show.platformSnapshots[p.id]={name:p.name,commission:p.commission,ivaOnCommission:p.ivaOnCommission,income:income[p.id]||0};
+  });
+
   await saveShowToSheet(show);
 }
 
