@@ -555,15 +555,52 @@ function renderDashboard(){
   const monthGroups={};
   cs.forEach(s=>{
     const m=(s.date||'Sin fecha').slice(0,7)||'Sin fecha';
-    if(!monthGroups[m]) monthGroups[m]={venta:0,gastos:0,beneficio:0};
-    monthGroups[m].venta+=s.c.ventaNeta;
-    monthGroups[m].gastos+=s.c.totalGastos;
-    monthGroups[m].beneficio+=s.c.restanteOpcion;
+    if(!monthGroups[m]) monthGroups[m]={
+      funciones:0,
+      ventaBruta:0,
+      ventaNeta:0,
+      comisiones:0,
+      autor:0,
+      alquiler:0,
+      otros:0,
+      totalGastos:0,
+      totalNeto:0,
+      cache:0,
+      restante:0,
+    };
+    monthGroups[m].funciones+=1;
+    monthGroups[m].ventaBruta+=s.c.ventaBruta;
+    monthGroups[m].ventaNeta+=s.c.ventaNeta;
+    monthGroups[m].comisiones+=s.c.totalComm;
+    monthGroups[m].autor+=s.c.autorImporte;
+    monthGroups[m].alquiler+=s.c.venueRental;
+    monthGroups[m].otros+=s.c.otrosGastos;
+    monthGroups[m].totalGastos+=s.c.totalGastos;
+    monthGroups[m].totalNeto+=s.c.totalNeto;
+    monthGroups[m].cache+=s.c.cache;
+    monthGroups[m].restante+=s.c.restanteOpcion;
   });
   const monthEntries=Object.entries(monthGroups).sort(([a],[b])=>a.localeCompare(b));
-  const monthMax=Math.max(...monthEntries.flatMap(([,v])=>[v.venta,v.gastos,Math.abs(v.beneficio)]),1);
-  const monthHtml=monthEntries.map(([m,v])=>`<div style="padding:10px 0;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px"><strong style="font-size:12px">${esc(m)}</strong><span class="${v.beneficio>=0?'success':'danger'} fw700">${fmt(v.beneficio)}</span></div><div class="mini-series"><span>Venta</span><div class="bar-track"><div class="bar-fill" style="width:${(v.venta/monthMax*100).toFixed(1)}%;background:var(--cyan)"></div></div><span>${fmt(v.venta)}</span></div><div class="mini-series"><span>Gastos</span><div class="bar-track"><div class="bar-fill" style="width:${(v.gastos/monthMax*100).toFixed(1)}%;background:var(--danger)"></div></div><span>${fmt(v.gastos)}</span></div><div class="mini-series"><span>Benef.</span><div class="bar-track"><div class="bar-fill" style="width:${(Math.abs(v.beneficio)/monthMax*100).toFixed(1)}%;background:var(--success)"></div></div><span>${fmt(v.beneficio)}</span></div></div>`).join('')||'<div class="empty">Sin datos</div>';
-
+  const monthMax=Math.max(...monthEntries.flatMap(([,v])=>[
+    v.ventaBruta,v.ventaNeta,v.totalGastos,Math.abs(v.totalNeto),v.cache,Math.abs(v.restante),v.autor
+  ]),1);
+  const monthLine=(label,value,colorVar='var(--cyan)',strong=false)=>`<div class="mini-series" style="grid-template-columns:82px 1fr 92px"><span title="${esc(label)}">${esc(label)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,Math.abs(value)/monthMax*100).toFixed(1)}%;background:${colorVar}"></div></div><span class="${strong?(value>=0?'success':'danger')+' fw700':''}">${fmt(value)}</span></div>`;
+  const monthHtml=monthEntries.map(([m,v])=>`<div style="padding:12px 0;border-bottom:1px solid var(--border)">
+    <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:10px;align-items:flex-start">
+      <div><strong style="font-size:12px">${esc(m)}</strong><div class="dim" style="font-size:10px;margin-top:2px">${v.funciones} función${v.funciones===1?'':'es'}</div></div>
+      <div style="text-align:right"><div class="${v.restante>=0?'success':'danger'} fw700">${fmt(v.restante)}</div><div class="dim" style="font-size:10px">Restante La Opción</div></div>
+    </div>
+    ${monthLine('V. bruta',v.ventaBruta,'var(--cyan)')}
+    ${monthLine('V. neta',v.ventaNeta,'var(--purple)')}
+    ${monthLine('Comisiones',v.comisiones,'var(--danger)')}
+    ${monthLine('Autor',v.autor,'var(--pink)')}
+    ${monthLine('Alquiler',v.alquiler,'var(--danger)')}
+    ${monthLine('Otros',v.otros,'var(--danger)')}
+    ${monthLine('Gastos',v.totalGastos,'var(--danger)')}
+    ${monthLine('T. neto',v.totalNeto,'var(--yellow)')}
+    ${monthLine('Caché',v.cache,'var(--pink)')}
+    ${monthLine('Restante',v.restante,v.restante>=0?'var(--success)':'var(--danger)',true)}
+  </div>`).join('')||'<div class="empty">Sin datos</div>';
   const rowsHtml=cs.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12).map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right">${fmt(s.c.autorImporte)}</td><td class="right">${fmt(s.c.totalGastos)}</td><td class="right">${fmt(s.c.cache)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td><td class="right">${fmtPct(s.c.ventaNeta?s.c.restanteOpcion/s.c.ventaNeta*100:0)}</td></tr>`).join('');
 
   return `<div class="section-top"><div><h1 class="page-title">Dashboard profesional</h1><p class="page-sub">La Opción Producciones · ${n} de ${S.shows.length} funciones${S.lastSyncAt?` · Última actualización: ${S.lastSyncAt}`:''}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="resetDashboardFilters">🧹 Limpiar filtros</button><button class="btn btn-secondary btn-sm" data-action="refresh">${S.isRefreshing?'⏳ Actualizando...':'🔄 Actualizar desde Sheet'}</button></div></div>
