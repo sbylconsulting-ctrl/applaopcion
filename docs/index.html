@@ -60,6 +60,68 @@ function fmtPct(n){ return `${Number(n||0).toFixed(2)}%`; }
 function r2(n){ return Math.round(Number(n||0)*100)/100; }
 function esc(s){ return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function normalize(t){ return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+
+function alphaSortByName(list){ return [...(list||[])].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es',{sensitivity:'base'})); }
+function getActiveSorted(list){ return alphaSortByName((list||[]).filter(x=>x.active!==false)); }
+function getLegacyAgreementById(config,id){ return (config?.agreements||[]).find(a=>a.id===id)||null; }
+function getLegacyAgreementByName(config,name){ return (config?.agreements||[]).find(a=>normalize(a.name)===normalize(name))||null; }
+function hasWorkAgreement(work){ return !!(work&&(work.agreement||work.agreementId||work.agreementMode||work.agreementValue!==undefined||work.agreementName)); }
+function agreementFromWork(work){
+  if(!hasWorkAgreement(work)) return null;
+  const raw=(work.agreement&&typeof work.agreement==='object')?work.agreement:{};
+  const id=raw.id||work.agreementId||`wa_${work.id||gid('w')}`;
+  const name=raw.name||work.agreementName||work.name||'Acuerdo';
+  const mode=raw.mode||work.agreementMode||'percentage';
+  const value=Number(raw.value??work.agreementValue??0);
+  return {id,name,mode,value};
+}
+function resolveAgreementForWork(work,config,legacyAgreement=null){
+  let linked=agreementFromWork(work);
+  if(work?.agreementId&&!work.agreement&&!work.agreementName&&!work.agreementMode&&work.agreementValue===undefined){
+    const legacyById=getLegacyAgreementById(config,work.agreementId);
+    if(legacyById) linked={id:legacyById.id,name:legacyById.name,mode:legacyById.mode||'percentage',value:Number(legacyById.value||0)};
+  }
+  const fallback=legacyAgreement||null;
+  const agr=linked||fallback;
+  if(!agr) return {id:'',snapshot:null};
+  return {id:agr.id||'',snapshot:{name:agr.name||work?.name||'Acuerdo',mode:agr.mode||'percentage',value:Number(agr.value||0)}};
+}
+function syncWorkAgreementToConfig(work,config=S.config){
+  if(!work) return null;
+  if(!work.agreementId) work.agreementId=`wa_${work.id||gid('w')}`;
+  if(!work.agreementName) work.agreementName=work.name||'Acuerdo';
+  if(!work.agreementMode) work.agreementMode='percentage';
+  if(work.agreementValue===undefined) work.agreementValue=0;
+  if(!Array.isArray(config.agreements)) config.agreements=[];
+  let agr=config.agreements.find(a=>a.id===work.agreementId);
+  if(!agr){ agr={id:work.agreementId,name:work.agreementName,mode:work.agreementMode,value:Number(work.agreementValue||0),active:work.active!==false}; config.agreements.push(agr); }
+  agr.name=work.agreementName||work.name||agr.name;
+  agr.mode=work.agreementMode||'percentage';
+  agr.value=Number(work.agreementValue||0);
+  agr.active=work.active!==false;
+  return agr;
+}
+function syncAllWorkAgreementsToConfig(config=S.config){ (config.works||[]).forEach(w=>syncWorkAgreementToConfig(w,config)); }
+function getAgreementCatalog(config=S.config){
+  const byName=new Map();
+  getActiveSorted(config.works||[]).forEach(w=>{
+    const resolved=resolveAgreementForWork(w,config);
+    const agr=resolved.snapshot;
+    if(agr){ byName.set(normalize(agr.name),{id:resolved.id,name:agr.name,mode:agr.mode,value:agr.value,source:'work'}); }
+  });
+  getActiveSorted(config.agreements||[]).forEach(a=>{
+    const key=normalize(a.name);
+    if(!byName.has(key)) byName.set(key,{id:a.id,name:a.name,mode:a.mode||'percentage',value:Number(a.value||0),source:'legacy'});
+  });
+  return alphaSortByName([...byName.values()]);
+}
+function matchesAgreementFilter(show,agreementId){
+  if(!agreementId) return true;
+  if(show.agreementId===agreementId) return true;
+  const selected=getAgreementCatalog().find(a=>a.id===agreementId);
+  return !!(selected&&normalize(show.agreementSnapshot?.name)===normalize(selected.name));
+}
+function agreementValueLabel(agr){ return !agr?'—':(agr.mode==='fixed'?fmt(agr.value):fmtPct(agr.value)); }
 function showToast(msg,type='success'){ S.toast={message:msg,type}; clearTimeout(S.toastTimer); S.toastTimer=setTimeout(()=>{S.toast=null;render();},3500); render(); }
 function logoSVG(w=150){ const h=w*.55; return `<svg width="${w}" height="${h}" viewBox="-28 -8 336 174" preserveAspectRatio="xMidYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible"><text x="140" y="68" text-anchor="middle" font-family="'Outfit','Arial Black',sans-serif" font-size="48" font-weight="900" letter-spacing="4" fill="var(--text)">LA OPCIÓN</text><line x1="4" y1="82" x2="276" y2="82" stroke="var(--cyan)" stroke-width="4"/><line x1="4" y1="92" x2="276" y2="92" stroke="var(--pink)" stroke-width="4"/><line x1="4" y1="102" x2="276" y2="102" stroke="var(--yellow)" stroke-width="4"/><text x="140" y="132" text-anchor="middle" font-family="'Outfit','Arial',sans-serif" font-size="20" font-weight="300" letter-spacing="9" fill="var(--text-muted)">PRODUCCIONES</text></svg>`; }
 function roleLabel(r){ return r==='admin'?'Administrador':'Usuario'; }
@@ -118,7 +180,8 @@ async function boot(){
 function sheetShowToAppShow(raw,config){
   const venue=config.venues.find(v=>normalize(v.name)===normalize(raw.sala))||null;
   const work=config.works.find(w=>normalize(w.name)===normalize(raw.obra))||null;
-  const agreement=config.agreements.find(a=>normalize(a.name)===normalize(raw.acuerdo))||null;
+  const legacyAgreement=getLegacyAgreementByName(config,raw.acuerdo);
+  const resolvedAgreement=resolveAgreementForWork(work,config,legacyAgreement);
   const platformSnapshots={},income={};
 
   if(Array.isArray(raw.platformData)&&raw.platformData.length){
@@ -145,8 +208,8 @@ function sheetShowToAppShow(raw,config){
     venueId:venue?.id||'', workId:work?.id||'',
     venueName:raw.sala||'', workName:raw.obra||'',
     date:raw.fecha||'', time:'',
-    agreementId:agreement?.id||'',
-    agreementSnapshot:agreement?{name:agreement.name,mode:agreement.mode,value:agreement.value}:null,
+    agreementId:resolvedAgreement.id,
+    agreementSnapshot:resolvedAgreement.snapshot,
     notes:raw.observaciones||'',
     income, platformSnapshots,
     autorPct:Number(raw.autorPct||0),
@@ -255,7 +318,7 @@ function getDashboardFilteredShows(){
     if(f.to && date && date>f.to) return false;
     if(f.venueId && show.venueId!==f.venueId) return false;
     if(f.workId && show.workId!==f.workId) return false;
-    if(f.agreementId && show.agreementId!==f.agreementId) return false;
+    if(f.agreementId && !matchesAgreementFilter(show,f.agreementId)) return false;
     if(f.platformId){
       const inc=show.income||{};
       if(Number(inc[f.platformId]||0)<=0) return false;
@@ -316,7 +379,7 @@ async function saveShowToSheet(show){
 async function saveConfigToSheet(){
   if(S.role!=='admin') return showToast('No tienes permisos.','error');
   S.isSaving=true;render();
-  try{await apiPost({action:'saveConfig',config:S.config});S.configDirty=false;showToast('Configuración guardada','success');await loadFromSheet();}
+  try{syncAllWorkAgreementsToConfig();await apiPost({action:'saveConfig',config:S.config});S.configDirty=false;showToast('Configuración guardada','success');await loadFromSheet();}
   catch(err){showToast('Error al guardar configuración: '+err.message,'error');}
   finally{S.isSaving=false;render();}
 }
@@ -392,14 +455,14 @@ function renderDashboard(){
   const f=S.dashboardFilters||{};
   const allMonths=[...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
   const monthOpts=allMonths.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('');
-  const venueOpts=S.config.venues.filter(v=>v.active!==false).map(v=>`<option value="${v.id}" ${f.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join('');
-  const workOpts=S.config.works.filter(w=>w.active!==false).map(w=>`<option value="${w.id}" ${f.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join('');
+  const venueOpts=getActiveSorted(S.config.venues).map(v=>`<option value="${v.id}" ${f.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join('');
+  const workOpts=getActiveSorted(S.config.works).map(w=>`<option value="${w.id}" ${f.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join('');
   const platformOpts=[
-    ...S.config.platforms.filter(p=>p.active!==false).map(p=>`<option value="${p.id}" ${f.platformId===p.id?'selected':''}>${esc(p.name)}</option>`),
+    ...getActiveSorted(S.config.platforms).map(p=>`<option value="${p.id}" ${f.platformId===p.id?'selected':''}>${esc(p.name)}</option>`),
     `<option value="cashBox" ${f.platformId==='cashBox'?'selected':''}>Taquilla efectivo</option>`,
     `<option value="cardBox" ${f.platformId==='cardBox'?'selected':''}>Taquilla tarjeta</option>`
   ].join('');
-  const agreementOpts=S.config.agreements.filter(a=>a.active!==false).map(a=>`<option value="${a.id}" ${f.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
+  const agreementOpts=getAgreementCatalog().map(a=>`<option value="${a.id}" ${f.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
 
   const filtered=getDashboardFilteredShows();
   const cs=filtered.map(s=>({...s,c:calcShow(s)}));
@@ -484,6 +547,11 @@ function renderDashboard(){
     <div class="card"><div class="kpi-label">Top canal</div><div class="kpi-value" style="font-size:17px">${esc(bestPlatform)}</div><div class="kpi-sub">${fmt(bestPlatformVal)}</div></div>
   </div>
 
+  <div class="card mb20">
+    <h3>Funciones recientes filtradas</h3>
+    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th class="right">V. Neta</th><th class="right">Gastos</th><th class="right">Caché</th><th class="right">Restante</th><th class="right">Margen</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="8" class="empty">Sin funciones con estos filtros</td></tr>'}</tbody></table></div>
+  </div>
+
   <div class="grid grid-2 mb20">
     <div class="card"><h3>Evolución mensual</h3>${monthHtml}</div>
     <div class="card"><h3>Ingresos por plataforma</h3>${renderMiniBars(platformEntries,0,'var(--cyan)',9)}</div>
@@ -498,11 +566,6 @@ function renderDashboard(){
       <div class="finance-split"><span>Caché compañías</span><strong class="pink">-${fmt(t.ca)}</strong></div>
       <div class="finance-split total"><span>Restante La Opción</span><strong class="${t.ro>=0?'success':'danger'}">${fmt(t.ro)}</strong></div>
     </div>
-  </div>
-
-  <div class="card">
-    <h3>Funciones recientes filtradas</h3>
-    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th class="right">V. Neta</th><th class="right">Gastos</th><th class="right">Caché</th><th class="right">Restante</th><th class="right">Margen</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="8" class="empty">Sin funciones con estos filtros</td></tr>'}</tbody></table></div>
   </div>`;
 }
 
@@ -523,7 +586,7 @@ function getFilteredShowList(){
     if(f.month && !(s.date||'').startsWith(f.month)) return false;
     if(f.venueId && s.venueId!==f.venueId) return false;
     if(f.workId && s.workId!==f.workId) return false;
-    if(f.agreementId && s.agreementId!==f.agreementId) return false;
+    if(f.agreementId && !matchesAgreementFilter(s,f.agreementId)) return false;
     return true;
   });
   const sort=f.sort||'dateDesc';
@@ -565,9 +628,9 @@ function renderShowList(){
   const isAdmin=S.role==='admin';
   const months=getShowMonths();
   const monthOpts=months.map(m=>`<option value="${m}" ${S.showFilters.month===m?'selected':''}>${m}</option>`).join('');
-  const venueOpts=S.config.venues.filter(v=>v.active!==false).map(v=>`<option value="${v.id}" ${S.showFilters.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join('');
-  const workOpts=S.config.works.filter(w=>w.active!==false).map(w=>`<option value="${w.id}" ${S.showFilters.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join('');
-  const agrOpts=S.config.agreements.filter(a=>a.active!==false).map(a=>`<option value="${a.id}" ${S.showFilters.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
+  const venueOpts=getActiveSorted(S.config.venues).map(v=>`<option value="${v.id}" ${S.showFilters.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join('');
+  const workOpts=getActiveSorted(S.config.works).map(w=>`<option value="${w.id}" ${S.showFilters.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join('');
+  const agrOpts=getAgreementCatalog().map(a=>`<option value="${a.id}" ${S.showFilters.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
   const activeFilters=Number(!!S.search)+['month','venueId','workId','agreementId'].reduce((n,k)=>n+Number(!!S.showFilters[k]),0);
   const thAdmin=`<th class="right">V.Bruta</th><th class="right">V.Neta</th><th class="right">Restante</th>`;
   const rowsHtml=cs.map(s=>{
@@ -628,17 +691,28 @@ function renderShowForm(isEdit){
   const isU=S.role==='user';
   const d=S.newShowDraft||(isEdit?null:emptyDraft());
   if(!d) return '<div class="card"><div class="empty">Error al cargar el formulario.</div></div>';
+  if(!d.income) d.income={};
   S.newShowDraft=d;
 
-  const workOpts=S.config.works.filter(w=>w.active!==false).map(w=>`<option value="${w.id}" ${d.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join('');
-  const venueOpts=S.config.venues.filter(v=>v.active!==false).map(v=>`<option value="${v.id}" ${d.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join('');
-  const agrOpts=S.config.agreements.filter(a=>a.active!==false).map(a=>`<option value="${a.id}" ${d.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
+  const selectedWork=S.config.works.find(w=>w.id===d.workId);
+  const legacyAgreement=d.agreementId?getLegacyAgreementById(S.config,d.agreementId):null;
+  const resolvedAgreement=resolveAgreementForWork(selectedWork,S.config,legacyAgreement);
+  if(selectedWork&&resolvedAgreement.id&&d.agreementId!==resolvedAgreement.id) d.agreementId=resolvedAgreement.id;
+
+  const workOpts=getActiveSorted(S.config.works).map(w=>`<option value="${w.id}" ${d.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join('');
+  const venueOpts=getActiveSorted(S.config.venues).map(v=>`<option value="${v.id}" ${d.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join('');
 
   const selectedVenue=S.config.venues.find(v=>v.id===d.venueId);
   const venueRental=Number(selectedVenue?.alquiler||0);
   const rentalInfo=d.venueId?`<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">Alquiler configurado: <strong style="color:var(--yellow)">${fmt(venueRental)}</strong> (se aplica automáticamente)</p>`:'';
 
-  const platFields=S.config.platforms.filter(p=>p.active!==false).map(p=>{
+  const agreementInfo=d.workId
+    ? (resolvedAgreement.snapshot
+      ? `<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">Acuerdo vinculado a la obra: <strong style="color:var(--cyan)">${esc(resolvedAgreement.snapshot.name)}</strong> · ${resolvedAgreement.snapshot.mode==='fixed'?'Fijo':'Porcentaje'} ${agreementValueLabel(resolvedAgreement.snapshot)}</p>`
+      : `<div class="dirty-note">⚠️ Esta obra todavía no tiene acuerdo configurado. Ve a Administración → Obras y completa tipo y valor del acuerdo.</div>`)
+    : `<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">Selecciona una obra para aplicar automáticamente su acuerdo.</p>`;
+
+  const platFields=getActiveSorted(S.config.platforms).map(p=>{
     const label=isU?esc(p.name):`${esc(p.name)} (${p.commission}%${p.ivaOnCommission?' +IVA':''})`;
     return `<div class="field"><label>${label}</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income[p.id]||''}" data-plat-id="${p.id}"/></div>`;
   }).join('');
@@ -648,7 +722,7 @@ function renderShowForm(isEdit){
   const btnLabel=isEdit?'💾 Guardar cambios':(isDup?'📄 Crear función duplicada':'💾 Guardar');
   const duplicateNote=isDup?`<div class="dirty-note">📄 Estás duplicando una función. Puedes cambiar fecha, sala, obra o importes. Al guardar se creará un registro nuevo y el original no se modificará.</div>`:'';
 
-  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="${isEdit?'shows':'shows'}">← Volver</button><h1 class="page-title" style="font-size:22px">${title}</h1></div>${duplicateNote}<div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div><div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div></div>${!isU?`<div class="field"><label>Acuerdo</label><select data-field="agreementId"><option value="">— Seleccionar —</option>${agrOpts}</select></div>`:''}<div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox"/></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox"/></div></div></div><div class="card"><h3>Gastos</h3><div class="field"><label>Autor (% sobre venta neta)</label><input type="number" min="0" max="100" step="0.01" placeholder="0" value="${d.autorPct||''}" data-expense-flat="autorPct"/></div><div class="field"><label>Otros gastos (€ — se resta a la venta neta)</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.otrosGastos||''}" data-expense-flat="otrosGastos"/></div></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':btnLabel}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="${isEdit?'shows':'shows'}">← Volver</button><h1 class="page-title" style="font-size:22px">${title}</h1></div>${duplicateNote}<div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div>${agreementInfo}<div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div></div><div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox"/></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox"/></div></div></div><div class="card"><h3>Gastos</h3><div class="field"><label>Autor (% sobre venta neta)</label><input type="number" min="0" max="100" step="0.01" placeholder="0" value="${d.autorPct||''}" data-expense-flat="autorPct"/></div><div class="field"><label>Otros gastos (€ — se resta a la venta neta)</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.otrosGastos||''}" data-expense-flat="otrosGastos"/></div></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':btnLabel}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
 }
 
 function renderSummary(){
@@ -670,20 +744,22 @@ function renderSummary(){
 
 function renderAdmin(){
   if(S.role!=='admin') return '<div class="card"><div class="empty">Acceso denegado</div></div>';
-  const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras'},{id:'agreements',label:'Acuerdos'},{id:'expenses',label:'Gastos'},{id:'users',label:'Usuarios'}];
+  if(S.adminTab==='agreements') S.adminTab='works';
+  const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras y acuerdos'},{id:'expenses',label:'Gastos'},{id:'users',label:'Usuarios'}];
   const tabBtns=tabs.map(t=>`<button class="btn ${S.adminTab===t.id?'btn-primary':'btn-ghost'} btn-sm" data-admin-tab="${t.id}">${t.label}</button>`).join('');
   const content=S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab);
   return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
 }
 function renderConfigEditor(tab){
   const meta=CONFIG_META[tab]||CONFIG_META.platforms;
-  const items=S.config[meta.key]||[];
+  const items=alphaSortByName(S.config[meta.key]||[]);
   const rows=items.map(item=>renderConfigRow(tab,item)).join('');
   return `<div class="grid grid-2 mb20"><div class="card"><h3>Añadir ${meta.singular}</h3>${renderAddConfigForm(tab)}<p class="dim" style="font-size:12px;margin-top:10px">Añade el elemento y después guarda los cambios.</p></div><div class="card"><h3>${meta.title}</h3><div class="table-wrap"><table><thead>${renderConfigHeader(tab)}</thead><tbody>${rows||`<tr><td colspan="6" class="empty">Sin ${meta.title.toLowerCase()}</td></tr>`}</tbody></table></div><p class="dim" style="font-size:12px;margin-top:10px">Desactiva elementos en vez de borrarlos para conservar históricos.</p></div></div>`;
 }
 function renderAddConfigForm(tab){
   if(tab==='platforms') return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva plataforma"/></div><div class="grid grid-2"><div class="field"><label>Comisión %</label><input type="number" min="0" step="0.01" data-add="commission" data-add-tab="${tab}" placeholder="0"/></div><div class="field"><label>IVA comisión</label><select data-add="ivaOnCommission" data-add-tab="${tab}"><option value="true">Sí</option><option value="false">No</option></select></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir plataforma</button>`;
   if(tab==='venues') return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva sala"/></div><div class="field"><label>Alquiler por función</label><input type="number" min="0" step="0.01" data-add="alquiler" data-add-tab="${tab}" placeholder="0"/></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir sala</button>`;
+  if(tab==='works') return `<div class="field"><label>Nombre de la obra</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva obra"/></div><div class="field"><label>Nombre del acuerdo</label><input data-add="agreementName" data-add-tab="${tab}" placeholder="Acuerdo vinculado a esta obra"/></div><div class="grid grid-2"><div class="field"><label>Tipo de acuerdo</label><select data-add="agreementMode" data-add-tab="${tab}"><option value="percentage">Porcentaje</option><option value="fixed">Fijo</option></select></div><div class="field"><label>Valor del acuerdo</label><input type="number" min="0" step="0.01" data-add="agreementValue" data-add-tab="${tab}" placeholder="0"/></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir obra con acuerdo</button>`;
   if(tab==='agreements') return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nuevo acuerdo"/></div><div class="grid grid-2"><div class="field"><label>Tipo</label><select data-add="mode" data-add-tab="${tab}"><option value="percentage">Porcentaje</option><option value="fixed">Fijo</option></select></div><div class="field"><label>Valor</label><input type="number" min="0" step="0.01" data-add="value" data-add-tab="${tab}" placeholder="0"/></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir acuerdo</button>`;
   const meta=CONFIG_META[tab];
   return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nuevo ${meta.singular}"/></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir ${meta.singular}</button>`;
@@ -691,12 +767,14 @@ function renderAddConfigForm(tab){
 function renderConfigHeader(tab){
   if(tab==='platforms') return '<tr><th>Nombre</th><th>Comisión</th><th>IVA</th><th>Activa</th></tr>';
   if(tab==='venues')    return '<tr><th>Nombre</th><th>Alquiler por función</th><th>Activa</th></tr>';
+  if(tab==='works')     return '<tr><th>Obra</th><th>Acuerdo</th><th>Tipo acuerdo</th><th>Valor acuerdo</th><th>Activa</th></tr>';
   if(tab==='agreements')return '<tr><th>Nombre</th><th>Tipo</th><th>Valor</th><th>Activo</th></tr>';
   return '<tr><th>Nombre</th><th>Activo</th></tr>';
 }
 function renderConfigRow(tab,item){
   if(tab==='platforms') return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="commission" value="${Number(item.commission||0)}"/></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="ivaOnCommission"><option value="true" ${item.ivaOnCommission?'selected':''}>Sí</option><option value="false" ${!item.ivaOnCommission?'selected':''}>No</option></select></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
   if(tab==='venues')    return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="alquiler" value="${Number(item.alquiler||0)}"/></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
+  if(tab==='works'){ const resolved=resolveAgreementForWork(item,S.config); const agr=resolved.snapshot||{name:item.agreementName||item.name,mode:'percentage',value:0}; return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="agreementName" value="${esc(agr.name||item.name)}"/></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="agreementMode"><option value="percentage" ${agr.mode==='percentage'?'selected':''}>Porcentaje</option><option value="fixed" ${agr.mode==='fixed'?'selected':''}>Fijo</option></select></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="agreementValue" value="${Number(agr.value||0)}"/></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`; }
   if(tab==='agreements')return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="mode"><option value="percentage" ${item.mode==='percentage'?'selected':''}>Porcentaje</option><option value="fixed" ${item.mode==='fixed'?'selected':''}>Fijo</option></select></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="value" value="${Number(item.value||0)}"/></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
   return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
 }
@@ -803,12 +881,23 @@ function bindEvents(){
   }
   const sm=document.querySelector('[data-bind="summaryMonth"]');
   if(sm) sm.onchange=()=>{S.summaryMonth=sm.value;render();};
-  // campos básicos — solo 'input', nunca 'change'+'input' juntos (evita doble disparo)
+  // campos básicos — selects en change y textos en input para evitar doble disparo
   document.querySelectorAll('[data-field]').forEach(el=>{
-    el.oninput=()=>{
+    const updateDraftField=()=>{
       if(!S.newShowDraft) S.newShowDraft=emptyDraft();
-      S.newShowDraft[el.dataset.field]=el.value;
+      const field=el.dataset.field;
+      S.newShowDraft[field]=el.value;
+      if(field==='workId'){
+        const work=S.config.works.find(w=>w.id===el.value);
+        const resolved=resolveAgreementForWork(work,S.config);
+        S.newShowDraft.agreementId=resolved.id||'';
+        render();
+      } else if(field==='venueId'){
+        render();
+      }
     };
+    if(el.tagName==='SELECT') el.onchange=updateDraftField;
+    else el.oninput=updateDraftField;
   });
   // ingresos plataformas
   document.querySelectorAll('[data-plat-id]').forEach(el=>{
@@ -838,9 +927,14 @@ function updateConfigFromInput(el){
   const item=getConfigItem(el.dataset.cfgTab,el.dataset.cfgId);if(!item)return;
   const field=el.dataset.cfgField;
   let value=el.type==='checkbox'?el.checked:el.value;
-  if(['commission','value','alquiler'].includes(field)) value=Number(value||0);
+  if(['commission','value','alquiler','agreementValue'].includes(field)) value=Number(value||0);
   if(field==='ivaOnCommission') value=value==='true';
-  item[field]=value;S.configDirty=true;
+  item[field]=value;
+  if(el.dataset.cfgTab==='works'){
+    if(!item.agreementName) item.agreementName=item.name;
+    syncWorkAgreementToConfig(item);
+  }
+  S.configDirty=true;
 }
 function addConfigItem(tab){
   const meta=CONFIG_META[tab];
@@ -851,8 +945,11 @@ function addConfigItem(tab){
   let item={id:gid(meta.prefix),name,active:true};
   if(tab==='platforms') item={...item,commission:Number(values.commission||0),ivaOnCommission:values.ivaOnCommission==='true'};
   if(tab==='venues')    item={...item,alquiler:Number(values.alquiler||0)};
+  if(tab==='works')     item={...item,agreementId:gid('wa'),agreementName:String(values.agreementName||name).trim(),agreementMode:values.agreementMode||'percentage',agreementValue:Number(values.agreementValue||0)};
   if(tab==='agreements')item={...item,mode:values.mode||'percentage',value:Number(values.value||0)};
-  S.config[meta.key].push(item);S.configDirty=true;
+  S.config[meta.key].push(item);
+  if(tab==='works') syncWorkAgreementToConfig(item);
+  S.configDirty=true;
   inputs.forEach(i=>{if(i.tagName==='INPUT')i.value='';});
   showToast(`${meta.singular[0].toUpperCase()+meta.singular.slice(1)} añadido. Guarda los cambios.`,'success');
   render();
@@ -888,7 +985,8 @@ async function handleSaveShow(){
 
   const work=S.config.works.find(w=>w.id===d.workId);
   const venue=S.config.venues.find(v=>v.id===d.venueId);
-  const agreement=S.config.agreements.find(a=>a.id===d.agreementId);
+  const legacyAgreement=d.agreementId?getLegacyAgreementById(S.config,d.agreementId):null;
+  const resolvedAgreement=resolveAgreementForWork(work,S.config,legacyAgreement);
 
   const income={};
   S.config.platforms.forEach(p=>{income[p.id]=parseFloat(d.income?.[p.id])||0;});
@@ -913,8 +1011,8 @@ async function handleSaveShow(){
     workId:d.workId, venueId:d.venueId,
     workName:work?.name||'', venueName:venue?.name||'',
     date:d.date, time:d.time||'',
-    agreementId:d.agreementId||'',
-    agreementSnapshot:agreement?{name:agreement.name,mode:agreement.mode,value:agreement.value}:null,
+    agreementId:resolvedAgreement.id,
+    agreementSnapshot:resolvedAgreement.snapshot,
     notes:d.notes||'',
     income, platformSnapshots:{},
     autorPct, otrosGastos, venueRental,
