@@ -526,7 +526,10 @@ function renderDashboard(){
   const avg=n?r2(t.ro/n):0;
 
   const byWork=groupTotal(cs,s=>s.workName,s=>s.c.restanteOpcion);
+  const byWorkAutor=groupTotal(cs,s=>s.workName,s=>s.c.autorImporte);
   const byVenue=groupTotal(cs,s=>s.venueName,s=>s.c.restanteOpcion);
+  const selectedWorkForAutor=(S.config.works||[]).find(w=>w.id===f.workId);
+  const autorScopeLabel=f.workId?(selectedWorkForAutor?.name||'Obra seleccionada'):'Todas las obras filtradas';
   const [bestWork,bestWorkVal]=bestEntry(byWork);
   const [bestVenue,bestVenueVal]=bestEntry(byVenue);
 
@@ -540,6 +543,7 @@ function renderDashboard(){
   const [bestPlatform,bestPlatformVal]=bestEntry(platformEntries.length?Object.fromEntries(platformEntries):{});
 
   const workEntries=Object.entries(byWork).sort(([,a],[,b])=>b-a);
+  const autorWorkEntries=Object.entries(byWorkAutor).filter(([,v])=>v>0).sort(([,a],[,b])=>b-a);
   const venueEntries=Object.entries(byVenue).sort(([,a],[,b])=>b-a);
   const gastosEntries=[
     ['Comisiones',t.comm],
@@ -560,7 +564,7 @@ function renderDashboard(){
   const monthMax=Math.max(...monthEntries.flatMap(([,v])=>[v.venta,v.gastos,Math.abs(v.beneficio)]),1);
   const monthHtml=monthEntries.map(([m,v])=>`<div style="padding:10px 0;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px"><strong style="font-size:12px">${esc(m)}</strong><span class="${v.beneficio>=0?'success':'danger'} fw700">${fmt(v.beneficio)}</span></div><div class="mini-series"><span>Venta</span><div class="bar-track"><div class="bar-fill" style="width:${(v.venta/monthMax*100).toFixed(1)}%;background:var(--cyan)"></div></div><span>${fmt(v.venta)}</span></div><div class="mini-series"><span>Gastos</span><div class="bar-track"><div class="bar-fill" style="width:${(v.gastos/monthMax*100).toFixed(1)}%;background:var(--danger)"></div></div><span>${fmt(v.gastos)}</span></div><div class="mini-series"><span>Benef.</span><div class="bar-track"><div class="bar-fill" style="width:${(Math.abs(v.beneficio)/monthMax*100).toFixed(1)}%;background:var(--success)"></div></div><span>${fmt(v.beneficio)}</span></div></div>`).join('')||'<div class="empty">Sin datos</div>';
 
-  const rowsHtml=cs.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12).map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right">${fmt(s.c.totalGastos)}</td><td class="right">${fmt(s.c.cache)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td><td class="right">${fmtPct(s.c.ventaNeta?s.c.restanteOpcion/s.c.ventaNeta*100:0)}</td></tr>`).join('');
+  const rowsHtml=cs.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12).map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right">${fmt(s.c.autorImporte)}</td><td class="right">${fmt(s.c.totalGastos)}</td><td class="right">${fmt(s.c.cache)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td><td class="right">${fmtPct(s.c.ventaNeta?s.c.restanteOpcion/s.c.ventaNeta*100:0)}</td></tr>`).join('');
 
   return `<div class="section-top"><div><h1 class="page-title">Dashboard profesional</h1><p class="page-sub">La Opción Producciones · ${n} de ${S.shows.length} funciones${S.lastSyncAt?` · Última actualización: ${S.lastSyncAt}`:''}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="resetDashboardFilters">🧹 Limpiar filtros</button><button class="btn btn-secondary btn-sm" data-action="refresh">${S.isRefreshing?'⏳ Actualizando...':'🔄 Actualizar desde Sheet'}</button></div></div>
 
@@ -582,6 +586,7 @@ function renderDashboard(){
     <div class="card"><div class="kpi-label">Total Gastos</div><div class="kpi-value danger">${fmt(t.g)}</div><div class="kpi-sub">${fmtPct(gastoPct)} sobre venta neta</div></div>
     <div class="card"><div class="kpi-label">Beneficio La Opción</div><div class="kpi-value ${t.ro>=0?'success':'danger'}">${fmt(t.ro)}</div><div class="kpi-sub">Margen ${fmtPct(margen)}</div></div>
     <div class="card"><div class="kpi-label">Caché total</div><div class="kpi-value pink">${fmt(t.ca)}</div><div class="kpi-sub">Coste compañía</div></div>
+    <div class="card"><div class="kpi-label">Autor acumulado</div><div class="kpi-value danger">${fmt(t.autor)}</div><div class="kpi-sub">${esc(autorScopeLabel)}</div></div>
     <div class="card"><div class="kpi-label">Media por función</div><div class="kpi-value yellow">${fmt(avg)}</div><div class="kpi-sub">Beneficio medio</div></div>
     <div class="card"><div class="kpi-label">Mejor obra</div><div class="kpi-value" style="font-size:17px">${esc(bestWork)}</div><div class="kpi-sub">${fmt(bestWorkVal)}</div></div>
     <div class="card"><div class="kpi-label">Mejor sala</div><div class="kpi-value" style="font-size:17px">${esc(bestVenue)}</div><div class="kpi-sub">${fmt(bestVenueVal)}</div></div>
@@ -590,18 +595,20 @@ function renderDashboard(){
 
   <div class="card mb20">
     <h3>Funciones recientes filtradas</h3>
-    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th class="right">V. Neta</th><th class="right">Gastos</th><th class="right">Caché</th><th class="right">Restante</th><th class="right">Margen</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="8" class="empty">Sin funciones con estos filtros</td></tr>'}</tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th class="right">V. Neta</th><th class="right">Autor</th><th class="right">Gastos</th><th class="right">Caché</th><th class="right">Restante</th><th class="right">Margen</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="9" class="empty">Sin funciones con estos filtros</td></tr>'}</tbody></table></div>
   </div>
 
   <div class="grid grid-2 mb20">
     <div class="card"><h3>Evolución mensual</h3>${monthHtml}</div>
     <div class="card"><h3>Ingresos por plataforma</h3>${renderMiniBars(platformEntries,0,'var(--cyan)',9)}</div>
     <div class="card"><h3>Ranking de obras por beneficio</h3>${renderMiniBars(workEntries,0,'var(--success)',8)}</div>
+    <div class="card"><h3>Autor acumulado por obra</h3>${renderMiniBars(autorWorkEntries,0,'var(--danger)',10)}</div>
     <div class="card"><h3>Ranking de salas por beneficio</h3>${renderMiniBars(venueEntries,0,'var(--purple)',8)}</div>
     <div class="card"><h3>Desglose de gastos</h3>${renderMiniBars(gastosEntries,0,'var(--danger)',6)}</div>
     <div class="card"><h3>Resumen financiero</h3>
       <div class="finance-split"><span>Venta bruta</span><strong class="cyan">${fmt(t.vb)}</strong></div>
       <div class="finance-split"><span>Venta neta</span><strong class="purple">${fmt(t.vn)}</strong></div>
+      <div class="finance-split"><span>Autor a pagar</span><strong class="danger">-${fmt(t.autor)}</strong></div>
       <div class="finance-split"><span>Total gastos</span><strong class="danger">-${fmt(t.g)}</strong></div>
       <div class="finance-split"><span>Total neto</span><strong class="yellow">${fmt(t.tn)}</strong></div>
       <div class="finance-split"><span>Caché compañías</span><strong class="pink">-${fmt(t.ca)}</strong></div>
@@ -717,7 +724,7 @@ function renderShowDetail(){
   if(c.venueRental>0)  gastoRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Alquiler sala</span><span class="fw700 danger">-${fmt(c.venueRental)}</span></div>`);
 
   // KPIs: admin ve todo, usuario solo ve Caché y Restante
-  const kpisAdmin=`<div class="card"><div class="kpi-label">V. Bruta</div><div class="kpi-value cyan">${fmt(c.ventaBruta)}</div></div><div class="card"><div class="kpi-label">V. Neta</div><div class="kpi-value purple">${fmt(c.ventaNeta)}</div></div><div class="card"><div class="kpi-label">Gastos</div><div class="kpi-value danger">${fmt(c.totalGastos)}</div></div><div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow">${fmt(c.totalNeto)}</div></div><div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink">${fmt(c.cache)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</div></div>`;
+  const kpisAdmin=`<div class="card"><div class="kpi-label">V. Bruta</div><div class="kpi-value cyan">${fmt(c.ventaBruta)}</div></div><div class="card"><div class="kpi-label">V. Neta</div><div class="kpi-value purple">${fmt(c.ventaNeta)}</div></div><div class="card"><div class="kpi-label">Autor a pagar</div><div class="kpi-value danger">${fmt(c.autorImporte)}</div><div class="kpi-sub">${fmtPct(show.autorPct)} · ${expenseOwnerLabel(c.autorOwner)}</div></div><div class="card"><div class="kpi-label">Gastos</div><div class="kpi-value danger">${fmt(c.totalGastos)}</div></div><div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow">${fmt(c.totalNeto)}</div></div><div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink">${fmt(c.cache)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</div></div>`;
   const kpisUser=`<div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink">${fmt(c.cache)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</div></div>`;
 
   return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">←</button><div style="flex:1"><h1 class="page-title" style="font-size:22px">${esc(show.workName)}</h1><p class="page-sub">${esc(show.venueName)} · ${esc(show.date)}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${show.id}">📄 Duplicar</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${show.id}">✏️ Editar función</button></div></div><div class="grid grid-kpis mb20">${isA?kpisAdmin:kpisUser}</div><div class="grid grid-2 mb20"><div class="card"><h3>Ingresos por plataforma</h3>${incomeRows||'<div class="empty">Sin ingresos de plataforma</div>'}${cashRows.length?`<div style="padding-top:6px">${cashRows.join('')}</div>`:''}</div><div class="card"><h3>Reparto (${esc(c.agreement?.name||'—')})</h3>${isA?`<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Total Neto</span><span class="fw700">${fmt(c.totalNeto)}</span></div>`:''}${gastoRows.length?`<div style="padding-top:4px;border-top:1px solid var(--border);margin-top:4px">${gastoRows.join('')}</div>`:''}${(c.autorImporte>0||c.otrosGastos>0)?`<p class="dim" style="font-size:11px;margin-top:8px">Asignación: Autor → <strong>${expenseOwnerLabel(c.autorOwner)}</strong>${c.otrosGastos>0?` · Otros gastos → <strong>${expenseOwnerLabel(c.expenseOwner)}</strong>`:''}</p>`:''}<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Caché sala</span><span class="fw700 pink">${fmt(c.cache)}</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800;border-top:1px solid var(--border);margin-top:4px"><span>Restante La Opción</span><span class="${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</span></div></div></div>`;
