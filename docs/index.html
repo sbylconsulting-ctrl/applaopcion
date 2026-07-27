@@ -65,11 +65,19 @@ function normalizeExpenseOwner(owner){
   owner=normalize(owner||'both');
   if(['laopcion','la opcion','opcion','option'].includes(owner)) return 'laopcion';
   if(['company','compania','compañia','cia','compañía'].includes(owner)) return 'company';
+  if(['cache','cache la opcion','cachelaopcion','gasto cache','gasto de cache'].includes(owner)) return 'cache';
   return 'both';
+}
+function normalizeAutorOwner(owner){
+  const key=normalizeExpenseOwner(owner);
+  return key==='cache'?'both':key;
 }
 function expenseOwnerLabel(owner){
   const key=normalizeExpenseOwner(owner);
-  return key==='laopcion'?'La Opción':(key==='company'?'Compañía':'Ambas partes');
+  if(key==='laopcion') return 'La Opción';
+  if(key==='company') return 'Compañía';
+  if(key==='cache') return 'Extra de caché a cargo de La Opción';
+  return 'Ambas partes';
 }
 
 function alphaSortByName(list){ return [...(list||[])].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es',{sensitivity:'base'})); }
@@ -224,7 +232,7 @@ function sheetShowToAppShow(raw,config){
     notes:raw.observaciones||'',
     income, platformSnapshots,
     autorPct:Number(raw.autorPct||0),
-    autorOwner:normalizeExpenseOwner(raw.autorOwner||raw.authorOwner||raw.autorGastoOwner||'both'),
+    autorOwner:normalizeAutorOwner(raw.autorOwner||raw.authorOwner||raw.autorGastoOwner||'both'),
     otrosGastos:Number(raw.otrosGastos||0),
     expenseOwner:normalizeExpenseOwner(raw.expenseOwner||raw.otrosGastosOwner||'both'),
     venueRental:Number(raw.alquiler||venue?.alquiler||0),
@@ -246,7 +254,7 @@ function appShowToSheetData(show,config){
   }));
   function findAmount(platName){ const pl=config.platforms.find(p=>normalize(p.name)===normalize(platName)); return pl?Number(inc[pl.id]??ps[pl.id]?.income??0):0; }
   const autorPct=r2(Number(show.autorPct||0));
-  const autorOwner=normalizeExpenseOwner(show.autorOwner||'both');
+  const autorOwner=normalizeAutorOwner(show.autorOwner||'both');
   const otrosGastos=r2(Number(show.otrosGastos||0));
   const expenseOwner=normalizeExpenseOwner(show.expenseOwner||'both');
   const venue=config.venues.find(v=>v.id===show.venueId||normalize(v.name)===normalize(show.venueName));
@@ -284,24 +292,26 @@ function calcShow(show){
   const ventaNeta=r2(ventaBruta/1.10);
   const autorPct=r2(Number(show.autorPct||0));
   const autorImporte=r2(ventaNeta*autorPct/100);
-  const autorOwner=normalizeExpenseOwner(show.autorOwner||'both');
+  const autorOwner=normalizeAutorOwner(show.autorOwner||'both');
   const otrosGastos=r2(Number(show.otrosGastos||0));
   const expenseOwner=normalizeExpenseOwner(show.expenseOwner||'both');
   const venueRental=r2(Number(show.venueRental||0));
 
   // Gastos fijos antes del reparto: comisiones de plataformas y alquiler.
-  // Autor y otros gastos ahora pueden ir a ambas partes, La Opción o compañía.
+  // "Extra de caché" se carga a La Opción y se suma al caché; no se duplica como gasto externo.
   const autorBoth=autorOwner==='both'?autorImporte:0;
   const autorLaOpcion=autorOwner==='laopcion'?autorImporte:0;
   const autorCompany=autorOwner==='company'?autorImporte:0;
   const otrosBoth=expenseOwner==='both'?otrosGastos:0;
   const otrosLaOpcion=expenseOwner==='laopcion'?otrosGastos:0;
   const otrosCompany=expenseOwner==='company'?otrosGastos:0;
+  const otrosCache=expenseOwner==='cache'?otrosGastos:0;
+  const otrosGastosRegulares=r2(otrosGastos-otrosCache);
 
   const gastosComunes=r2(totalComm+venueRental);
   const gastosAntesReparto=r2(gastosComunes+autorBoth+otrosBoth);
   const baseReparto=r2(ventaNeta-gastosAntesReparto);
-  const totalGastos=r2(gastosComunes+autorImporte+otrosGastos);
+  const totalGastos=r2(gastosComunes+autorImporte+otrosGastosRegulares);
   const totalNeto=r2(ventaNeta-totalGastos);
 
   const agr=show.agreementSnapshot;
@@ -311,10 +321,10 @@ function calcShow(show){
   };
 
   const cacheBase=calcCacheFromBase(baseReparto);
-  const cache=r2(cacheBase-autorCompany-otrosCompany);
-  const restanteOpcion=r2(baseReparto-cacheBase-autorLaOpcion-otrosLaOpcion);
+  const cache=r2(cacheBase-autorCompany-otrosCompany+otrosCache);
+  const restanteOpcion=r2(baseReparto-cacheBase-autorLaOpcion-otrosLaOpcion-otrosCache);
 
-  return {commissions,cashBox,cardBox,ventaBruta,ventaNeta,totalComm:r2(totalComm),autorImporte,autorOwner,otrosGastos,expenseOwner,venueRental,gastosComunes,gastosAntesReparto,baseReparto,totalGastos,totalNeto,cacheBase,cache,restanteOpcion,agreement:agr};
+  return {commissions,cashBox,cardBox,ventaBruta,ventaNeta,totalComm:r2(totalComm),autorImporte,autorOwner,otrosGastos,otrosGastosRegulares,otrosCache,expenseOwner,venueRental,gastosComunes,gastosAntesReparto,baseReparto,totalGastos,totalNeto,cacheBase,cache,restanteOpcion,agreement:agr};
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -331,7 +341,7 @@ function showToDraft(show){
     notes:show.notes||'',
     income:{...show.income},
     autorPct:Number(show.autorPct||0),
-    autorOwner:normalizeExpenseOwner(show.autorOwner||'both'),
+    autorOwner:normalizeAutorOwner(show.autorOwner||'both'),
     otrosGastos:Number(show.otrosGastos||0),
     expenseOwner:normalizeExpenseOwner(show.expenseOwner||'both'),
   };
@@ -517,7 +527,7 @@ function renderDashboard(){
     comm:a.comm+s.c.totalComm,
     autor:a.autor+s.c.autorImporte,
     alquiler:a.alquiler+s.c.venueRental,
-    otros:a.otros+s.c.otrosGastos,
+    otros:a.otros+s.c.otrosGastosRegulares,
   }),{vb:0,vn:0,g:0,tn:0,ca:0,ro:0,comm:0,autor:0,alquiler:0,otros:0});
 
   const n=cs.length;
@@ -574,7 +584,7 @@ function renderDashboard(){
     monthGroups[m].comisiones+=s.c.totalComm;
     monthGroups[m].autor+=s.c.autorImporte;
     monthGroups[m].alquiler+=s.c.venueRental;
-    monthGroups[m].otros+=s.c.otrosGastos;
+    monthGroups[m].otros+=s.c.otrosGastosRegulares;
     monthGroups[m].totalGastos+=s.c.totalGastos;
     monthGroups[m].totalNeto+=s.c.totalNeto;
     monthGroups[m].cache+=s.c.cache;
@@ -757,7 +767,10 @@ function renderShowDetail(){
   if(c.cardBox>0) cashRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Taquilla tarjeta</span><span class="fw700 success">${fmt(c.cardBox)}</span></div>`);
   const gastoRows=[];
   if(c.autorImporte>0) gastoRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Autor (${fmtPct(show.autorPct)}) <span class="dim">(${expenseOwnerLabel(c.autorOwner)})</span></span><span class="fw700 danger">-${fmt(c.autorImporte)}</span></div>`);
-  if(c.otrosGastos>0)  gastoRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Otros gastos <span class="dim">(${expenseOwnerLabel(c.expenseOwner)})</span></span><span class="fw700 danger">-${fmt(c.otrosGastos)}</span></div>`);
+  if(c.otrosGastos>0){
+    if(c.expenseOwner==='cache') gastoRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Extra de caché <span class="dim">(a cargo de La Opción)</span></span><span class="fw700 pink">+${fmt(c.otrosCache)}</span></div>`);
+    else gastoRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Otros gastos <span class="dim">(${expenseOwnerLabel(c.expenseOwner)})</span></span><span class="fw700 danger">-${fmt(c.otrosGastos)}</span></div>`);
+  }
   if(c.venueRental>0)  gastoRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Alquiler sala</span><span class="fw700 danger">-${fmt(c.venueRental)}</span></div>`);
 
   // KPIs: admin ve todo, usuario solo ve Caché y Restante
@@ -807,7 +820,7 @@ function renderShowForm(isEdit){
   const btnLabel=isEdit?'💾 Guardar cambios':(isDup?'📄 Crear función duplicada':'💾 Guardar');
   const duplicateNote=isDup?`<div class="dirty-note">📄 Estás duplicando una función. Puedes cambiar fecha, sala, obra o importes. Al guardar se creará un registro nuevo y el original no se modificará.</div>`:'';
 
-  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="${isEdit?'shows':'shows'}">← Volver</button><h1 class="page-title" style="font-size:22px">${title}</h1></div>${duplicateNote}<div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div>${agreementInfo}<div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div></div><div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox"/></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox"/></div></div></div><div class="card"><h3>Gastos</h3><div class="field"><label>Autor (% sobre venta neta)</label><input type="number" min="0" max="100" step="0.01" placeholder="0" value="${d.autorPct||''}" data-expense-flat="autorPct"/></div><div class="field"><label>¿A quién va autor?</label><select data-autor-owner><option value="both" ${normalizeExpenseOwner(d.autorOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeExpenseOwner(d.autorOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeExpenseOwner(d.autorOwner)==='company'?'selected':''}>Compañía — se resta del caché</option></select></div><div class="field"><label>Otros gastos (€)</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.otrosGastos||''}" data-expense-flat="otrosGastos"/></div><div class="field"><label>¿A quién van otros gastos?</label><select data-expense-owner><option value="both" ${normalizeExpenseOwner(d.expenseOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeExpenseOwner(d.expenseOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeExpenseOwner(d.expenseOwner)==='company'?'selected':''}>Compañía — se resta del caché</option></select></div><p class="dim" style="font-size:11px;margin-top:-4px">Por defecto “Ambas partes” mantiene el cálculo anterior.</p></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':btnLabel}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="${isEdit?'shows':'shows'}">← Volver</button><h1 class="page-title" style="font-size:22px">${title}</h1></div>${duplicateNote}<div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div>${agreementInfo}<div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div></div><div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox"/></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox"/></div></div></div><div class="card"><h3>Gastos</h3><div class="field"><label>Autor (% sobre venta neta)</label><input type="number" min="0" max="100" step="0.01" placeholder="0" value="${d.autorPct||''}" data-expense-flat="autorPct"/></div><div class="field"><label>¿A quién va autor?</label><select data-autor-owner><option value="both" ${normalizeAutorOwner(d.autorOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeAutorOwner(d.autorOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeAutorOwner(d.autorOwner)==='company'?'selected':''}>Compañía — se resta del caché</option></select></div><div class="field"><label>Otros gastos (€)</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.otrosGastos||''}" data-expense-flat="otrosGastos"/></div><div class="field"><label>¿A quién van otros gastos?</label><select data-expense-owner><option value="both" ${normalizeExpenseOwner(d.expenseOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeExpenseOwner(d.expenseOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeExpenseOwner(d.expenseOwner)==='company'?'selected':''}>Compañía — se resta del caché</option><option value="cache" ${normalizeExpenseOwner(d.expenseOwner)==='cache'?'selected':''}>Extra de caché — se suma al caché y se cobra a La Opción</option></select></div><p class="dim" style="font-size:11px;margin-top:-4px">Por defecto “Ambas partes” mantiene el cálculo anterior. “Extra de caché” aumenta el caché y reduce el restante de La Opción por el mismo importe.</p></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':btnLabel}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
 }
 
 function renderSummary(){
@@ -1004,7 +1017,7 @@ function bindEvents(){
   document.querySelectorAll('[data-autor-owner]').forEach(el=>{
     el.onchange=()=>{
       if(!S.newShowDraft) S.newShowDraft=emptyDraft();
-      S.newShowDraft.autorOwner=normalizeExpenseOwner(el.value);
+      S.newShowDraft.autorOwner=normalizeAutorOwner(el.value);
     };
   });
   document.querySelectorAll('[data-expense-owner]').forEach(el=>{
@@ -1096,7 +1109,7 @@ async function handleSaveShow(){
   // nunca Number(string_acumulado). Si el draft tiene "4.424.42" por
   // doble disparo, parseFloat devuelve 4.42 (para en el primer punto).
   const autorPct   = Math.max(0, parseFloat(String(d.autorPct    ?? 0)) || 0);
-  const autorOwner = normalizeExpenseOwner(d.autorOwner||'both');
+  const autorOwner = normalizeAutorOwner(d.autorOwner||'both');
   const otrosGastos= Math.max(0, parseFloat(String(d.otrosGastos ?? 0)) || 0);
   const expenseOwner=normalizeExpenseOwner(d.expenseOwner||'both');
   const venueRental= Number(venue?.alquiler || 0);
