@@ -23,6 +23,7 @@
     .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}.bar-label{width:90px;flex-shrink:0;color:var(--text-muted);font-size:11px}.bar-track{flex:1;height:6px;background:var(--surface-alt);border-radius:3px;overflow:hidden}.bar-fill{height:100%;border-radius:3px;background:var(--cyan)}.bar-value{min-width:75px;text-align:right;font-size:12px;font-weight:700}.empty{text-align:center;color:var(--text-dim);padding:36px 10px}.success{color:var(--success)}.danger{color:var(--danger)}.cyan{color:var(--cyan)}.pink{color:var(--pink)}.yellow{color:var(--yellow)}.purple{color:var(--purple)}.fw700{font-weight:700}.mb20{margin-bottom:20px}.mt10{margin-top:10px}.muted{color:var(--text-muted)}.dim{color:var(--text-dim)}
     .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 20%,var(--cyan-dim) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,var(--pink-dim) 0%,transparent 50%),var(--bg);padding:clamp(18px,4vw,42px);overflow:auto}.login-box{width:100%;max-width:430px;text-align:center}.login-logo{width:min(100%,340px);margin:0 auto 30px;display:flex;align-items:center;justify-content:center}.login-logo svg{display:block;width:100%;height:auto;max-height:170px;overflow:visible}.sidebar-header svg{max-width:100%;height:auto;overflow:visible}.toast{position:fixed;top:18px;right:18px;z-index:200;padding:11px 18px;border-radius:10px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;max-width:420px}.toast.success{border-color:rgba(74,222,128,.3);color:var(--success)}.toast.error{border-color:rgba(248,113,113,.3);color:var(--danger)}.toast.warn{border-color:rgba(251,191,36,.3);color:var(--warn)}.loading-overlay{position:fixed;inset:0;background:rgba(10,10,15,.85);z-index:150;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-text{color:var(--text-muted);font-size:14px}.dirty-note{background:var(--warn-dim);border:1px solid rgba(251,191,36,.25);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:12px;margin-bottom:14px}
     .dashboard-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}.dashboard-filters .field{margin-bottom:0}.mini-series{display:grid;grid-template-columns:52px 1fr 88px;align-items:center;gap:8px;margin:5px 0;font-size:11px;color:var(--text-muted)}.mini-series .bar-track{height:5px}.finance-split{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}.finance-split.total{border-bottom:0;border-top:1px solid var(--border-light);margin-top:6px;padding-top:14px;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800}.bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .panel-title{display:flex;align-items:center;gap:7px}.info-tip{position:relative;display:inline-grid;place-items:center;width:17px;height:17px;border:1px solid var(--border-light);border-radius:50%;color:var(--text-muted);font-size:11px;font-family:Arial,sans-serif;font-weight:800;line-height:1;cursor:help;outline:none;vertical-align:middle}.info-tip:hover,.info-tip:focus{color:var(--cyan);border-color:var(--cyan);background:var(--cyan-dim)}.info-tip::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 9px);transform:translateX(-50%) translateY(4px);width:max-content;max-width:min(290px,80vw);padding:9px 11px;border:1px solid var(--border-light);border-radius:8px;background:#242433;color:var(--text);box-shadow:0 12px 30px rgba(0,0,0,.45);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:400;line-height:1.45;text-transform:none;letter-spacing:0;white-space:normal;text-align:left;opacity:0;visibility:hidden;pointer-events:none;transition:.15s;z-index:80}.info-tip::before{content:'';position:absolute;left:50%;bottom:calc(100% + 4px);width:8px;height:8px;background:#242433;border-right:1px solid var(--border-light);border-bottom:1px solid var(--border-light);transform:translateX(-50%) rotate(45deg);opacity:0;visibility:hidden;transition:.15s;z-index:81}.info-tip:hover::after,.info-tip:focus::after,.info-tip:hover::before,.info-tip:focus::before{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}.info-tip:hover::before,.info-tip:focus::before{transform:translateX(-50%) rotate(45deg)}.platform-finance{border:1px solid var(--border);border-radius:10px;overflow:visible}.platform-finance-head,.platform-finance-row{display:grid;grid-template-columns:minmax(110px,1.25fr) repeat(3,minmax(84px,.75fr));gap:10px;align-items:center;padding:10px 12px}.platform-finance-head{background:var(--surface);border-radius:10px 10px 0 0;color:var(--text-dim);font-size:9px;text-transform:uppercase;letter-spacing:.65px;font-weight:800}.platform-finance-row{border-top:1px solid var(--border);font-size:12px}.platform-finance-row:hover{background:var(--surface-alt)}.platform-finance-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.platform-finance-value{text-align:right;font-variant-numeric:tabular-nums}.platform-finance-total{background:rgba(110,200,228,.05);border-radius:0 0 10px 10px;font-weight:800}.platform-finance-note{margin-top:10px;color:var(--text-dim);font-size:10px;line-height:1.4}@media(max-width:600px){.platform-finance{overflow-x:auto}.platform-finance-head,.platform-finance-row{min-width:520px}.info-tip::after{left:auto;right:-10px;transform:translateY(4px)}.info-tip:hover::after,.info-tip:focus::after{transform:translateY(0)}}
     .show-toolbar{display:grid;grid-template-columns:1.4fr repeat(5,minmax(120px,.7fr));gap:10px;align-items:end;margin-bottom:14px}.search-wrap{position:relative}.search-wrap .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}.search-wrap input{padding-left:38px}.show-count-pill{display:inline-flex;align-items:center;gap:6px;background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(110,200,228,.22);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}.row-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.show-mobile-card{display:none}.show-result-note{color:var(--text-dim);font-size:12px;margin:0 0 12px}.show-list-card{padding:16px}.filter-label{display:block;margin-bottom:4px;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:800}
     @media(max-width:1050px){.show-toolbar{grid-template-columns:1fr 1fr}.show-toolbar .search-wrap{grid-column:1/-1}}@media(max-width:700px){.show-toolbar{grid-template-columns:1fr}.show-mobile-card{display:block}.show-table-desktop{display:none}.row-actions{justify-content:flex-start}}
     @media(max-width:1100px){.grid-2{grid-template-columns:1fr}}@media(max-width:900px){:root{--sidebar-w:0}.sidebar{position:static;width:100%;min-height:auto}.app{flex-direction:column}.main{margin-left:0;padding:18px}}
@@ -60,6 +61,8 @@ function fmtPct(n){ return `${Number(n||0).toFixed(2)}%`; }
 function r2(n){ return Math.round(Number(n||0)*100)/100; }
 function esc(s){ return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function normalize(t){ return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+function infoTip(text){ return `<span class="info-tip" tabindex="0" role="img" aria-label="${esc(text)}" data-tip="${esc(text)}">i</span>`; }
+function panelTitle(title,help){ return `<h3 class="panel-title"><span>${esc(title)}</span>${infoTip(help)}</h3>`; }
 
 function normalizeExpenseOwner(owner){
   owner=normalize(owner||'both');
@@ -545,12 +548,45 @@ function renderDashboard(){
 
   const platformTotals={};
   cs.forEach(s=>{
-    s.c.commissions.forEach(c=>{ platformTotals[c.name]=(platformTotals[c.name]||0)+c.income; });
-    platformTotals['Taq. efectivo']=(platformTotals['Taq. efectivo']||0)+s.c.cashBox;
-    platformTotals['Taq. tarjeta']=(platformTotals['Taq. tarjeta']||0)+s.c.cardBox;
+    s.c.commissions.forEach(c=>{
+      if(!platformTotals[c.name]) platformTotals[c.name]={income:0,commission:0};
+      platformTotals[c.name].income+=c.income;
+      platformTotals[c.name].commission+=c.commTotal;
+    });
+    if(!platformTotals['Taq. efectivo']) platformTotals['Taq. efectivo']={income:0,commission:0};
+    if(!platformTotals['Taq. tarjeta']) platformTotals['Taq. tarjeta']={income:0,commission:0};
+    platformTotals['Taq. efectivo'].income+=s.c.cashBox;
+    platformTotals['Taq. tarjeta'].income+=s.c.cardBox;
   });
-  const platformEntries=Object.entries(platformTotals).filter(([,v])=>v>0).sort(([,a],[,b])=>b-a);
+  const platformFinanceEntries=Object.entries(platformTotals)
+    .map(([name,v])=>({name,income:r2(v.income),commission:r2(v.commission),benefit:r2(v.income-v.commission)}))
+    .filter(v=>v.income>0)
+    .sort((a,b)=>b.income-a.income);
+  const platformEntries=platformFinanceEntries.map(v=>[v.name,v.income]);
   const [bestPlatform,bestPlatformVal]=bestEntry(platformEntries.length?Object.fromEntries(platformEntries):{});
+  const platformFinanceTotals=platformFinanceEntries.reduce((a,v)=>({
+    income:r2(a.income+v.income),commission:r2(a.commission+v.commission),benefit:r2(a.benefit+v.benefit)
+  }),{income:0,commission:0,benefit:0});
+  const platformFinanceHtml=platformFinanceEntries.length?`<div class="platform-finance">
+    <div class="platform-finance-head">
+      <span>Canal</span>
+      <span class="platform-finance-value">Facturado ${infoTip('Suma de la venta bruta registrada en este canal para las funciones que cumplen los filtros.')}</span>
+      <span class="platform-finance-value">Comisión ${infoTip('Coste de intermediación: facturado × porcentaje de comisión. Si la plataforma aplica IVA a la comisión, también se incluye.')}</span>
+      <span class="platform-finance-value">Beneficio ${infoTip('Beneficio del canal antes de otros gastos: facturado menos coste de comisión. No descuenta IVA de entradas, autor, alquiler, caché ni otros gastos.')}</span>
+    </div>
+    ${platformFinanceEntries.map(v=>`<div class="platform-finance-row">
+      <span class="platform-finance-name" title="${esc(v.name)}">${esc(v.name)}</span>
+      <span class="platform-finance-value cyan">${fmt(v.income)}</span>
+      <span class="platform-finance-value danger">${v.commission>0?'-':''}${fmt(v.commission)}</span>
+      <span class="platform-finance-value ${v.benefit>=0?'success':'danger'}">${fmt(v.benefit)}</span>
+    </div>`).join('')}
+    <div class="platform-finance-row platform-finance-total">
+      <span>Total</span>
+      <span class="platform-finance-value cyan">${fmt(platformFinanceTotals.income)}</span>
+      <span class="platform-finance-value danger">${platformFinanceTotals.commission>0?'-':''}${fmt(platformFinanceTotals.commission)}</span>
+      <span class="platform-finance-value ${platformFinanceTotals.benefit>=0?'success':'danger'}">${fmt(platformFinanceTotals.benefit)}</span>
+    </div>
+  </div><p class="platform-finance-note">Taquilla figura sin comisión porque actualmente no hay un coste de TPV o gestión configurado para esos canales.</p>`:'<div class="empty">Sin ingresos de plataforma</div>';
 
   const workEntries=Object.entries(byWork).sort(([,a],[,b])=>b-a);
   const autorWorkEntries=Object.entries(byWorkAutor).filter(([,v])=>v>0).sort(([,a],[,b])=>b-a);
@@ -628,31 +664,31 @@ function renderDashboard(){
   </div>
 
   <div class="grid grid-kpis mb20">
-    <div class="card"><div class="kpi-label">Venta Bruta</div><div class="kpi-value cyan">${fmt(t.vb)}</div><div class="kpi-sub">${n} funciones filtradas</div></div>
-    <div class="card"><div class="kpi-label">Venta Neta</div><div class="kpi-value purple">${fmt(t.vn)}</div><div class="kpi-sub">Base antes de gastos</div></div>
-    <div class="card"><div class="kpi-label">Total Gastos</div><div class="kpi-value danger">${fmt(t.g)}</div><div class="kpi-sub">${fmtPct(gastoPct)} sobre venta neta</div></div>
-    <div class="card"><div class="kpi-label">Beneficio La Opción</div><div class="kpi-value ${t.ro>=0?'success':'danger'}">${fmt(t.ro)}</div><div class="kpi-sub">Margen ${fmtPct(margen)}</div></div>
-    <div class="card"><div class="kpi-label">Caché total</div><div class="kpi-value pink">${fmt(t.ca)}</div><div class="kpi-sub">Coste compañía</div></div>
-    <div class="card"><div class="kpi-label">Autor acumulado</div><div class="kpi-value danger">${fmt(t.autor)}</div><div class="kpi-sub">${esc(autorScopeLabel)}</div></div>
-    <div class="card"><div class="kpi-label">Media por función</div><div class="kpi-value yellow">${fmt(avg)}</div><div class="kpi-sub">Beneficio medio</div></div>
-    <div class="card"><div class="kpi-label">Mejor obra</div><div class="kpi-value" style="font-size:17px">${esc(bestWork)}</div><div class="kpi-sub">${fmt(bestWorkVal)}</div></div>
-    <div class="card"><div class="kpi-label">Mejor sala</div><div class="kpi-value" style="font-size:17px">${esc(bestVenue)}</div><div class="kpi-sub">${fmt(bestVenueVal)}</div></div>
-    <div class="card"><div class="kpi-label">Top canal</div><div class="kpi-value" style="font-size:17px">${esc(bestPlatform)}</div><div class="kpi-sub">${fmt(bestPlatformVal)}</div></div>
+    <div class="card"><div class="kpi-label">Venta Bruta ${infoTip('Suma de todos los ingresos registrados: plataformas, taquilla en efectivo y taquilla con tarjeta.')}</div><div class="kpi-value cyan">${fmt(t.vb)}</div><div class="kpi-sub">${n} funciones filtradas</div></div>
+    <div class="card"><div class="kpi-label">Venta Neta ${infoTip('Venta bruta sin el 10% de IVA de las entradas. Es la base utilizada antes de descontar gastos.')}</div><div class="kpi-value purple">${fmt(t.vn)}</div><div class="kpi-sub">Base antes de gastos</div></div>
+    <div class="card"><div class="kpi-label">Total Gastos ${infoTip('Suma de comisiones, alquiler, autor y otros gastos regulares de las funciones filtradas.')}</div><div class="kpi-value danger">${fmt(t.g)}</div><div class="kpi-sub">${fmtPct(gastoPct)} sobre venta neta</div></div>
+    <div class="card"><div class="kpi-label">Beneficio La Opción ${infoTip('Importe restante para La Opción después de gastos comunes, reparto con la compañía y gastos asignados a La Opción.')}</div><div class="kpi-value ${t.ro>=0?'success':'danger'}">${fmt(t.ro)}</div><div class="kpi-sub">Margen ${fmtPct(margen)}</div></div>
+    <div class="card"><div class="kpi-label">Caché total ${infoTip('Importe total correspondiente a las compañías según el acuerdo de cada obra y los ajustes de gastos asignados.')}</div><div class="kpi-value pink">${fmt(t.ca)}</div><div class="kpi-sub">Coste compañía</div></div>
+    <div class="card"><div class="kpi-label">Autor acumulado ${infoTip('Derechos de autor calculados sobre la venta neta de las funciones filtradas.')}</div><div class="kpi-value danger">${fmt(t.autor)}</div><div class="kpi-sub">${esc(autorScopeLabel)}</div></div>
+    <div class="card"><div class="kpi-label">Media por función ${infoTip('Beneficio total de La Opción dividido entre el número de funciones incluidas en los filtros.')}</div><div class="kpi-value yellow">${fmt(avg)}</div><div class="kpi-sub">Beneficio medio</div></div>
+    <div class="card"><div class="kpi-label">Mejor obra ${infoTip('Obra con mayor beneficio acumulado para La Opción dentro de los filtros actuales.')}</div><div class="kpi-value" style="font-size:17px">${esc(bestWork)}</div><div class="kpi-sub">${fmt(bestWorkVal)}</div></div>
+    <div class="card"><div class="kpi-label">Mejor sala ${infoTip('Sala con mayor beneficio acumulado para La Opción dentro de los filtros actuales.')}</div><div class="kpi-value" style="font-size:17px">${esc(bestVenue)}</div><div class="kpi-sub">${fmt(bestVenueVal)}</div></div>
+    <div class="card"><div class="kpi-label">Top canal ${infoTip('Canal con mayor facturación bruta dentro de las funciones filtradas.')}</div><div class="kpi-value" style="font-size:17px">${esc(bestPlatform)}</div><div class="kpi-sub">${fmt(bestPlatformVal)}</div></div>
   </div>
 
   <div class="card mb20">
-    <h3>Funciones recientes filtradas</h3>
+    ${panelTitle('Funciones recientes filtradas','Muestra hasta las 12 funciones más recientes que cumplen los filtros, con sus principales importes y margen para La Opción.')}
     <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th class="right">V. Neta</th><th class="right">Autor</th><th class="right">Gastos</th><th class="right">Caché</th><th class="right">Restante</th><th class="right">Margen</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="9" class="empty">Sin funciones con estos filtros</td></tr>'}</tbody></table></div>
   </div>
 
   <div class="grid grid-2 mb20">
-    <div class="card"><h3>Evolución mensual</h3>${monthHtml}</div>
-    <div class="card"><h3>Ingresos por plataforma</h3>${renderMiniBars(platformEntries,0,'var(--cyan)',9)}</div>
-    <div class="card"><h3>Ranking de obras por beneficio</h3>${renderMiniBars(workEntries,0,'var(--success)',8)}</div>
-    <div class="card"><h3>Autor acumulado por obra</h3>${renderMiniBars(autorWorkEntries,0,'var(--danger)',10)}</div>
-    <div class="card"><h3>Ranking de salas por beneficio</h3>${renderMiniBars(venueEntries,0,'var(--purple)',8)}</div>
-    <div class="card"><h3>Desglose de gastos</h3>${renderMiniBars(gastosEntries,0,'var(--danger)',6)}</div>
-    <div class="card"><h3>Resumen financiero</h3>
+    <div class="card">${panelTitle('Evolución mensual','Compara por mes ventas, gastos, caché y beneficio de las funciones incluidas en los filtros.')}${monthHtml}</div>
+    <div class="card">${panelTitle('Ingresos por plataforma','Desglosa por canal lo facturado, el coste real de comisión —con IVA cuando aplica— y el beneficio antes de otros gastos.')}${platformFinanceHtml}</div>
+    <div class="card">${panelTitle('Ranking de obras por beneficio','Ordena las obras por el beneficio acumulado que queda para La Opción.')}${renderMiniBars(workEntries,0,'var(--success)',8)}</div>
+    <div class="card">${panelTitle('Autor acumulado por obra','Suma los derechos de autor calculados para cada obra dentro del periodo filtrado.')}${renderMiniBars(autorWorkEntries,0,'var(--danger)',10)}</div>
+    <div class="card">${panelTitle('Ranking de salas por beneficio','Ordena las salas por el beneficio acumulado que generan para La Opción.')}${renderMiniBars(venueEntries,0,'var(--purple)',8)}</div>
+    <div class="card">${panelTitle('Desglose de gastos','Agrupa los costes de las funciones filtradas en comisiones, autor, alquiler y otros gastos.')}${renderMiniBars(gastosEntries,0,'var(--danger)',6)}</div>
+    <div class="card">${panelTitle('Resumen financiero','Resume el recorrido desde la venta bruta hasta el importe final restante para La Opción.')}
       <div class="finance-split"><span>Venta bruta</span><strong class="cyan">${fmt(t.vb)}</strong></div>
       <div class="finance-split"><span>Venta neta</span><strong class="purple">${fmt(t.vn)}</strong></div>
       <div class="finance-split"><span>Autor a pagar</span><strong class="danger">-${fmt(t.autor)}</strong></div>
