@@ -167,7 +167,11 @@ async function apiPost(payload){
   const resp=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},cache:'no-store',body:JSON.stringify(body)});
   if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const data=await resp.json();
-  if(!data.ok){ const msg=data.error||'Error desconocido'; if(/sesión|sesion|token|caducado/i.test(msg)) clearSession(false); throw new Error(msg); }
+  if(!data.ok){
+    const msg=data.error||'Error desconocido';
+    if(data.errorCode==='AUTH_REQUIRED') clearSession(false);
+    const err=new Error(msg);err.code=data.errorCode||'SERVER_ERROR';throw err;
+  }
   if(data.user){ S.user=data.user; S.role=data.user.role; }
   return data;
 }
@@ -422,12 +426,35 @@ async function saveShowToSheet(show){
   const wasDuplicating=S.isDuplicating===true;
   SAVE_LOCK=true;S.isSaving=true;render();
   try{
-    await apiPost(appShowToSheetData(show,S.config));
+    const payload=appShowToSheetData(show,S.config);
+    let lastError=null;
+    for(let attempt=0;attempt<3;attempt++){
+      try{await apiPost(payload);lastError=null;break;}
+      catch(err){
+        lastError=err;
+        if(err.code==='AUTH_REQUIRED'||!/ocupado|lock|concurr/i.test(err.message)||attempt===2) throw err;
+        await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)));
+      }
+    }
+    if(lastError) throw lastError;
     await loadFromSheet();
     S.view='shows';S.selectedId=null;S.editShowId=null;S.newShowDraft=null;S.isDuplicating=false;S.duplicateSourceId=null;
     showToast(wasDuplicating?'Función duplicada y guardada como nuevo registro':'Función guardada correctamente','success');
   }catch(err){showToast('Error al guardar: '+err.message,'error');}
   finally{S.isSaving=false;SAVE_LOCK=false;render();}
+}
+
+async function deleteShowFromSheet(show){
+  if(S.role!=='admin') return showToast('Solo el administrador puede eliminar funciones.','error');
+  if(!show) return showToast('Función no encontrada.','error');
+  const label=[show.workName,show.venueName,show.date].filter(Boolean).join(' · ');
+  if(!window.confirm(`¿Eliminar definitivamente esta función?\n\n${label}\n\nEsta acción no se puede deshacer.`)) return;
+  try{
+    await apiPost({action:'deleteShow',appId:show.appId||show.id});
+    S.selectedId=null;S.editShowId=null;S.view='shows';
+    await loadFromSheet();
+    showToast('Función eliminada correctamente','success');
+  }catch(err){showToast('Error al eliminar: '+err.message,'error');}
 }
 
 async function saveConfigToSheet(){
@@ -766,11 +793,11 @@ function renderShowList(){
   const thAdmin=`<th class="right">V.Bruta</th><th class="right">V.Neta</th><th class="right">Restante</th>`;
   const rowsHtml=cs.map(s=>{
     const txt=esc([s.date,s.workName,s.venueName,s.agreementSnapshot?.name,s.notes].join(' '));
-    return `<tr data-show-row="1" data-search-text="${txt}"><td>${esc(s.date)}</td><td><strong>${esc(s.workName||'—')}</strong></td><td>${esc(s.venueName||'—')}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td>${isAdmin?`<td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td>`:''}<td><div class="row-actions"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button></div></td></tr>`;
+    return `<tr data-show-row="1" data-search-text="${txt}"><td>${esc(s.date)}</td><td><strong>${esc(s.workName||'—')}</strong></td><td>${esc(s.venueName||'—')}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td>${isAdmin?`<td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td>`:''}<td><div class="row-actions"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button>${isAdmin?`<button class="btn btn-danger btn-sm" data-action="deleteShow" data-show-id="${s.id}">🗑️ Eliminar</button>`:''}</div></td></tr>`;
   }).join('');
   const cardsHtml=cs.map(s=>{
     const txt=esc([s.date,s.workName,s.venueName,s.agreementSnapshot?.name,s.notes].join(' '));
-    return `<div class="card show-mobile-card" data-show-card="1" data-search-text="${txt}" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="fw700">${esc(s.workName||'—')}</div><div class="muted" style="font-size:12px">${esc(s.venueName||'—')} · ${esc(s.date||'—')}</div><div class="dim" style="font-size:11px;margin-top:4px">${esc(s.agreementSnapshot?.name||'Sin acuerdo')}</div></div>${isAdmin?`<div style="text-align:right"><div class="success fw700">${fmt(s.c.restanteOpcion)}</div><div class="dim" style="font-size:11px">Restante</div></div>`:''}</div><div class="row-actions" style="margin-top:12px"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button></div></div>`;
+    return `<div class="card show-mobile-card" data-show-card="1" data-search-text="${txt}" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="fw700">${esc(s.workName||'—')}</div><div class="muted" style="font-size:12px">${esc(s.venueName||'—')} · ${esc(s.date||'—')}</div><div class="dim" style="font-size:11px;margin-top:4px">${esc(s.agreementSnapshot?.name||'Sin acuerdo')}</div></div>${isAdmin?`<div style="text-align:right"><div class="success fw700">${fmt(s.c.restanteOpcion)}</div><div class="dim" style="font-size:11px">Restante</div></div>`:''}</div><div class="row-actions" style="margin-top:12px"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button>${isAdmin?`<button class="btn btn-danger btn-sm" data-action="deleteShow" data-show-id="${s.id}">🗑️ Eliminar</button>`:''}</div></div>`;
   }).join('');
   const colspan=isAdmin?8:5;
   return `<div class="section-top"><div><h1 class="page-title">Funciones</h1><p class="page-sub"><span id="show-list-count">${cs.length} de ${S.shows.length} funciones</span>${activeFilters?` · ${activeFilters} filtro${activeFilters>1?'s':''} activo${activeFilters>1?'s':''}`:''}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Actualizar</button><button class="btn btn-primary" data-view="newshow">➕ Nueva</button></div></div>
@@ -954,6 +981,10 @@ function bindEvents(){
       if(a==='createUser')   return handleCreateUser();
       if(a==='updateUser')   return handleUpdateUser(btn.dataset.userId);
       if(a==='refreshUsers') return loadUsers();
+      if(a==='deleteShow'){
+        const show=S.shows.find(s=>s.id===btn.dataset.showId);
+        return deleteShowFromSheet(show);
+      }
       if(a==='viewShow'){
         const show=S.shows.find(s=>s.id===btn.dataset.showId);
         if(show){S.selectedId=show.id;S.view='detail';S.isDuplicating=false;S.duplicateSourceId=null;render();}
