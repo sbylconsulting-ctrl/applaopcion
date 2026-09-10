@@ -367,6 +367,24 @@ function resetDashboardFilters(){
   S.dashboardFilters={month:'',from:'',to:'',venueId:'',workId:'',platformId:'',agreementId:''};
 }
 
+function dashboardEntityName(show,type){
+  const isVenue=type==='venues';
+  const id=show[isVenue?'venueId':'workId'];
+  const name=show[isVenue?'venueName':'workName'];
+  const item=(S.config[type]||[]).find(x=>String(x.id)===String(id));
+  return String(name||item?.name||'').trim();
+}
+
+function matchesDashboardEntity(show,type,selectedId){
+  if(!selectedId) return true;
+  const id=show[type==='venues'?'venueId':'workId'];
+  if(id!==undefined && id!==null && String(id)===String(selectedId)) return true;
+  const selected=(S.config[type]||[]).find(x=>String(x.id)===String(selectedId));
+  const name=dashboardEntityName(show,type);
+  const nameKey=value=>normalize(value).replace(/\s+/g,' ');
+  return !!(selected && name && nameKey(name)===nameKey(selected.name));
+}
+
 function getDashboardFilteredShows(){
   const f=S.dashboardFilters||{};
   return S.shows.filter(show=>{
@@ -374,8 +392,8 @@ function getDashboardFilteredShows(){
     if(f.month && !date.startsWith(f.month)) return false;
     if(f.from && date && date<f.from) return false;
     if(f.to && date && date>f.to) return false;
-    if(f.venueId && show.venueId!==f.venueId) return false;
-    if(f.workId && show.workId!==f.workId) return false;
+    if(!matchesDashboardEntity(show,'venues',f.venueId)) return false;
+    if(!matchesDashboardEntity(show,'works',f.workId)) return false;
     if(f.agreementId && !matchesAgreementFilter(show,f.agreementId)) return false;
     if(f.platformId){
       const inc=show.income||{};
@@ -565,9 +583,9 @@ function renderDashboard(){
   const gastoPct=t.vn?r2(t.g/t.vn*100):0;
   const avg=n?r2(t.ro/n):0;
 
-  const byWork=groupTotal(cs,s=>s.workName,s=>s.c.restanteOpcion);
-  const byWorkAutor=groupTotal(cs,s=>s.workName,s=>s.c.autorImporte);
-  const byVenue=groupTotal(cs,s=>s.venueName,s=>s.c.restanteOpcion);
+  const byWork=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>s.c.restanteOpcion);
+  const byWorkAutor=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>s.c.autorImporte);
+  const byVenue=groupTotal(cs,s=>dashboardEntityName(s,'venues'),s=>s.c.restanteOpcion);
   const selectedWorkForAutor=(S.config.works||[]).find(w=>w.id===f.workId);
   const autorScopeLabel=f.workId?(selectedWorkForAutor?.name||'Obra seleccionada'):'Todas las obras filtradas';
   const [bestWork,bestWorkVal]=bestEntry(byWork);
@@ -616,7 +634,7 @@ function renderDashboard(){
   </div><p class="platform-finance-note">Taquilla figura sin comisión porque actualmente no hay un coste de TPV o gestión configurado para esos canales.</p>`:'<div class="empty">Sin ingresos de plataforma</div>';
 
   const workEntries=Object.entries(byWork).sort(([,a],[,b])=>b-a);
-  const autorWorkEntries=Object.entries(byWorkAutor).filter(([,v])=>v>0).sort(([,a],[,b])=>b-a);
+  const autorWorkEntries=Object.entries(byWorkAutor).sort(([,a],[,b])=>b-a);
   const venueEntries=Object.entries(byVenue).sort(([,a],[,b])=>b-a);
   const gastosEntries=[
     ['Comisiones',t.comm],
