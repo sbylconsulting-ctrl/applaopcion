@@ -238,7 +238,7 @@ function sheetShowToAppShow(raw,config){
     agreementSnapshot:resolvedAgreement.snapshot,
     notes:raw.observaciones||'',
     income, platformSnapshots,
-    dashboardAmounts:{autor:raw.autor,restanteLaOpcion:raw.restanteLaOpcion},
+    dashboardAmounts:{autor:raw.autor,restanteLaOpcion:raw.restanteLaOpcion,totalNeto:raw.totalNeto,ventaBruta:raw.ventaBruta},
     autorPct:Number(raw.autorPct||0),
     autorOwner:normalizeAutorOwner(raw.autorOwner||raw.authorOwner||raw.autorGastoOwner||'both'),
     otrosGastos:Number(raw.otrosGastos||0),
@@ -598,7 +598,14 @@ function renderDashboard(){
   const avg=n?r2(t.ro/n):0;
 
   const byWork=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>s.c.restanteOpcion);
-  const byWorkAutor=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>s.c.autorImporte);
+  const rankingAmount=(show,field,fallback)=>{
+    const value=show.dashboardAmounts?.[field];
+    if(value===null || value===undefined || String(value).trim()==='') return fallback;
+    return Number.isFinite(Number(value))?Number(value):fallback;
+  };
+  const workNetTotals=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>rankingAmount(s,'totalNeto',s.c.totalNeto));
+  const workBillingTotals=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>rankingAmount(s,'ventaBruta',s.c.ventaBruta));
+  const venueNetTotals=groupTotal(cs,s=>dashboardEntityName(s,'venues'),s=>rankingAmount(s,'totalNeto',s.c.totalNeto));
   const byVenue=groupTotal(cs,s=>dashboardEntityName(s,'venues'),s=>s.c.restanteOpcion);
   const selectedWorkForAutor=(S.config.works||[]).find(w=>w.id===f.workId);
   const autorScopeLabel=f.workId?(selectedWorkForAutor?.name||'Obra seleccionada'):'Todas las obras filtradas';
@@ -647,9 +654,9 @@ function renderDashboard(){
     </div>
   </div><p class="platform-finance-note">Taquilla figura sin comisión porque actualmente no hay un coste de TPV o gestión configurado para esos canales.</p>`:'<div class="empty">Sin ingresos de plataforma</div>';
 
-  const workEntries=Object.entries(byWork).sort(([,a],[,b])=>b-a);
-  const autorWorkEntries=Object.entries(byWorkAutor).sort(([,a],[,b])=>b-a);
-  const venueEntries=Object.entries(byVenue).sort(([,a],[,b])=>b-a);
+  const workEntries=Object.entries(workNetTotals).sort(([,a],[,b])=>b-a);
+  const billingWorkEntries=Object.entries(workBillingTotals).sort(([,a],[,b])=>b-a);
+  const venueEntries=Object.entries(venueNetTotals).sort(([,a],[,b])=>b-a);
   const gastosEntries=[
     ['Comisiones',t.comm],
     ['Autor',t.autor],
@@ -743,9 +750,9 @@ function renderDashboard(){
   <div class="grid grid-2 mb20">
     <div class="card">${panelTitle('Evolución mensual','Compara por mes ventas, gastos, caché y beneficio de las funciones incluidas en los filtros.')}${monthHtml}</div>
     <div class="card">${panelTitle('Ingresos por plataforma','Desglosa por canal lo facturado, el coste real de comisión —con IVA cuando aplica— y el beneficio antes de otros gastos.')}${platformFinanceHtml}</div>
-    <div class="card">${panelTitle('Ranking de obras por beneficio','Ordena las obras por el beneficio acumulado que queda para La Opción.')}${renderMiniBars(workEntries,0,'var(--success)',8)}</div>
-    <div class="card">${panelTitle('Autor acumulado por obra','Suma los derechos de autor calculados para cada obra dentro del periodo filtrado.')}${renderMiniBars(autorWorkEntries,0,'var(--danger)',10)}</div>
-    <div class="card">${panelTitle('Ranking de salas por beneficio','Ordena las salas por el beneficio acumulado que generan para La Opción.')}${renderMiniBars(venueEntries,0,'var(--purple)',8)}</div>
+    <div class="card">${panelTitle('Ranking de obras por neto antes del caché','Suma el total neto de cada obra: venta neta menos gastos, antes de descontar el caché de la compañía. Aplica los filtros seleccionados.')}${renderMiniBars(workEntries,0,'var(--success)',8)}</div>
+    <div class="card">${panelTitle('Facturación acumulada por obra','Suma la venta bruta, con IVA, de cada obra en el mes, sala y demás filtros seleccionados.')}${renderMiniBars(billingWorkEntries,0,'var(--danger)',10)}</div>
+    <div class="card">${panelTitle('Ranking de salas por neto antes del caché','Suma el total neto de las funciones de cada sala: venta neta menos gastos, antes de descontar el caché de las compañías. Aplica los filtros seleccionados.')}${renderMiniBars(venueEntries,0,'var(--purple)',8)}</div>
     <div class="card">${panelTitle('Desglose de gastos','Agrupa los costes de las funciones filtradas en comisiones, autor, alquiler y otros gastos.')}${renderMiniBars(gastosEntries,0,'var(--danger)',6)}</div>
     <div class="card">${panelTitle('Resumen financiero','Resume el recorrido desde la venta bruta hasta el importe final restante para La Opción.')}
       <div class="finance-split"><span>Venta bruta</span><strong class="cyan">${fmt(t.vb)}</strong></div>
