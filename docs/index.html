@@ -238,6 +238,7 @@ function sheetShowToAppShow(raw,config){
     agreementSnapshot:resolvedAgreement.snapshot,
     notes:raw.observaciones||'',
     income, platformSnapshots,
+    dashboardAmounts:{autor:raw.autor,restanteLaOpcion:raw.restanteLaOpcion},
     autorPct:Number(raw.autorPct||0),
     autorOwner:normalizeAutorOwner(raw.autorOwner||raw.authorOwner||raw.autorGastoOwner||'both'),
     otrosGastos:Number(raw.otrosGastos||0),
@@ -564,7 +565,20 @@ function renderDashboard(){
   const agreementOpts=getAgreementCatalog().map(a=>`<option value="${a.id}" ${f.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
 
   const filtered=getDashboardFilteredShows();
-  const cs=filtered.map(s=>({...s,c:calcShow(s)}));
+  const cs=filtered.map(s=>{
+    const c=calcShow(s);
+    const saved=s.dashboardAmounts||{};
+    // En el dashboard, usar los importes reales recibidos de Google Sheets.
+    // Cero es un importe válido; recalcular solo si el campo no está disponible.
+    const readAmount=(value,fallback)=>{
+      if(value===null || value===undefined || String(value).trim()==='') return fallback;
+      const amount=Number(value);
+      return Number.isFinite(amount)?amount:fallback;
+    };
+    c.autorImporte=readAmount(saved.autor,c.autorImporte);
+    c.restanteOpcion=readAmount(saved.restanteLaOpcion,c.restanteOpcion);
+    return {...s,c};
+  });
   const t=cs.reduce((a,s)=>({
     vb:a.vb+s.c.ventaBruta,
     vn:a.vn+s.c.ventaNeta,
