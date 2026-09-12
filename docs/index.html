@@ -27,6 +27,32 @@
     .show-toolbar{display:grid;grid-template-columns:1.4fr repeat(5,minmax(120px,.7fr));gap:10px;align-items:end;margin-bottom:14px}.search-wrap{position:relative}.search-wrap .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}.search-wrap input{padding-left:38px}.show-count-pill{display:inline-flex;align-items:center;gap:6px;background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(110,200,228,.22);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}.row-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.show-mobile-card{display:none}.show-result-note{color:var(--text-dim);font-size:12px;margin:0 0 12px}.show-list-card{padding:16px}.filter-label{display:block;margin-bottom:4px;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:800}
     @media(max-width:1050px){.show-toolbar{grid-template-columns:1fr 1fr}.show-toolbar .search-wrap{grid-column:1/-1}}@media(max-width:700px){.show-toolbar{grid-template-columns:1fr}.show-mobile-card{display:block}.show-table-desktop{display:none}.row-actions{justify-content:flex-start}}
     @media(max-width:1100px){.grid-2{grid-template-columns:1fr}}@media(max-width:900px){:root{--sidebar-w:0}.sidebar{position:static;width:100%;min-height:auto}.app{flex-direction:column}.main{margin-left:0;padding:18px}}
+.nb-actions{display:flex;gap:8px;flex-wrap:wrap}
+.nb-dashboard{max-width:1600px;margin:0 auto}
+.nb-eyebrow{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+.nb-hero{background:linear-gradient(120deg,rgba(74,222,128,.09),var(--card) 55%);border:1px solid rgba(74,222,128,.24);border-radius:18px;padding:28px;display:grid;grid-template-columns:1.1fr 1fr;gap:24px;align-items:center}
+.nb-hero.negative{background:linear-gradient(120deg,rgba(248,113,113,.08),var(--card) 55%);border-color:rgba(248,113,113,.3)}
+.nb-hero h2{font-family:'Outfit',sans-serif;font-size:19px;font-weight:600}
+.nb-result{font-family:'Outfit',sans-serif;font-size:clamp(30px,3.6vw,54px);font-weight:800;letter-spacing:-1px;margin:10px 0;overflow-wrap:anywhere}
+.nb-comparison{font-size:12px;color:var(--text-muted);line-height:1.5}
+.nb-formula{border-left:1px solid var(--border-light);padding-left:24px}
+.nb-formula>div{display:flex;justify-content:space-between;gap:16px;padding:9px 0;font-size:12px;color:var(--text-muted)}
+.nb-formula strong{color:var(--text);white-space:nowrap}
+.nb-note{font-size:12px;color:var(--text-muted);line-height:1.6}
+.nb-context{border-left:3px solid var(--yellow);background:var(--surface-alt);padding:12px 16px;border-radius:6px;font-size:12px;color:var(--text-muted);line-height:1.6}
+.nb-chart{display:grid;grid-template-columns:repeat(12,minmax(66px,1fr));gap:8px;overflow-x:auto;padding:8px 0 12px}
+.nb-month{font:inherit;display:flex;flex-direction:column;align-items:center;gap:10px;background:transparent;border:1px solid transparent;border-radius:8px;padding:8px 3px;color:var(--text-muted);cursor:pointer;font-size:11px}
+.nb-month:hover,.nb-month:focus-visible,.nb-month.selected{border-color:var(--border-light);background:var(--surface-alt)}
+.nb-chart-value{font-size:10px;white-space:nowrap}
+.nb-chart-track{height:100px;display:flex;align-items:flex-end;width:26px;background:var(--surface-alt);border-radius:5px}
+.nb-chart-track>span{display:block;width:100%;border-radius:5px}
+.nb-room-button{font:inherit;display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--text);cursor:pointer;text-align:left}
+.nb-room-button:hover{color:var(--cyan)}
+.nb-rank{font-size:11px;color:var(--text-muted);background:var(--surface-alt);padding:4px 7px;border-radius:5px}
+.nb-dashboard .bar-label{width:150px}
+@media(max-width:900px){.nb-hero{grid-template-columns:1fr}.nb-formula{border-left:0;border-top:1px solid var(--border-light);padding-left:0;padding-top:12px}.nb-dashboard .bar-label{width:100px}}
+@media(max-width:500px){.nb-hero{padding:20px}.nb-formula>div{font-size:11px}.nb-chart{grid-template-columns:repeat(12,76px)}}
+
   </style>
 </head>
 <body>
@@ -148,7 +174,7 @@ function showToast(msg,type='success'){ S.toast={message:msg,type}; clearTimeout
 function logoSVG(w=150){ const h=w*.55; return `<svg width="${w}" height="${h}" viewBox="-28 -8 336 174" preserveAspectRatio="xMidYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible"><text x="140" y="68" text-anchor="middle" font-family="'Outfit','Arial Black',sans-serif" font-size="48" font-weight="900" letter-spacing="4" fill="var(--text)">LA OPCIÓN</text><line x1="4" y1="82" x2="276" y2="82" stroke="var(--cyan)" stroke-width="4"/><line x1="4" y1="92" x2="276" y2="92" stroke="var(--pink)" stroke-width="4"/><line x1="4" y1="102" x2="276" y2="102" stroke="var(--yellow)" stroke-width="4"/><text x="140" y="132" text-anchor="middle" font-family="'Outfit','Arial',sans-serif" font-size="20" font-weight="300" letter-spacing="9" fill="var(--text-muted)">PRODUCCIONES</text></svg>`; }
 function roleLabel(r){ return r==='admin'?'Administrador':'Usuario'; }
 function defaultViewForRole(role){ return role==='admin'?'dashboard':'shows'; }
-function isAdminOnlyView(view){ return ['dashboard','summary','admin','barDashboard'].includes(view); }
+function isAdminOnlyView(view){ return ['dashboard','summary','admin','barDashboard','businessDashboard'].includes(view); }
 function isViewAllowedForRole(view,role){ return role==='admin'||!isAdminOnlyView(view); }
 function normalizeCurrentView(){
   if(S.user && !isViewAllowedForRole(S.view,S.role)){
@@ -172,6 +198,7 @@ async function apiPost(payload){
     if(data.errorCode==='AUTH_REQUIRED') clearSession(false);
     const err=new Error(msg);err.code=data.errorCode||'SERVER_ERROR';throw err;
   }
+  invalidateBusiness(body.action);
   if(data.user){ S.user=data.user; S.role=data.user.role; }
   return data;
 }
@@ -183,7 +210,7 @@ function saveSession(token,user){
   normalizeCurrentView();
   localStorage.setItem(STORAGE_KEY,JSON.stringify({token,user}));
 }
-function clearSession(rn=true){ resetBars(); S.token='';S.user=null;S.role=null;S.view='dashboard';S.selectedId=null;S.editShowId=null;S.users=[];S.newShowDraft=null;S.search='';S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};S.isDuplicating=false;S.duplicateSourceId=null;localStorage.removeItem(STORAGE_KEY);if(rn)render(); }
+function clearSession(rn=true){ resetBars(); resetBusiness(); S.token='';S.user=null;S.role=null;S.view='dashboard';S.selectedId=null;S.editShowId=null;S.users=[];S.newShowDraft=null;S.search='';S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};S.isDuplicating=false;S.duplicateSourceId=null;localStorage.removeItem(STORAGE_KEY);if(rn)render(); }
 
 async function boot(){
   const raw=localStorage.getItem(STORAGE_KEY);
@@ -526,8 +553,8 @@ function bindLogin(){
 function renderSidebar(){
   const isAdmin=S.role==='admin';
   const items=isAdmin
-    ?[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Nueva Función',icon:'➕'},{id:'barBilling',label:'Facturación barra',icon:'🥤'},{id:'barDashboard',label:'Dashboard barras',icon:'📈'},{id:'summary',label:'Resumen Mensual',icon:'📋'},{id:'admin',label:'Administración',icon:'⚙️'}]
-    :[{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar Ingreso',icon:'➕'},{id:'barBilling',label:'Facturación barra',icon:'🥤'}];
+    ?[{id:'businessDashboard',label:'Dashboard del negocio',icon:'💼'},{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Nueva Función',icon:'➕'},{id:'barBilling',label:'Facturación barra',icon:'🥤'},{id:'businessExpenses',label:'Gastos',icon:'🧾'},{id:'barDashboard',label:'Dashboard barras',icon:'📈'},{id:'summary',label:'Resumen Mensual',icon:'📋'},{id:'admin',label:'Administración',icon:'⚙️'}]
+    :[{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar Ingreso',icon:'➕'},{id:'barBilling',label:'Facturación barra',icon:'🥤'},{id:'businessExpenses',label:'Gastos',icon:'🧾'}];
   const navBtns=items.map(it=>`<button class="nav-btn ${S.view===it.id?'active':''}" data-view="${it.id}">${it.icon} ${it.label}</button>`).join('');
   const rc=isAdmin?'var(--pink-dim)':'var(--cyan-dim)',rt=isAdmin?'var(--pink)':'var(--cyan)';
   return `<div class="sidebar"><div class="sidebar-header">${logoSVG(155)}</div><div class="nav">${navBtns}</div><div class="sidebar-footer"><div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><div class="role-pill" style="background:${rc};color:${rt}">${isAdmin?'A':'U'}</div><div><div style="font-size:12px;font-weight:600">${esc(S.user.email)}</div><div style="font-size:10px;color:var(--text-dim)">${roleLabel(S.role)}</div></div></div><button class="btn btn-ghost btn-sm" data-action="logout" style="width:100%;justify-content:flex-start;gap:7px">🚪 Cerrar sesión</button></div></div>`;
@@ -538,6 +565,8 @@ function renderView(){
     S.view=defaultViewForRole(S.role);
   }
   switch(S.view){
+    case 'businessDashboard': return renderBusinessDashboard();
+    case 'businessExpenses': return renderExpenseEntry();
     case 'barBilling': return renderBarBilling();
     case 'barDashboard': return renderBarDashboard();
     case 'dashboard': return renderDashboard();
@@ -947,10 +976,10 @@ function renderSummary(){
 function renderAdmin(){
   if(S.role!=='admin') return '<div class="card"><div class="empty">Acceso denegado</div></div>';
   if(S.adminTab==='agreements') S.adminTab='works';
-  const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras y acuerdos'},{id:'expenses',label:'Gastos'},{id:'barMethods',label:'Pagos de barra'},{id:'users',label:'Usuarios'}];
+  const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras y acuerdos'},{id:'expenses',label:'Gastos de funciones'},{id:'businessTypes',label:'Tipos de gasto del negocio'},{id:'barMethods',label:'Pagos de barra'},{id:'users',label:'Usuarios'}];
   const tabBtns=tabs.map(t=>`<button class="btn ${S.adminTab===t.id?'btn-primary':'btn-ghost'} btn-sm" data-admin-tab="${t.id}">${t.label}</button>`).join('');
-  const content=S.adminTab==='barMethods'?renderBarMethods():(S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab));
-  return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'&&S.adminTab!=='barMethods'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'&&S.adminTab!=='barMethods'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
+  const content=S.adminTab==='businessTypes'?renderBusinessTypes():(S.adminTab==='barMethods'?renderBarMethods():(S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab)));
+  return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
 }
 function renderConfigEditor(tab){
   const meta=CONFIG_META[tab]||CONFIG_META.platforms;
@@ -989,7 +1018,7 @@ function renderUsersAdmin(){
 // EVENTS
 // ══════════════════════════════════════════════════════════════
 function bindEvents(){
-  bindBarEvents();
+  bindBarEvents();bindExpenseEvents();bindBusinessEvents();
   document.querySelectorAll('[data-view]').forEach(btn=>{
     btn.onclick=()=>{
       if(S.isSaving)return showToast('Espera a que termine el guardado.','warn');
@@ -1000,6 +1029,8 @@ function bindEvents(){
         return render();
       }
       S.view=targetView;
+      if(targetView==='businessExpenses')loadExpenses();
+      if(targetView==='businessDashboard')loadBusiness();
       if(['barBilling','barDashboard'].includes(targetView)) loadBars();
       S.selectedId=null;
       S.editShowId=null;
@@ -1015,7 +1046,7 @@ function bindEvents(){
     btn.onclick=()=>{
       const a=btn.dataset.action;
       if(a==='logout')       return handleLogout();
-      if(a==='refresh')      return S.view==='admin'&&S.adminTab==='barMethods'?loadBars(true):loadFromSheet({manual:true});
+      if(a==='refresh')      return S.view==='admin'&&S.adminTab==='businessTypes'?loadExpenses(true):(S.view==='admin'&&S.adminTab==='barMethods'?loadBars(true):loadFromSheet({manual:true}));
       if(a==='resetDashboardFilters'){resetDashboardFilters();return render();}
       if(a==='clearShowFilters'){S.search='';S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};return render();}
       if(a==='saveNewShow')  {btn.disabled=true;btn.innerHTML='⏳ Guardando...';return handleSaveShow();}
@@ -1063,7 +1094,7 @@ function bindEvents(){
   });
 
   document.querySelectorAll('[data-admin-tab]').forEach(btn=>{
-    btn.onclick=()=>{S.adminTab=btn.dataset.adminTab;if(S.adminTab==='users')loadUsers();if(S.adminTab==='barMethods')loadBars();render();};
+    btn.onclick=()=>{S.adminTab=btn.dataset.adminTab;if(S.adminTab==='users')loadUsers();if(S.adminTab==='barMethods')loadBars();if(S.adminTab==='businessTypes')loadExpenses();render();};
   });
 
   document.querySelectorAll('[data-dash-filter]').forEach(el=>{
@@ -1390,6 +1421,184 @@ function bindBarEvents(){
       B.draft=JSON.parse(JSON.stringify(record));S.view='barBilling';render();window.scrollTo(0,0);
     }
   };});
+}
+
+const MONTH_NAMES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function currentBusinessPeriod(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+const E={records:[],types:[],originalTypes:[],typeDraft:null,draft:null,loaded:false,loading:false,error:'',generation:0,filters:{year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),venueId:'',typeId:''}};
+function resetBusiness(){
+  E.generation++;E.records=[];E.types=[];E.originalTypes=[];E.typeDraft=null;E.draft=null;E.loaded=false;E.loading=false;E.error='';E.filters={year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),venueId:'',typeId:''};
+  N.generation++;N.loaded=false;N.loading=false;N.error='';N.snapshot=null;N.filters={year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),venueId:'',basis:'benefit'};
+}
+function invalidateBusiness(action){
+  if(['saveShow','deleteShow','saveConfig','saveBarRecord','deleteBarRecord','saveBusinessExpense','deleteBusinessExpense','saveBusinessTypes'].includes(action))N.loaded=false;
+}
+async function loadExpenses(force=false){
+  if(E.loading||E.loaded&&!force)return;
+  const generation=E.generation;E.loading=true;E.error='';render();
+  try{
+    const data=await apiPost({action:'getBusinessExpenses'});
+    if(generation!==E.generation)return;
+    if(!Array.isArray(data.records)||!Array.isArray(data.types))throw new Error('Actualiza la implementación de Apps Script para activar los gastos.');
+    E.records=data.records;E.types=data.types;E.originalTypes=JSON.parse(JSON.stringify(data.types));if(!E.typeDraft)E.typeDraft=JSON.parse(JSON.stringify(data.types));E.loaded=true;
+  }catch(err){if(generation===E.generation)E.error=err.message;}
+  finally{if(generation===E.generation){E.loading=false;render();}}
+}
+function emptyExpenseDraft(){return {id:gid('ex'),version:0,period:currentBusinessPeriod(),venueId:'',typeId:'',concept:'',amount:''};}
+function periodName(year,month){return month?`${MONTH_NAMES[Number(month)-1]} ${year}`:`Año ${year}`;}
+function businessYearOptions(year,periods){
+  const now=new Date().getFullYear(),years=new Set([String(year),String(now-1),String(now),String(now+1)]);
+  periods.forEach(p=>{if(/^\d{4}/.test(p))years.add(p.slice(0,4));});
+  return [...years].sort().reverse().map(y=>`<option value="${esc(y)}" ${String(year)===y?'selected':''}>${esc(y)}</option>`).join('');
+}
+function businessMonthOptions(month,all=true){return `${all?`<option value="" ${!month?'selected':''}>Todo el año</option>`:''}${MONTH_NAMES.map((name,i)=>{const value=String(i+1).padStart(2,'0');return `<option value="${value}" ${value===month?'selected':''}>${name}</option>`;}).join('')}`;}
+function expenseNotice(){return E.loading?'<div class="card mb20">Cargando gastos…</div>':E.error?`<div class="card mb20"><p class="danger">${esc(E.error)}</p><button class="btn btn-secondary mt10" data-expense-action="reload">Reintentar</button></div>`:'';}
+function expensePeriodMatches(r,f){return r.period.slice(0,4)===f.year&&(!f.month||r.period.slice(5)===f.month);}
+function filteredExpenses(){return E.records.filter(r=>expensePeriodMatches(r,E.filters)&&(!E.filters.typeId||r.typeId===E.filters.typeId)&&(!E.filters.venueId||(E.filters.venueId==='general'?!r.venueId:r.venueId===E.filters.venueId))).sort((a,b)=>b.period.localeCompare(a.period)||a.venueName.localeCompare(b.venueName));}
+function expenseVenueOptions(selected,includeAll=false){
+  const venues=new Map((S.config.venues||[]).map(v=>[v.id,v.name]));E.records.forEach(r=>{if(r.venueId&&!venues.has(r.venueId))venues.set(r.venueId,r.venueName);});
+  return `${includeAll?'<option value="">Todas las salas y generales</option>':''}<option value="${includeAll?'general':''}" ${selected===(includeAll?'general':'')?'selected':''}>General · sin sala asignada</option>${[...venues].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,name])=>`<option value="${esc(id)}" ${selected===id?'selected':''}>${esc(name)}</option>`).join('')}`;
+}
+function renderExpenseEntry(){
+  if(!E.draft)E.draft=emptyExpenseDraft();const d=E.draft,f=E.filters,records=filteredExpenses();
+  const total=records.reduce((a,r)=>a+Math.round(r.amount*100),0)/100;
+  const fullMonth=E.records.filter(r=>expensePeriodMatches(r,f)).reduce((a,r)=>a+Math.round(r.amount*100),0)/100;
+  const byType=new Map();records.forEach(r=>{const t=byType.get(r.typeId)||{name:E.types.find(t=>t.id===r.typeId)?.name||r.typeName,cents:0};t.cents+=Math.round(r.amount*100);byType.set(r.typeId,t);});
+  const types=E.types.filter(t=>t.active!==false||t.id===d.typeId);
+  return `<div class="section-top"><div><h1 class="page-title">Gastos</h1><p class="page-sub">Personal, alquileres, proveedores y otros costes del negocio</p></div><button class="btn btn-secondary" data-expense-action="reload" ${E.loading?'disabled':''}>Actualizar gastos</button></div>${expenseNotice()}${!E.loaded?'':`
+  <form id="expense-form"><div class="grid grid-2 mb20"><div class="card"><h3>${d.version?'Editar gasto':'Registrar gasto'}</h3><div class="grid grid-2"><div class="field"><label>Mes *</label><select data-expense-field="month">${businessMonthOptions(d.period.slice(5),false)}</select></div><div class="field"><label>Año *</label><input type="number" min="1900" max="2199" step="1" data-expense-field="year" required value="${esc(d.period.slice(0,4))}"/></div></div><div class="field"><label>Sala / gasto general</label><select data-expense-field="venueId">${expenseVenueOptions(d.venueId)}</select></div><p class="muted" style="font-size:12px">Los gastos generales se descuentan del resultado global. No se reparten automáticamente entre salas.</p></div>
+  <div class="card"><div class="field"><label>Tipo de gasto *</label><select required data-expense-field="typeId"><option value="">— Seleccionar —</option>${types.map(t=>`<option value="${esc(t.id)}" ${d.typeId===t.id?'selected':''}>${esc(t.name)}${t.active===false?' (inactivo)':''}</option>`).join('')}</select></div><div class="field"><label>Concepto</label><input maxlength="240" data-expense-field="concept" placeholder="Por ejemplo, personal de septiembre" value="${esc(d.concept)}"/></div><div class="field"><label>Importe (€) *</label><input type="number" min="0.01" step="0.01" inputmode="decimal" required data-expense-field="amount" value="${esc(d.amount)}" placeholder="0,00"/></div><p class="muted" style="font-size:12px">Incluye aquí únicamente gastos que no estén ya descontados en las funciones. Por ejemplo, no repitas un alquiler ya registrado en una función.</p></div></div><div class="nb-actions mb20"><button type="submit" class="btn btn-primary" ${S.isSaving?'disabled':''}>${d.version?'Guardar cambios':'Guardar gasto'}</button><button type="button" class="btn btn-secondary" data-expense-action="new">${d.version?'Cancelar edición':'Limpiar formulario'}</button></div></form>
+  <div class="card mb20"><h3>Consultar gastos</h3><div class="dashboard-filters"><div class="field"><label>Mes</label><select data-expense-filter="month">${businessMonthOptions(f.month)}</select></div><div class="field"><label>Año</label><select data-expense-filter="year">${businessYearOptions(f.year,E.records.map(r=>r.period))}</select></div><div class="field"><label>Sala</label><select data-expense-filter="venueId">${expenseVenueOptions(f.venueId,true)}</select></div><div class="field"><label>Tipo</label><select data-expense-filter="typeId"><option value="">Todos</option>${E.types.map(t=>`<option value="${esc(t.id)}" ${f.typeId===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select></div></div></div>
+  <div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">Total del periodo · todas las salas</div><div class="kpi-value danger" id="expense-period-total">${fmt(fullMonth)}</div><div class="kpi-sub">${esc(periodName(f.year,f.month))} · incluye generales</div></div><div class="card"><div class="kpi-label">Gasto con los filtros seleccionados</div><div class="kpi-value" id="expense-filtered-total">${fmt(total)}</div><div class="kpi-sub">${records.length} registros</div></div></div>
+  <div class="card mb20"><h3>Distribución por tipo</h3>${renderMiniBars([...byType.values()].sort((a,b)=>b.cents-a.cents).map(t=>[t.name,t.cents/100]),0,'var(--danger)',byType.size)}</div>
+  <div class="card"><h3>Detalle de gastos</h3><div class="table-wrap"><table><thead><tr><th>Periodo</th><th>Sala</th><th>Tipo</th><th>Concepto</th><th class="right">Importe</th><th>Acciones</th></tr></thead><tbody>${records.map(r=>`<tr><td>${esc(r.period)}</td><td>${esc(r.venueName)}</td><td>${esc(E.types.find(t=>t.id===r.typeId)?.name||r.typeName)}</td><td style="white-space:normal;min-width:130px">${esc(r.concept||'—')}</td><td class="right">${fmt(r.amount)}</td><td><div class="nb-actions"><button class="btn btn-secondary btn-sm" data-expense-action="edit" data-expense-id="${esc(r.id)}">Editar</button>${S.role==='admin'?`<button class="btn btn-danger btn-sm" data-expense-action="delete" data-expense-id="${esc(r.id)}">Eliminar</button>`:''}</div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No hay gastos con estos filtros</td></tr>'}</tbody><tfoot><tr><th colspan="4">Total filtrado</th><th class="right">${fmt(total)}</th><th></th></tr></tfoot></table></div></div>`}`;
+}
+function renderBusinessTypes(){
+  return `${expenseNotice()}${!E.loaded?'':`<div class="grid grid-2"><div class="card"><h3>Añadir tipo de gasto del negocio</h3><div class="field"><label>Nombre</label><input maxlength="100" id="business-type-name" placeholder="Por ejemplo, Publicidad"/></div><button class="btn btn-primary" data-expense-action="addType">Añadir tipo</button><p class="muted mt10">Después pulsa «Guardar tipos».</p></div><div class="card"><h3>Tipos de gasto del negocio</h3><div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Activo</th></tr></thead><tbody>${(E.typeDraft||[]).map(t=>`<tr><td><input class="inline-input" maxlength="100" data-business-type-name="${esc(t.id)}" value="${esc(t.name)}"/></td><td><input type="checkbox" data-business-type-active="${esc(t.id)}" ${t.active!==false?'checked':''}/></td></tr>`).join('')}</tbody></table></div><p class="muted mt10">Puedes desactivar un tipo; los gastos históricos se mantienen.</p><div class="nb-actions mt10"><button class="btn btn-primary" data-expense-action="saveTypes">Guardar tipos</button><button class="btn btn-secondary" data-expense-action="reloadTypes">Descartar cambios y recargar</button></div></div></div>`}`;
+}
+async function saveExpenseForm(){
+  if(S.isSaving||!E.draft)return;const d=E.draft;
+  if(!d.typeId||!/^\d{4}-(0[1-9]|1[0-2])$/.test(d.period))return showToast('Selecciona mes, año y tipo.','error');
+  const amount=Number(d.amount);if(!Number.isFinite(amount)||amount<=0)return showToast('Introduce un importe mayor que cero.','error');
+  S.isSaving=true;render();
+  try{
+    const data=await apiPost({action:'saveBusinessExpense',...d,amount});if(!data.record)throw new Error('El servidor no ha confirmado el gasto.');
+    E.records=E.records.filter(r=>r.id!==data.record.id);E.records.push(data.record);
+    E.filters={year:d.period.slice(0,4),month:d.period.slice(5),venueId:'',typeId:''};E.draft={...emptyExpenseDraft(),period:d.period,venueId:d.venueId};showToast('Gasto guardado.','success');
+  }catch(err){showToast(err.message,'error');}finally{S.isSaving=false;render();}
+}
+async function deleteExpense(id){
+  if(S.role!=='admin'||S.isSaving)return;const r=E.records.find(r=>r.id===id);if(!r)return;
+  if(!window.confirm(`¿Eliminar el gasto de ${r.period}, ${r.venueName}, por ${fmt(r.amount)}?`))return;
+  S.isSaving=true;render();try{await apiPost({action:'deleteBusinessExpense',id,version:r.version});E.records=E.records.filter(r=>r.id!==id);if(E.draft?.id===id)E.draft=emptyExpenseDraft();showToast('Gasto eliminado.','success');}catch(err){showToast(err.message,'error');}finally{S.isSaving=false;render();}
+}
+async function saveBusinessTypes(){
+  if(S.isSaving||S.role!=='admin')return;S.isSaving=true;render();
+  try{const data=await apiPost({action:'saveBusinessTypes',types:E.typeDraft,originalTypes:E.originalTypes});if(!Array.isArray(data.types))throw new Error('El servidor no ha confirmado los tipos.');E.types=data.types;E.originalTypes=JSON.parse(JSON.stringify(data.types));E.typeDraft=JSON.parse(JSON.stringify(data.types));showToast('Tipos de gasto guardados.','success');}catch(err){showToast(err.message,'error');}finally{S.isSaving=false;render();}
+}
+function bindExpenseEvents(){
+  const form=document.getElementById('expense-form');if(form)form.onsubmit=e=>{e.preventDefault();saveExpenseForm();};
+  document.querySelectorAll('[data-expense-field]').forEach(el=>{
+    const update=()=>{if(!E.draft)return;const k=el.dataset.expenseField;if(k==='month')E.draft.period=E.draft.period.slice(0,4)+'-'+el.value;else if(k==='year')E.draft.period=el.value.padStart(4,'0')+'-'+E.draft.period.slice(-2);else E.draft[k]=el.value;};
+    if(el.tagName==='SELECT')el.onchange=update;else el.oninput=update;
+  });
+  document.querySelectorAll('[data-expense-filter]').forEach(el=>{el.onchange=()=>{E.filters[el.dataset.expenseFilter]=el.value;render();};});
+  document.querySelectorAll('[data-business-type-name]').forEach(el=>{el.oninput=()=>{E.typeDraft.find(t=>t.id===el.dataset.businessTypeName).name=el.value;};});
+  document.querySelectorAll('[data-business-type-active]').forEach(el=>{el.onchange=()=>{E.typeDraft.find(t=>t.id===el.dataset.businessTypeActive).active=el.checked;};});
+  document.querySelectorAll('[data-expense-action]').forEach(el=>{el.onclick=()=>{
+    if(S.isSaving)return;const action=el.dataset.expenseAction;
+    if(action==='reload')return loadExpenses(true);
+    if(action==='reloadTypes'){E.typeDraft=null;return loadExpenses(true);}
+    if(action==='saveTypes')return saveBusinessTypes();
+    if(action==='addType'){const name=document.getElementById('business-type-name').value.trim();if(!name)return showToast('Introduce un nombre.','error');if(E.typeDraft.some(t=>normalize(t.name)===normalize(name)))return showToast('Ese tipo ya existe.','error');E.typeDraft.push({id:gid('etb'),name,active:true});return render();}
+    if(action==='new'){E.draft=emptyExpenseDraft();return render();}
+    if(action==='delete')return deleteExpense(el.dataset.expenseId);
+    if(action==='edit'){const record=E.records.find(r=>r.id===el.dataset.expenseId);if(record){E.draft=JSON.parse(JSON.stringify(record));render();window.scrollTo(0,0);}}
+  };});
+}
+
+const N={snapshot:null,loaded:false,loading:false,error:'',generation:0,filters:{year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),venueId:'',basis:'benefit'}};
+async function loadBusiness(force=false){
+  if(N.loading||N.loaded&&!force)return;const generation=N.generation;N.loading=true;N.error='';render();
+  try{
+    const data=await apiPost({action:'getBusinessData'});if(generation!==N.generation)return;
+    if(!data.snapshot||!['works','bars','expenses','venues','types'].every(k=>Array.isArray(data.snapshot[k])))throw new Error('Actualiza Apps Script para activar el Dashboard del negocio.');
+    const snap=data.snapshot;
+    for(const r of snap.works)for(const key of ['gross','net','benefit','cache'])if(typeof r[key]!=='number'||!Number.isFinite(r[key]))throw new Error('Hay un importe de obra no válido. Revisa la hoja antes de calcular el resultado.');
+    for(const r of snap.bars)if(typeof r.total!=='number'||!Number.isFinite(r.total))throw new Error('Hay un importe de barra no válido.');
+    for(const r of snap.expenses)if(typeof r.amount!=='number'||!Number.isFinite(r.amount))throw new Error('Hay un gasto no válido.');
+    N.snapshot=snap;N.loaded=true;
+  }catch(err){if(generation===N.generation){N.error=err.message;N.loaded=false;}}
+  finally{if(generation===N.generation){N.loading=false;render();}}
+}
+function summarizeBusiness(snapshot,filters){
+  const rows=new Map(),types=new Map(),works=new Map();let generalCents=0,periodGeneralCents=0,undated=0;
+  const rowFor=(id,name)=>{if(!rows.has(id))rows.set(id,{id,name,works:0,bars:0,expenses:0,gross:0,net:0,cache:0,count:0,barCount:0});return rows.get(id);};
+  const matches=period=>period.slice(0,4)===filters.year&&(!filters.month||period.slice(5,7)===filters.month);
+  const venueMatches=id=>!filters.venueId||filters.venueId===id;
+  const addType=r=>{const type=types.get(r.typeId)||{name:snapshot.types.find(t=>t.id===r.typeId)?.name||r.typeName,cents:0};type.cents+=Math.round(r.amount*100);types.set(r.typeId,type);};
+  snapshot.works.forEach(r=>{
+    if(!r.date){undated++;return;}if(!matches(r.date)||!venueMatches(r.venueId))return;
+    const v=rowFor(r.venueId,r.venueName),cents=Math.round(r[filters.basis==='net'?'net':'benefit']*100);
+    v.works+=cents;v.gross+=Math.round(r.gross*100);v.net+=Math.round(r.net*100);v.cache+=Math.round(r.cache*100);v.count++;
+    const w=works.get(r.workName)||{name:r.workName||'Sin obra',cents:0,count:0};w.cents+=cents;w.count++;works.set(r.workName,w);
+  });
+  snapshot.bars.forEach(r=>{if(!r.date){undated++;return;}if(matches(r.date)&&venueMatches(r.venueId)){const v=rowFor(r.venueId,r.venueName);v.bars+=Math.round(r.total*100);v.barCount++;}});
+  snapshot.expenses.forEach(r=>{
+    if(!matches(r.period))return;
+    if(!r.venueId){periodGeneralCents+=Math.round(r.amount*100);if(!filters.venueId){generalCents+=Math.round(r.amount*100);addType(r);}return;}
+    if(venueMatches(r.venueId)){rowFor(r.venueId,r.venueName).expenses+=Math.round(r.amount*100);addType(r);}
+  });
+  const ranking=[...rows.values()].map(v=>({...v,result:v.works+v.bars-v.expenses})).sort((a,b)=>b.result-a.result||a.name.localeCompare(b.name));
+  const total=ranking.reduce((t,v)=>{for(const key of ['works','bars','expenses','gross','net','cache','count','barCount','result'])t[key]+=v[key];return t;},{works:0,bars:0,expenses:0,gross:0,net:0,cache:0,count:0,barCount:0,result:0});
+  total.general=generalCents;total.periodGeneral=periodGeneralCents;total.result-=generalCents;
+  return {total,ranking,types:[...types.values()].sort((a,b)=>b.cents-a.cents),works:[...works.values()].sort((a,b)=>b.cents-a.cents),undated,hasData:ranking.length>0||generalCents>0};
+}
+function previousBusinessFilters(f){
+  if(!f.month)return {...f,year:String(Number(f.year)-1)};
+  const month=Number(f.month);return {...f,year:String(Number(f.year)-(month===1?1:0)),month:String(month===1?12:month-1).padStart(2,'0')};
+}
+function businessVenueOptions(){
+  const venues=new Map(N.snapshot.venues.map(v=>[String(v.id),v.name]));
+  [...N.snapshot.works,...N.snapshot.bars,...N.snapshot.expenses].forEach(r=>{if(r.venueId&&!venues.has(r.venueId))venues.set(r.venueId,r.venueName);});
+  return '<option value="">Todo el negocio</option>'+[...venues].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,name])=>`<option value="${esc(id)}" ${N.filters.venueId===id?'selected':''}>${esc(name)}</option>`).join('');
+}
+function businessChart(months){
+  const max=Math.max(1,...months.map(m=>Math.abs(m.summary.total.result)));
+  return `<div class="nb-chart" aria-label="Resultado mensual del año seleccionado">${months.map(m=>{const value=m.summary.total.result;return `<button class="nb-month ${N.filters.month===m.month?'selected':''}" data-business-month="${m.month}" title="${MONTH_NAMES[Number(m.month)-1]}: ${m.summary.hasData?fmt(value/100):'Sin registros'}" aria-label="Ver ${MONTH_NAMES[Number(m.month)-1]}: ${m.summary.hasData?fmt(value/100):'sin registros'}"><span class="nb-chart-value ${value<0?'danger':'success'}">${m.summary.hasData?fmt(value/100):'—'}</span><span class="nb-chart-track"><span style="height:${m.summary.hasData?Math.max(2,Math.abs(value)/max*100):0}%;background:${value<0?'var(--danger)':'var(--success)'}"></span></span><span>${MONTH_NAMES[Number(m.month)-1].slice(0,3)}</span></button>`;}).join('')}</div><p class="nb-note">Pulsa un mes para consultar su detalle. Rojo: resultado negativo. «—»: sin registros.</p>`;
+}
+function renderBusinessDashboard(){
+  const header=`<div class="section-top"><div><p class="nb-eyebrow">LA OPCIÓN · CONTROL DEL NEGOCIO</p><h1 class="page-title">Dashboard del negocio</h1><p class="page-sub">Obras + barras − gastos mensuales</p></div><button class="btn btn-secondary" data-business-action="reload" ${N.loading?'disabled':''}>${N.loading?'Actualizando…':'Actualizar todo'}</button></div>`;
+  if(N.loading)return header+'<div class="card empty">Cargando obras, barras y gastos…</div>';
+  if(!N.loaded)return header+`<div class="card"><p class="${N.error?'danger':'muted'}">${esc(N.error||'Actualiza para reunir los datos del negocio.')}</p><button class="btn btn-primary mt10" data-business-action="reload">${N.error?'Reintentar':'Cargar datos'}</button></div>`;
+  const f=N.filters,snapshot=N.snapshot,summary=summarizeBusiness(snapshot,f),t=summary.total;
+  const prevFilter=previousBusinessFilters(f),previous=summarizeBusiness(snapshot,prevFilter),delta=t.result-previous.total.result;
+  const months=MONTH_NAMES.map((_,i)=>{const month=String(i+1).padStart(2,'0');return {month,summary:summarizeBusiness(snapshot,{...f,month})};});
+  const periods=[...snapshot.works.map(r=>r.date),...snapshot.bars.map(r=>r.date),...snapshot.expenses.map(r=>r.period)];
+  const venueName=f.venueId?(snapshot.venues.find(v=>String(v.id)===f.venueId)?.name||summary.ranking[0]?.name||'Sala seleccionada'):'Todo el negocio';
+  const basisLabel=f.basis==='net'?'Neto de obras antes del caché':'Beneficio de obras después del caché';
+  const resultLabel=f.venueId?'Resultado de la sala antes de gastos generales':f.basis==='net'?'Resultado antes del caché de obras':'Resultado del negocio';
+  const totalCosts=t.expenses+t.general;
+  return `<div class="nb-dashboard">${header}
+  <div class="card mb20"><div class="dashboard-filters"><div class="field"><label>Mes</label><select data-business-filter="month">${businessMonthOptions(f.month)}</select></div><div class="field"><label>Año</label><select data-business-filter="year">${businessYearOptions(f.year,periods)}</select></div><div class="field"><label>Sala</label><select data-business-filter="venueId">${businessVenueOptions()}</select></div><div class="field"><label>Importe de obras que se suma</label><select data-business-filter="basis"><option value="benefit" ${f.basis==='benefit'?'selected':''}>Beneficio después del caché</option><option value="net" ${f.basis==='net'?'selected':''}>Neto antes del caché</option></select></div></div></div>
+  <div class="nb-hero mb20 ${t.result<0?'negative':''}"><div><p class="nb-eyebrow">${esc(periodName(f.year,f.month))} · ${esc(venueName)}</p><h2>${esc(resultLabel)}</h2><div class="nb-result ${t.result<0?'danger':'success'}" id="business-result">${summary.hasData?fmt(t.result/100):'Sin registros'}</div><p class="nb-comparison">${summary.hasData&&previous.hasData?`${delta>=0?'+':''}${fmt(delta/100)} frente a ${esc(periodName(prevFilter.year,prevFilter.month))}`:'Sin registros comparables en el periodo anterior'}</p></div><div class="nb-formula"><div><span>${esc(basisLabel)}</span><strong>${fmt(t.works/100)}</strong></div><div><span>+ Cobros de barras</span><strong>${fmt(t.bars/100)}</strong></div><div><span>− Gastos asignados a salas</span><strong>${fmt(t.expenses/100)}</strong></div><div><span>− Gastos generales incluidos</span><strong>${fmt(t.general/100)}</strong></div></div></div>
+  ${f.basis==='net'?'<div class="nb-context mb20">Vista antes del caché: el importe que corresponde a las compañías todavía no se ha descontado. Para ver el resultado después de ese coste, selecciona «Beneficio después del caché».</div>':''}
+  ${f.venueId?`<div class="nb-context mb20">Hay ${fmt(t.periodGeneral/100)} de gastos generales del periodo. No están asignados a esta sala; se descuentan al seleccionar «Todo el negocio».</div>`:''}
+  ${summary.undated?`<div class="nb-context mb20">${summary.undated} registros de obras o barras carecen de fecha y no se pueden incluir en los periodos. Revisa sus fechas.</div>`:''}
+  <div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">Aportación de obras</div><div class="kpi-value purple">${fmt(t.works/100)}</div><div class="nb-note">${t.count} funciones · ${f.basis==='net'?'antes':'después'} del caché</div></div><div class="card"><div class="kpi-label">Facturación de barras</div><div class="kpi-value cyan">${fmt(t.bars/100)}</div><div class="nb-note">${t.barCount} registros de cobros</div></div><div class="card"><div class="kpi-label">Gastos mensuales incluidos</div><div class="kpi-value danger">${fmt(totalCosts/100)}</div><div class="nb-note">${fmt(t.expenses/100)} asignados + ${fmt(t.general/100)} generales</div></div><div class="card"><div class="kpi-label">Salas con resultado negativo</div><div class="kpi-value ${summary.ranking.some(v=>v.result<0)?'danger':''}">${summary.ranking.filter(v=>v.result<0).length} / ${summary.ranking.length}</div><div class="nb-note">Antes de gastos generales</div></div></div>
+  <div class="card mb20"><div class="section-top"><div><h3 style="margin-bottom:4px">Evolución mensual · ${esc(f.year)}</h3><p class="nb-note">${esc(venueName)} · ${esc(basisLabel)}</p></div></div>${businessChart(months)}</div>
+  <div class="card mb20"><h3>Ranking de salas por resultado</h3><p class="nb-note" style="margin-bottom:14px">Obras + barras − gastos asignados. Pulsa una sala para ver su detalle.</p><div class="table-wrap"><table id="business-ranking"><thead><tr><th># / Sala</th><th class="right">Obras</th><th class="right">Barras</th><th class="right">Gastos asignados</th><th class="right">Resultado</th></tr></thead><tbody>${summary.ranking.map((v,i)=>`<tr><td><button class="nb-room-button" data-business-venue="${esc(v.id)}"><span class="nb-rank">${i+1}</span>${esc(v.name)}</button></td><td class="right">${fmt(v.works/100)}</td><td class="right">${fmt(v.bars/100)}</td><td class="right">${fmt(v.expenses/100)}</td><td class="right fw700 ${v.result<0?'danger':'success'}">${fmt(v.result/100)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin actividad en este periodo</td></tr>'}</tbody><tfoot><tr><th>Subtotal de salas</th><th class="right">${fmt(t.works/100)}</th><th class="right">${fmt(t.bars/100)}</th><th class="right">${fmt(t.expenses/100)}</th><th class="right">${fmt((t.result+t.general)/100)}</th></tr>${!f.venueId?`<tr><td colspan="4">Gastos generales sin asignar</td><td class="right danger">−${fmt(t.general/100)}</td></tr>`:''}<tr><th colspan="4">${esc(resultLabel)}</th><th class="right ${t.result<0?'danger':'success'}">${fmt(t.result/100)}</th></tr></tfoot></table></div></div>
+  <div class="grid grid-2 mb20"><div class="card"><h3>Gastos mensuales por tipo</h3>${renderMiniBars(summary.types.map(t=>[t.name,t.cents/100]),0,'var(--danger)',summary.types.length)}<p class="nb-note">Solo gastos del nuevo apartado «Gastos», dentro de los filtros.</p></div><div class="card"><h3>Obras que más aportan</h3>${renderMiniBars(summary.works.slice(0,8).map(w=>[w.name,w.cents/100]),0,'var(--purple)',8)}<p class="nb-note">${esc(basisLabel)}. No se asignan a las obras los gastos generales del negocio.</p></div></div>
+  <div class="card mb20"><h3>Detalle mensual del año</h3><div class="table-wrap"><table><thead><tr><th>Mes</th><th class="right">Obras</th><th class="right">Barras</th><th class="right">Gastos de salas</th><th class="right">Generales</th><th class="right">Resultado</th></tr></thead><tbody>${months.map(m=>{const v=m.summary.total;return `<tr><td>${MONTH_NAMES[Number(m.month)-1]}</td>${m.summary.hasData?`<td class="right">${fmt(v.works/100)}</td><td class="right">${fmt(v.bars/100)}</td><td class="right">${fmt(v.expenses/100)}</td><td class="right">${fmt(v.general/100)}</td><td class="right fw700 ${v.result<0?'danger':'success'}">${fmt(v.result/100)}</td>`:'<td colspan="5" class="right muted">Sin registros</td>'}</tr>`;}).join('')}</tbody></table></div></div>
+  <div class="card"><h3>Cómo se calcula</h3><p class="nb-note">${esc(basisLabel)} + cobros de barras − gastos asignados − gastos generales incluidos. Los gastos y el caché ya descontados en las funciones no se vuelven a restar. Registra en «Gastos» solo costes adicionales.</p><p class="nb-note mt10">Venta bruta de entradas del periodo: <strong>${fmt(t.gross/100)}</strong>. Se muestra como referencia; no se suma otra vez. Barras utiliza el importe cobrado, sin separar IVA. El resultado es de gestión con los importes registrados; no equivale a un beneficio contable después de impuestos.</p><p class="nb-note mt10">Última carga: ${esc(new Date(snapshot.updatedAt).toLocaleString('es-ES'))}. Los periodos sin registros no permiten saber si falta información o no hubo actividad.</p></div></div>`;
+}
+function bindBusinessEvents(){
+  const chart=document.querySelector('.nb-chart'),selected=chart?.querySelector('.nb-month.selected');
+  if(selected)chart.scrollLeft=selected.offsetLeft-chart.offsetLeft-chart.clientWidth/2+selected.offsetWidth/2;
+  document.querySelectorAll('[data-business-filter]').forEach(el=>{el.onchange=()=>{N.filters[el.dataset.businessFilter]=el.value;render();};});
+  document.querySelectorAll('[data-business-month]').forEach(el=>{el.onclick=()=>{N.filters.month=el.dataset.businessMonth;render();};});
+  document.querySelectorAll('[data-business-venue]').forEach(el=>{el.onclick=()=>{N.filters.venueId=el.dataset.businessVenue;render();window.scrollTo(0,0);};});
+  document.querySelectorAll('[data-business-action="reload"]').forEach(el=>{el.onclick=()=>loadBusiness(true);});
 }
 
 boot();
