@@ -148,7 +148,7 @@ function showToast(msg,type='success'){ S.toast={message:msg,type}; clearTimeout
 function logoSVG(w=150){ const h=w*.55; return `<svg width="${w}" height="${h}" viewBox="-28 -8 336 174" preserveAspectRatio="xMidYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible"><text x="140" y="68" text-anchor="middle" font-family="'Outfit','Arial Black',sans-serif" font-size="48" font-weight="900" letter-spacing="4" fill="var(--text)">LA OPCIÓN</text><line x1="4" y1="82" x2="276" y2="82" stroke="var(--cyan)" stroke-width="4"/><line x1="4" y1="92" x2="276" y2="92" stroke="var(--pink)" stroke-width="4"/><line x1="4" y1="102" x2="276" y2="102" stroke="var(--yellow)" stroke-width="4"/><text x="140" y="132" text-anchor="middle" font-family="'Outfit','Arial',sans-serif" font-size="20" font-weight="300" letter-spacing="9" fill="var(--text-muted)">PRODUCCIONES</text></svg>`; }
 function roleLabel(r){ return r==='admin'?'Administrador':'Usuario'; }
 function defaultViewForRole(role){ return role==='admin'?'dashboard':'shows'; }
-function isAdminOnlyView(view){ return ['dashboard','summary','admin'].includes(view); }
+function isAdminOnlyView(view){ return ['dashboard','summary','admin','barDashboard'].includes(view); }
 function isViewAllowedForRole(view,role){ return role==='admin'||!isAdminOnlyView(view); }
 function normalizeCurrentView(){
   if(S.user && !isViewAllowedForRole(S.view,S.role)){
@@ -183,7 +183,7 @@ function saveSession(token,user){
   normalizeCurrentView();
   localStorage.setItem(STORAGE_KEY,JSON.stringify({token,user}));
 }
-function clearSession(rn=true){ S.token='';S.user=null;S.role=null;S.view='dashboard';S.selectedId=null;S.editShowId=null;S.users=[];S.newShowDraft=null;S.search='';S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};S.isDuplicating=false;S.duplicateSourceId=null;localStorage.removeItem(STORAGE_KEY);if(rn)render(); }
+function clearSession(rn=true){ resetBars(); S.token='';S.user=null;S.role=null;S.view='dashboard';S.selectedId=null;S.editShowId=null;S.users=[];S.newShowDraft=null;S.search='';S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};S.isDuplicating=false;S.duplicateSourceId=null;localStorage.removeItem(STORAGE_KEY);if(rn)render(); }
 
 async function boot(){
   const raw=localStorage.getItem(STORAGE_KEY);
@@ -526,8 +526,8 @@ function bindLogin(){
 function renderSidebar(){
   const isAdmin=S.role==='admin';
   const items=isAdmin
-    ?[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Nueva Función',icon:'➕'},{id:'summary',label:'Resumen Mensual',icon:'📋'},{id:'admin',label:'Administración',icon:'⚙️'}]
-    :[{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar Ingreso',icon:'➕'}];
+    ?[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Nueva Función',icon:'➕'},{id:'barBilling',label:'Facturación barra',icon:'🥤'},{id:'barDashboard',label:'Dashboard barras',icon:'📈'},{id:'summary',label:'Resumen Mensual',icon:'📋'},{id:'admin',label:'Administración',icon:'⚙️'}]
+    :[{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar Ingreso',icon:'➕'},{id:'barBilling',label:'Facturación barra',icon:'🥤'}];
   const navBtns=items.map(it=>`<button class="nav-btn ${S.view===it.id?'active':''}" data-view="${it.id}">${it.icon} ${it.label}</button>`).join('');
   const rc=isAdmin?'var(--pink-dim)':'var(--cyan-dim)',rt=isAdmin?'var(--pink)':'var(--cyan)';
   return `<div class="sidebar"><div class="sidebar-header">${logoSVG(155)}</div><div class="nav">${navBtns}</div><div class="sidebar-footer"><div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><div class="role-pill" style="background:${rc};color:${rt}">${isAdmin?'A':'U'}</div><div><div style="font-size:12px;font-weight:600">${esc(S.user.email)}</div><div style="font-size:10px;color:var(--text-dim)">${roleLabel(S.role)}</div></div></div><button class="btn btn-ghost btn-sm" data-action="logout" style="width:100%;justify-content:flex-start;gap:7px">🚪 Cerrar sesión</button></div></div>`;
@@ -538,6 +538,8 @@ function renderView(){
     S.view=defaultViewForRole(S.role);
   }
   switch(S.view){
+    case 'barBilling': return renderBarBilling();
+    case 'barDashboard': return renderBarDashboard();
     case 'dashboard': return renderDashboard();
     case 'shows':     return renderShowList();
     case 'newshow':   return renderShowForm(false);
@@ -945,10 +947,10 @@ function renderSummary(){
 function renderAdmin(){
   if(S.role!=='admin') return '<div class="card"><div class="empty">Acceso denegado</div></div>';
   if(S.adminTab==='agreements') S.adminTab='works';
-  const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras y acuerdos'},{id:'expenses',label:'Gastos'},{id:'users',label:'Usuarios'}];
+  const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras y acuerdos'},{id:'expenses',label:'Gastos'},{id:'barMethods',label:'Pagos de barra'},{id:'users',label:'Usuarios'}];
   const tabBtns=tabs.map(t=>`<button class="btn ${S.adminTab===t.id?'btn-primary':'btn-ghost'} btn-sm" data-admin-tab="${t.id}">${t.label}</button>`).join('');
-  const content=S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab);
-  return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
+  const content=S.adminTab==='barMethods'?renderBarMethods():(S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab));
+  return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'&&S.adminTab!=='barMethods'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'&&S.adminTab!=='barMethods'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
 }
 function renderConfigEditor(tab){
   const meta=CONFIG_META[tab]||CONFIG_META.platforms;
@@ -987,6 +989,7 @@ function renderUsersAdmin(){
 // EVENTS
 // ══════════════════════════════════════════════════════════════
 function bindEvents(){
+  bindBarEvents();
   document.querySelectorAll('[data-view]').forEach(btn=>{
     btn.onclick=()=>{
       if(S.isSaving)return showToast('Espera a que termine el guardado.','warn');
@@ -997,6 +1000,7 @@ function bindEvents(){
         return render();
       }
       S.view=targetView;
+      if(['barBilling','barDashboard'].includes(targetView)) loadBars();
       S.selectedId=null;
       S.editShowId=null;
       S.isDuplicating=false;
@@ -1011,7 +1015,7 @@ function bindEvents(){
     btn.onclick=()=>{
       const a=btn.dataset.action;
       if(a==='logout')       return handleLogout();
-      if(a==='refresh')      return loadFromSheet({manual:true});
+      if(a==='refresh')      return S.view==='admin'&&S.adminTab==='barMethods'?loadBars(true):loadFromSheet({manual:true});
       if(a==='resetDashboardFilters'){resetDashboardFilters();return render();}
       if(a==='clearShowFilters'){S.search='';S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};return render();}
       if(a==='saveNewShow')  {btn.disabled=true;btn.innerHTML='⏳ Guardando...';return handleSaveShow();}
@@ -1059,7 +1063,7 @@ function bindEvents(){
   });
 
   document.querySelectorAll('[data-admin-tab]').forEach(btn=>{
-    btn.onclick=()=>{S.adminTab=btn.dataset.adminTab;if(S.adminTab==='users')loadUsers();render();};
+    btn.onclick=()=>{S.adminTab=btn.dataset.adminTab;if(S.adminTab==='users')loadUsers();if(S.adminTab==='barMethods')loadBars();render();};
   });
 
   document.querySelectorAll('[data-dash-filter]').forEach(el=>{
@@ -1242,6 +1246,150 @@ async function handleSaveShow(){
   });
 
   await saveShowToSheet(show);
+}
+
+// Estado independiente: nunca se mezcla con S.shows ni sus filtros.
+const B={records:[],methods:[],originalMethods:[],loaded:false,loading:false,error:'',draft:null,methodDraft:null,filters:{month:'',from:'',to:'',venueId:''},generation:0};
+function resetBars(){
+  B.generation++;B.records=[];B.methods=[];B.originalMethods=[];B.loaded=false;B.loading=false;B.error='';B.draft=null;B.methodDraft=null;B.filters={month:'',from:'',to:'',venueId:''};
+}
+async function loadBars(force=false){
+  if(B.loading||(!force&&B.loaded)) return;
+  const generation=B.generation;
+  B.loading=true;B.error='';render();
+  try{
+    const data=await apiPost({action:'getBarData'});
+    if(generation!==B.generation) return;
+    if(!Array.isArray(data.records)||!Array.isArray(data.methods)) throw new Error('Actualiza la implementación de Apps Script para activar Facturación barra.');
+    B.records=data.records;B.methods=data.methods;B.originalMethods=JSON.parse(JSON.stringify(data.methods));B.loaded=true;
+    if(!B.methodDraft) B.methodDraft=JSON.parse(JSON.stringify(data.methods));
+  }catch(err){if(generation===B.generation) B.error=err.message;}
+  finally{if(generation===B.generation){B.loading=false;render();}}
+}
+function emptyBarDraft(){return {id:gid('bar'),version:0,venueId:'',date:'',payments:[]};}
+function barDraftMethods(){
+  const d=B.draft||emptyBarDraft();
+  return B.methods.filter(m=>m.active!==false||d.payments.some(p=>p.id===m.id)).map(m=>({...m,name:d.payments.find(p=>p.id===m.id)?.name||m.name}));
+}
+function filteredBars(){
+  const f=B.filters;
+  return B.records.filter(r=>(!f.month||r.date.startsWith(f.month))&&(!f.from||r.date>=f.from)&&(!f.to||r.date<=f.to)&&(!f.venueId||r.venueId===f.venueId)).sort((a,b)=>b.date.localeCompare(a.date)||a.venueName.localeCompare(b.venueName));
+}
+function barSummary(records){
+  const days=new Map(),venues=new Map(),methods=new Map();let totalCents=0;
+  records.forEach(r=>{
+    const cents=Math.round(r.total*100);totalCents+=cents;
+    days.set(r.date,(days.get(r.date)||0)+cents);
+    const v=venues.get(r.venueId)||{name:r.venueName,cents:0};v.cents+=cents;venues.set(r.venueId,v);
+    r.payments.forEach(p=>{const m=methods.get(p.id)||{name:B.methods.find(x=>x.id===p.id)?.name||p.name,cents:0};m.cents+=Math.round(p.amount*100);methods.set(p.id,m);});
+  });
+  return {total:totalCents/100,days:[...days].sort(([a],[b])=>a.localeCompare(b)).map(([name,cents])=>[name,cents/100]),venues:[...venues.values()].sort((a,b)=>b.cents-a.cents).map(v=>[v.name,v.cents/100]),methods:[...methods.values()].sort((a,b)=>b.cents-a.cents).map(m=>[m.name,m.cents/100])};
+}
+function barLoadNotice(){
+  if(B.loading) return '<div class="card mb20"><p>Cargando facturación de barra…</p></div>';
+  if(B.error) return `<div class="card mb20"><p class="danger">${esc(B.error)}</p><button class="btn btn-secondary" data-bar-action="reload">Reintentar</button></div>`;
+  return '';
+}
+function barFiltersHtml(){
+  const f=B.filters,months=[...new Set(B.records.map(r=>r.date.slice(0,7)))].sort().reverse();
+  const venues=new Map((S.config.venues||[]).map(v=>[v.id,v.name]));B.records.forEach(r=>{if(!venues.has(r.venueId))venues.set(r.venueId,r.venueName);});
+  return `<div class="card mb20"><div class="dashboard-filters">
+    <div class="field"><label>Mes</label><select data-bar-filter="month"><option value="">Todos</option>${months.map(m=>`<option value="${esc(m)}" ${f.month===m?'selected':''}>${esc(m)}</option>`).join('')}</select></div>
+    <div class="field"><label>Sala</label><select data-bar-filter="venueId"><option value="">Todas</option>${[...venues].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,name])=>`<option value="${esc(id)}" ${f.venueId===id?'selected':''}>${esc(name)}</option>`).join('')}</select></div>
+    <div class="field"><label>Desde</label><input type="date" data-bar-filter="from" value="${esc(f.from)}"/></div>
+    <div class="field"><label>Hasta</label><input type="date" data-bar-filter="to" value="${esc(f.to)}"/></div>
+  </div><button class="btn btn-ghost btn-sm mt10" data-bar-action="clearFilters">Limpiar filtros</button>${f.from&&f.to&&f.from>f.to?'<p class="danger">La fecha inicial es posterior a la final.</p>':''}</div>`;
+}
+function barRecordsHtml(records){
+  return `<div class="card"><h3>Registros de barra · ${records.length}</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Sala</th><th>Ingresos por método</th><th class="right">Total</th><th>Acciones</th></tr></thead><tbody>${records.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.venueName)}</td><td>${r.payments.filter(p=>p.amount!==0).map(p=>`${esc(p.name)}: ${fmt(p.amount)}`).join('<br>')}</td><td class="right fw700 cyan">${fmt(r.total)}</td><td><div class="row-actions"><button class="btn btn-secondary btn-sm" data-bar-action="edit" data-bar-id="${esc(r.id)}">✏️ Editar</button>${S.role==='admin'?`<button class="btn btn-danger btn-sm" data-bar-action="delete" data-bar-id="${esc(r.id)}">Eliminar</button>`:''}</div></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin registros con estos filtros</td></tr>'}</tbody></table></div></div>`;
+}
+function renderBarBilling(){
+  if(!B.draft) B.draft=emptyBarDraft();
+  const d=B.draft;
+  const venues=(S.config.venues||[]).filter(v=>v.active!==false||v.id===d.venueId);
+  const methods=barDraftMethods();
+  return `<div class="section-top"><div><h1 class="page-title">Facturación barra</h1><p class="page-sub">Consumos por sala y fecha</p></div><button class="btn btn-secondary btn-sm" data-bar-action="reload" ${B.loading?'disabled':''}>🔄 Actualizar barras</button></div>
+    ${barLoadNotice()}${!B.loaded?'':`<form id="bar-form"><div class="grid grid-2 mb20">
+    <div class="card"><h3>${d.version?'Editar registro':'Nuevo registro'}</h3><div class="field"><label>Sala *</label><select data-bar-field="venueId" required><option value="">— Seleccionar —</option>${venues.map(v=>`<option value="${esc(v.id)}" ${d.venueId===v.id?'selected':''}>${esc(v.name)}${v.active===false?' (inactiva)':''}</option>`).join('')}</select></div><div class="field"><label>Fecha *</label><input type="date" data-bar-field="date" required value="${esc(d.date)}"/></div></div>
+    <div class="card"><h3>Ingresos</h3>${methods.map(m=>`<div class="field"><label>${esc(m.name)}${m.active===false?' (inactivo; registro histórico)':''}</label><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00" data-bar-payment="${esc(m.id)}" value="${esc(d.payments.find(p=>p.id===m.id)?.amount??'')}"/></div>`).join('')||'<p>No hay métodos activos. Añádelos en Administración.</p>'}<div class="finance-split total"><span>Total</span><strong id="bar-draft-total" class="cyan">${fmt(d.payments.reduce((a,p)=>a+(Number(p.amount)||0),0))}</strong></div></div></div>
+    <div style="display:flex;gap:10px;margin-bottom:24px"><button type="submit" class="btn btn-primary" ${S.isSaving||!methods.length?'disabled':''}>${d.version?'Guardar cambios':'Guardar ingreso de barra'}</button><button type="button" class="btn btn-secondary" data-bar-action="new">${d.version?'Cancelar edición':'Limpiar formulario'}</button></div></form>${barFiltersHtml()}${barRecordsHtml(filteredBars())}`}`;
+}
+function renderBarDashboard(){
+  const records=filteredBars(),summary=barSummary(records);
+  return `<div class="section-top"><div><h1 class="page-title">Dashboard barras</h1><p class="page-sub">Facturación de consumiciones</p></div><button class="btn btn-secondary btn-sm" data-bar-action="reload" ${B.loading?'disabled':''}>🔄 Actualizar barras</button></div>${barLoadNotice()}${!B.loaded?'':`${barFiltersHtml()}
+    <div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">Total facturado</div><div class="kpi-value cyan">${fmt(summary.total)}</div></div><div class="card"><div class="kpi-label">Registros</div><div class="kpi-value">${records.length}</div></div><div class="card"><div class="kpi-label">Días con registros</div><div class="kpi-value">${summary.days.length}</div></div><div class="card"><div class="kpi-label">Media por día registrado</div><div class="kpi-value purple">${fmt(summary.days.length?summary.total/summary.days.length:0)}</div></div></div>
+    <div class="grid grid-2 mb20"><div class="card"><h3>Facturación por sala</h3>${renderMiniBars(summary.venues,0,'var(--purple)',summary.venues.length)}</div><div class="card"><h3>Facturación por método de pago</h3>${renderMiniBars(summary.methods,0,'var(--cyan)',summary.methods.length)}</div></div>
+    <div class="card mb20"><h3>Facturación por día</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th class="right">Facturado</th></tr></thead><tbody>${summary.days.map(([date,total])=>`<tr><td>${esc(date)}</td><td class="right cyan fw700">${fmt(total)}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">Sin registros con estos filtros</td></tr>'}</tbody><tfoot><tr><th>Total</th><th class="right">${fmt(summary.total)}</th></tr></tfoot></table></div></div>${barRecordsHtml(records)}`}`;
+}
+function renderBarMethods(){
+  const methods=B.methodDraft||[];
+  return `${barLoadNotice()}${!B.loaded?'':`<div class="grid grid-2"><div class="card"><h3>Añadir método de pago de barra</h3><div class="field"><label>Nombre</label><input id="bar-method-name" maxlength="100" placeholder="Por ejemplo, Bizum"/></div><button class="btn btn-primary" data-bar-action="addMethod">Añadir método</button><p class="dim mt10">Después pulsa «Guardar métodos».</p></div><div class="card"><h3>Métodos de pago de barra</h3><div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Activo</th></tr></thead><tbody>${methods.map(m=>`<tr><td><input class="inline-input" maxlength="100" data-bar-method-name="${esc(m.id)}" value="${esc(m.name)}"/></td><td><input type="checkbox" data-bar-method-active="${esc(m.id)}" ${m.active!==false?'checked':''}/></td></tr>`).join('')}</tbody></table></div><p class="dim mt10">Desactiva un método para dejar de usarlo en nuevos registros. Los ingresos anteriores se conservan.</p><div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary" data-bar-action="saveMethods">Guardar métodos</button><button class="btn btn-secondary" data-bar-action="reloadMethods">Descartar cambios y recargar</button></div></div></div>`}`;
+}
+async function saveBarForm(){
+  if(S.isSaving||!B.draft)return;
+  const d=B.draft;
+  const payments=barDraftMethods().map(m=>({id:m.id,amount:Number(d.payments.find(p=>p.id===m.id)?.amount||0)}));
+  if(!d.venueId||!d.date) return showToast('Selecciona sala y fecha.','error');
+  if(payments.some(p=>!Number.isFinite(p.amount)||p.amount<0))return showToast('Revisa los importes.','error');
+  S.isSaving=true;render();
+  try{
+    const data=await apiPost({action:'saveBarRecord',id:d.id,version:d.version,venueId:d.venueId,date:d.date,payments});
+    if(!data.record)throw new Error('El servidor no ha confirmado el registro. Actualiza Apps Script.');
+    B.records=B.records.filter(r=>r.id!==data.record.id);B.records.push(data.record);
+    B.draft=emptyBarDraft();showToast('Ingreso de barra guardado.','success');
+  }catch(err){showToast(err.message,'error');}
+  finally{S.isSaving=false;render();}
+}
+async function deleteBarEntry(id){
+  if(S.isSaving||S.role!=='admin')return;
+  const record=B.records.find(r=>r.id===id);if(!record)return;
+  if(!window.confirm(`¿Eliminar el ingreso de barra de ${record.venueName}, ${record.date}, por ${fmt(record.total)}?`))return;
+  S.isSaving=true;render();
+  try{await apiPost({action:'deleteBarRecord',id,version:record.version});B.records=B.records.filter(r=>r.id!==id);if(B.draft?.id===id)B.draft=emptyBarDraft();showToast('Ingreso eliminado.','success');}
+  catch(err){showToast(err.message,'error');}
+  finally{S.isSaving=false;render();}
+}
+async function saveBarMethods(){
+  if(S.isSaving||S.role!=='admin')return;
+  S.isSaving=true;render();
+  try{
+    const data=await apiPost({action:'saveBarMethods',methods:B.methodDraft,originalMethods:B.originalMethods});
+    if(!Array.isArray(data.methods))throw new Error('Actualiza Apps Script para guardar métodos de barra.');
+    B.methods=data.methods;B.originalMethods=JSON.parse(JSON.stringify(data.methods));B.methodDraft=JSON.parse(JSON.stringify(data.methods));showToast('Métodos de barra guardados.','success');
+  }catch(err){showToast(err.message,'error');}
+  finally{S.isSaving=false;render();}
+}
+function bindBarEvents(){
+  const form=document.getElementById('bar-form');if(form)form.onsubmit=e=>{e.preventDefault();saveBarForm();};
+  document.querySelectorAll('[data-bar-field]').forEach(el=>{el.onchange=()=>{if(B.draft)B.draft[el.dataset.barField]=el.value;};});
+  document.querySelectorAll('[data-bar-payment]').forEach(el=>{el.oninput=()=>{
+    if(!B.draft)return;
+    const id=el.dataset.barPayment;let p=B.draft.payments.find(x=>x.id===id);
+    if(!p){p={id,amount:'',name:B.methods.find(m=>m.id===id)?.name||id};B.draft.payments.push(p);}p.amount=el.value;
+    const total=document.getElementById('bar-draft-total');if(total)total.textContent=fmt(B.draft.payments.reduce((a,x)=>a+(Number(x.amount)||0),0));
+  };});
+  document.querySelectorAll('[data-bar-filter]').forEach(el=>{el.onchange=()=>{B.filters[el.dataset.barFilter]=el.value;render();};});
+  document.querySelectorAll('[data-bar-method-name]').forEach(el=>{el.oninput=()=>{B.methodDraft.find(m=>m.id===el.dataset.barMethodName).name=el.value;};});
+  document.querySelectorAll('[data-bar-method-active]').forEach(el=>{el.onchange=()=>{B.methodDraft.find(m=>m.id===el.dataset.barMethodActive).active=el.checked;};});
+  document.querySelectorAll('[data-bar-action]').forEach(el=>{el.onclick=()=>{
+    if(S.isSaving)return;
+    const action=el.dataset.barAction;
+    if(action==='reload')return loadBars(true);
+    if(action==='reloadMethods'){B.methodDraft=null;return loadBars(true);}
+    if(action==='saveMethods')return saveBarMethods();
+    if(action==='addMethod'){
+      const name=document.getElementById('bar-method-name')?.value.trim();if(!name)return showToast('Introduce el nombre del método.','error');
+      if(B.methodDraft.some(m=>normalize(m.name)===normalize(name)))return showToast('Ese método ya existe.','error');
+      B.methodDraft.push({id:gid('bm'),name,active:true});return render();
+    }
+    if(action==='new'){B.draft=emptyBarDraft();return render();}
+    if(action==='clearFilters'){B.filters={month:'',from:'',to:'',venueId:''};return render();}
+    if(action==='delete')return deleteBarEntry(el.dataset.barId);
+    if(action==='edit'){
+      const record=B.records.find(r=>r.id===el.dataset.barId);if(!record)return;
+      B.draft=JSON.parse(JSON.stringify(record));S.view='barBilling';render();window.scrollTo(0,0);
+    }
+  };});
 }
 
 boot();
