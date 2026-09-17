@@ -15,7 +15,7 @@
       --sidebar-w:230px; --radius:14px; --shadow:0 18px 40px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box;margin:0;padding:0} html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh} button,input,select,textarea{font:inherit}
-    .app{display:flex;min-height:100vh}.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:30}.sidebar-header{padding:18px 10px 14px;border-bottom:1px solid var(--border);text-align:center}.nav{flex:1;padding:10px 8px;overflow-y:auto}.nav-btn{width:100%;border:0;background:transparent;color:var(--text-muted);border-radius:8px;padding:10px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.15s;text-align:left;margin-bottom:2px;font-size:13px}.nav-btn:hover{background:var(--surface-alt)}.nav-btn.active{background:var(--cyan-dim);color:var(--cyan);font-weight:700}.sidebar-footer{border-top:1px solid var(--border);padding:14px}.role-pill{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800}.main{margin-left:var(--sidebar-w);flex:1;padding:28px 36px;min-width:0}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:30}.sidebar-header{padding:18px 10px 14px;border-bottom:1px solid var(--border);text-align:center}.nav{flex:1;padding:10px 8px;overflow-y:auto}.nav-btn{width:100%;border:0;background:transparent;color:var(--text-muted);border-radius:8px;padding:10px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.15s;text-align:left;margin-bottom:2px;font-size:13px}.nav-btn:hover{background:var(--surface-alt)}.nav-btn.active{background:var(--cyan-dim);color:var(--cyan);font-weight:700}.nav-section{padding:12px 13px 5px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-dim)}.nav-section:first-child{padding-top:4px}.sidebar-footer{border-top:1px solid var(--border);padding:14px}.role-pill{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800}.main{margin-left:var(--sidebar-w);flex:1;padding:28px 36px;min-width:0}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}.card h3{margin:0 0 14px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700}.page-title{font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;margin:0}.page-sub{color:var(--text-muted);font-size:13px;margin:4px 0 0}.section-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}.grid{display:grid;gap:14px}.grid-2{grid-template-columns:1fr 1fr}.grid-kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700}.kpi-value{margin-top:8px;font-size:22px;font-family:'Outfit',sans-serif;font-weight:800}.kpi-sub{margin-top:4px;font-size:11px;color:var(--text-dim)}
     .btn{border:0;border-radius:8px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;transition:.15s;font-size:13px}.btn:disabled{opacity:.5;cursor:not-allowed}.btn-primary{background:var(--cyan);color:#0A0A0F}.btn-secondary{background:var(--surface-alt);color:var(--text);border:1px solid var(--border)}.btn-danger{background:var(--danger-dim);color:var(--danger)}.btn-ghost{background:transparent;color:var(--text-muted)}.btn-sm{padding:5px 10px;font-size:12px}.badge{display:inline-flex;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.3px}.badge-ok{background:var(--success-dim);color:var(--success)}.badge-off{background:var(--surface-alt);color:var(--text-dim)}
     .field{margin-bottom:12px}.field label{display:block;margin-bottom:4px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700}.field input,.field select,.field textarea{width:100%;padding:8px 11px;background:var(--surface-alt);color:var(--text);border:1px solid var(--border);border-radius:8px;outline:none;font-size:13px}.field textarea{min-height:64px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--cyan)}.inline-input{width:100%;min-width:120px;padding:7px 9px;background:var(--surface-alt);color:var(--text);border:1px solid var(--border);border-radius:8px;outline:none;font-size:12px}.inline-check{width:18px;height:18px;accent-color:var(--cyan)}
@@ -93,7 +93,7 @@ function panelTitle(title,help){ return `<h3 class="panel-title"><span>${esc(tit
 function normalizeExpenseOwner(owner){
   owner=normalize(owner||'both');
   if(['laopcion','la opcion','opcion','option'].includes(owner)) return 'laopcion';
-  if(['company','compania','compañia','cia','compañía'].includes(owner)) return 'company';
+  if(['company','compania','cia'].includes(owner)) return 'company';
   if(['cache','cache la opcion','cachelaopcion','gasto cache','gasto de cache'].includes(owner)) return 'cache';
   return 'both';
 }
@@ -112,7 +112,13 @@ function expenseOwnerLabel(owner){
 function alphaSortByName(list){ return [...(list||[])].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es',{sensitivity:'base'})); }
 function getActiveSorted(list){ return alphaSortByName((list||[]).filter(x=>x.active!==false)); }
 function getLegacyAgreementById(config,id){ return (config?.agreements||[]).find(a=>a.id===id)||null; }
-function getLegacyAgreementByName(config,name){ return (config?.agreements||[]).find(a=>normalize(a.name)===normalize(name))||null; }
+function getLegacyAgreementByName(config,name){
+  const list=config?.agreements||[];
+  const exact=list.find(a=>String(a.name||'').trim()===String(name||'').trim());
+  if(exact) return exact;
+  const loose=list.filter(a=>normalize(a.name)===normalize(name));
+  return loose.length===1?loose[0]:null;
+}
 function hasWorkAgreement(work){ return !!(work&&(work.agreement||work.agreementId||work.agreementMode||work.agreementValue!==undefined||work.agreementName)); }
 function agreementFromWork(work){
   if(!hasWorkAgreement(work)) return null;
@@ -147,27 +153,29 @@ function syncWorkAgreementToConfig(work,config=S.config){
   agr.mode=work.agreementMode||'percentage';
   agr.value=Number(work.agreementValue||0);
   agr.active=work.active!==false;
+  work.agreement={id:work.agreementId,name:agr.name,mode:agr.mode,value:agr.value};
   return agr;
 }
 function syncAllWorkAgreementsToConfig(config=S.config){ (config.works||[]).forEach(w=>syncWorkAgreementToConfig(w,config)); }
+
+// CORREGIDO: los acuerdos se identifican por id, no por nombre sin tildes
 function getAgreementCatalog(config=S.config){
-  const byName=new Map();
+  const byId=new Map();
   getActiveSorted(config.works||[]).forEach(w=>{
     const resolved=resolveAgreementForWork(w,config);
     const agr=resolved.snapshot;
-    if(agr){ byName.set(normalize(agr.name),{id:resolved.id,name:agr.name,mode:agr.mode,value:agr.value,source:'work'}); }
+    if(agr&&resolved.id&&!byId.has(resolved.id)) byId.set(resolved.id,{id:resolved.id,name:agr.name,mode:agr.mode,value:agr.value,source:'work'});
   });
   getActiveSorted(config.agreements||[]).forEach(a=>{
-    const key=normalize(a.name);
-    if(!byName.has(key)) byName.set(key,{id:a.id,name:a.name,mode:a.mode||'percentage',value:Number(a.value||0),source:'legacy'});
+    if(!byId.has(a.id)) byId.set(a.id,{id:a.id,name:a.name,mode:a.mode||'percentage',value:Number(a.value||0),source:'legacy'});
   });
-  return alphaSortByName([...byName.values()]);
+  return alphaSortByName([...byId.values()]);
 }
-function matchesAgreementFilter(show,agreementId){
+function matchesAgreementFilter(show,agreementId,catalog){
   if(!agreementId) return true;
-  if(show.agreementId===agreementId) return true;
-  const selected=getAgreementCatalog().find(a=>a.id===agreementId);
-  return !!(selected&&normalize(show.agreementSnapshot?.name)===normalize(selected.name));
+  if(String(show.agreementId||'')===String(agreementId)) return true;
+  const selected=(catalog||getAgreementCatalog()).find(a=>a.id===agreementId);
+  return !!(selected&&String(show.agreementSnapshot?.name||'').trim()===String(selected.name||'').trim());
 }
 function agreementValueLabel(agr){ return !agr?'—':(agr.mode==='fixed'?fmt(agr.value):fmtPct(agr.value)); }
 function showToast(msg,type='success'){ S.toast={message:msg,type}; clearTimeout(S.toastTimer); S.toastTimer=setTimeout(()=>{S.toast=null;render();},3500); render(); }
@@ -229,14 +237,24 @@ async function boot(){
 
 // ══════════════════════════════════════════════════════════════
 // CONVERSIÓN SHEET → APP
+// CORREGIDO: usa el acuerdo con el que se guardó la función, respeta
+// un alquiler guardado de 0 € y conserva los importes del Sheet.
 // ══════════════════════════════════════════════════════════════
 function sheetShowToAppShow(raw,config){
   const venue=config.venues.find(v=>normalize(v.name)===normalize(raw.sala))||null;
-  const work=config.works.find(w=>normalize(w.name)===normalize(raw.obra))||null;
+  const work=config.works.find(w=>String(w.name||'').trim()===String(raw.obra||'').trim())
+          ||config.works.find(w=>normalize(w.name)===normalize(raw.obra))||null;
   const legacyAgreement=getLegacyAgreementByName(config,raw.acuerdo);
   const resolvedAgreement=resolveAgreementForWork(work,config,legacyAgreement);
-  const platformSnapshots={},income={};
+  let agreementId=resolvedAgreement.id;
+  let agreementSnapshot=resolvedAgreement.snapshot;
+  const ad=raw.agreementData;
+  if(ad&&typeof ad==='object'&&(ad.mode||ad.value!==undefined)){
+    agreementId=ad.id||agreementId;
+    agreementSnapshot={name:ad.name||raw.acuerdo||agreementSnapshot?.name||'Acuerdo',mode:ad.mode==='fixed'?'fixed':'percentage',value:Number(ad.value||0)};
+  }
 
+  const platformSnapshots={},income={};
   if(Array.isArray(raw.platformData)&&raw.platformData.length){
     raw.platformData.forEach(p=>{
       const cfg=config.platforms.find(x=>x.id===p.id||normalize(x.name)===normalize(p.name));
@@ -256,29 +274,33 @@ function sheetShowToAppShow(raw,config){
   income.cashBox=Number(raw.efectivo||0);
   income.cardBox=Number(raw.tarjeta||0);
 
+  const hasValue=v=>v!==null&&v!==undefined&&String(v).trim()!==''&&Number.isFinite(Number(v));
+  const storedAmounts=(raw.storedAmounts&&typeof raw.storedAmounts==='object')
+    ? raw.storedAmounts
+    : {ventaBruta:raw.ventaBruta,ventaNeta:raw.ventaNeta,autor:raw.autor,alquiler:raw.alquiler,totalGastos:raw.totalGastos,totalNeto:raw.totalNeto,cache:raw.cache,restante:raw.restanteLaOpcion};
+
   return {
     id:raw.id||raw.appId||gid('s'), appId:raw.appId||raw.id||'',
     venueId:venue?.id||'', workId:work?.id||'',
     venueName:raw.sala||'', workName:raw.obra||'',
     date:raw.fecha||'', time:'',
-    agreementId:resolvedAgreement.id,
-    agreementSnapshot:resolvedAgreement.snapshot,
+    agreementId,
+    agreementSnapshot,
     notes:raw.observaciones||'',
     income, platformSnapshots,
-    dashboardAmounts:{autor:raw.autor,restanteLaOpcion:raw.restanteLaOpcion,totalNeto:raw.totalNeto,ventaBruta:raw.ventaBruta},
+    storedAmounts,
     autorPct:Number(raw.autorPct||0),
     autorOwner:normalizeAutorOwner(raw.autorOwner||raw.authorOwner||raw.autorGastoOwner||'both'),
     otrosGastos:Number(raw.otrosGastos||0),
     expenseOwner:normalizeExpenseOwner(raw.expenseOwner||raw.otrosGastosOwner||'both'),
-    venueRental:Number(raw.alquiler||venue?.alquiler||0),
+    venueRental:hasValue(raw.alquiler)?Number(raw.alquiler):Number(venue?.alquiler||0),
     status:{}
   };
 }
 
 // ══════════════════════════════════════════════════════════════
 // CONVERSIÓN APP → SHEET
-// autorPct = % sobre ventaNeta (backend calcula €)
-// otrosGastos = importe directo en € que se resta a la venta neta
+// CORREGIDO: envía workId y acuerdoId para que el backend no dependa del nombre
 // ══════════════════════════════════════════════════════════════
 function appShowToSheetData(show,config){
   const ps=show.platformSnapshots||{};
@@ -298,6 +320,8 @@ function appShowToSheetData(show,config){
   return {
     action:'saveShow', appId:show.appId||show.id||gid('s'),
     sala:show.venueName||'', obra:show.workName||'', fecha:show.date||'',
+    workId:show.workId||'',
+    acuerdoId:c.agreement?(show.agreementId||''):'',
     atrapalo:findAmount('Atrápalo'), fever:findAmount('Fever'), kultur:findAmount('Kultur'),
     abonoteatro:findAmount('Abonoteatro'), laopcion:findAmount('Laopcion'), universe:findAmount('Universe'),
     efectivo:Number(inc.cashBox||0), tarjeta:Number(inc.cardBox||0),
@@ -308,7 +332,7 @@ function appShowToSheetData(show,config){
 }
 
 // ══════════════════════════════════════════════════════════════
-// CÁLCULO LOCAL
+// CÁLCULO LOCAL (se usa al crear/editar una función)
 // ══════════════════════════════════════════════════════════════
 function calcShow(show){
   const ps=show.platformSnapshots||{}, inc=show.income||{};
@@ -316,8 +340,8 @@ function calcShow(show){
   Object.entries(ps).forEach(([pid,snap])=>{
     const amt=r2(Number(inc[pid]??snap.income??0)); totalPlatIncome+=amt;
     const base=r2(amt*Number(snap.commission||0)/100);
-    const iva=snap.ivaOnCommission?r2(base*0.21):0;
-    const total=r2(base+iva);
+    const total=snap.ivaOnCommission?r2(base*1.21):base;
+    const iva=r2(total-base);
     commissions.push({id:pid,name:snap.name,income:amt,commBase:base,commIva:iva,commTotal:total});
     totalComm+=total;
   });
@@ -332,8 +356,6 @@ function calcShow(show){
   const expenseOwner=normalizeExpenseOwner(show.expenseOwner||'both');
   const venueRental=r2(Number(show.venueRental||0));
 
-  // Gastos fijos antes del reparto: comisiones de plataformas y alquiler.
-  // "Extra de caché" se carga a La Opción y se suma al caché; no se duplica como gasto externo.
   const autorBoth=autorOwner==='both'?autorImporte:0;
   const autorLaOpcion=autorOwner==='laopcion'?autorImporte:0;
   const autorCompany=autorOwner==='company'?autorImporte:0;
@@ -363,12 +385,47 @@ function calcShow(show){
 }
 
 // ══════════════════════════════════════════════════════════════
+// NUEVO: IMPORTES PARA MOSTRAR
+// Todas las métricas (dashboard, lista, detalle, resumen) salen de los
+// importes GUARDADOS en el Sheet. Antes se mezclaba el "Restante" guardado
+// con el "Caché" recalculado con el acuerdo actual, y no cuadraba.
+// ══════════════════════════════════════════════════════════════
+function showAmounts(show){
+  const c=calcShow(show);
+  const st=show.storedAmounts;
+  if(!st) return {...c,fromSheet:false,mismatch:false,allToCompany:c.totalNeto>0&&Math.abs(c.restanteOpcion)<0.005};
+  const pick=(value,fallback)=>{
+    if(value===null||value===undefined||String(value).trim()==='') return fallback;
+    const n=Number(value);
+    return Number.isFinite(n)?r2(n):fallback;
+  };
+  const out={...c,fromSheet:true};
+  out.ventaBruta=pick(st.ventaBruta,c.ventaBruta);
+  out.ventaNeta=pick(st.ventaNeta,c.ventaNeta);
+  out.autorImporte=pick(st.autor,c.autorImporte);
+  out.venueRental=pick(st.alquiler,c.venueRental);
+  out.totalGastos=pick(st.totalGastos,c.totalGastos);
+  out.totalNeto=pick(st.totalNeto,c.totalNeto);
+  out.cache=pick(st.cache,c.cache);
+  out.restanteOpcion=pick(st.restante,c.restanteOpcion);
+  // Comisiones coherentes con el total de gastos guardado
+  if(st.totalGastos!==null&&st.totalGastos!==undefined&&String(st.totalGastos).trim()!==''){
+    out.totalComm=r2(Math.max(0,out.totalGastos-out.autorImporte-c.otrosGastosRegulares-out.venueRental));
+  }
+  // Comprobación: caché + restante = total neto
+  out.mismatch=Math.abs(r2(out.totalNeto-out.cache-out.restanteOpcion))>0.02;
+  // Todo el neto va a la compañía (acuerdo al 100 % o similar)
+  out.allToCompany=out.totalNeto>0&&Math.abs(out.restanteOpcion)<0.005&&out.cache>=out.totalNeto-0.02;
+  return out;
+}
+
+// ══════════════════════════════════════════════════════════════
 // DRAFT HELPERS — nuevo show o edición
 // ══════════════════════════════════════════════════════════════
 function emptyDraft(){ return {appId:'',workId:'',venueId:'',date:'',time:'',agreementId:'',notes:'',income:{},autorPct:0,autorOwner:'both',otrosGastos:0,expenseOwner:'both'}; }
 
 function showToDraft(show){
-  const d={
+  return {
     appId:show.appId||show.id||'',
     workId:show.workId||'', venueId:show.venueId||'',
     date:show.date||'', time:show.time||'',
@@ -380,7 +437,6 @@ function showToDraft(show){
     otrosGastos:Number(show.otrosGastos||0),
     expenseOwner:normalizeExpenseOwner(show.expenseOwner||'both'),
   };
-  return d;
 }
 
 function showToDuplicateDraft(show){
@@ -413,16 +469,19 @@ function matchesDashboardEntity(show,type,selectedId){
   return !!(selected && name && nameKey(name)===nameKey(selected.name));
 }
 
+// CORREGIDO: las funciones sin fecha no se cuelan al filtrar por mes o fechas
 function getDashboardFilteredShows(){
   const f=S.dashboardFilters||{};
+  const catalog=f.agreementId?getAgreementCatalog():null;
   return S.shows.filter(show=>{
     const date=show.date||'';
+    if((f.month||f.from||f.to)&&!date) return false;
     if(f.month && !date.startsWith(f.month)) return false;
-    if(f.from && date && date<f.from) return false;
-    if(f.to && date && date>f.to) return false;
+    if(f.from && date<f.from) return false;
+    if(f.to && date>f.to) return false;
     if(!matchesDashboardEntity(show,'venues',f.venueId)) return false;
     if(!matchesDashboardEntity(show,'works',f.workId)) return false;
-    if(f.agreementId && !matchesAgreementFilter(show,f.agreementId)) return false;
+    if(f.agreementId && !matchesAgreementFilter(show,f.agreementId,catalog)) return false;
     if(f.platformId){
       const inc=show.income||{};
       if(Number(inc[f.platformId]||0)<=0) return false;
@@ -435,7 +494,7 @@ function groupTotal(list,keyFn,valueFn){
   const out={};
   list.forEach(item=>{
     const key=keyFn(item)||'Sin datos';
-    out[key]=(out[key]||0)+Number(valueFn(item)||0);
+    out[key]=r2((out[key]||0)+Number(valueFn(item)||0));
   });
   return out;
 }
@@ -448,7 +507,7 @@ function bestEntry(obj){
 function renderMiniBars(entries,maxValue,colorVar='var(--cyan)',limit=8){
   const rows=entries.slice(0,limit);
   const mx=Math.max(...rows.map(([,v])=>Math.abs(Number(v||0))),1);
-  return rows.map(([name,total])=>`<div class="bar-row"><span class="bar-label" title="${esc(name)}">${esc(name)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,Math.abs(total)/mx*100).toFixed(1)}%;background:${colorVar}"></div></div><span class="bar-value">${fmt(total)}</span></div>`).join('')||'<div class="empty">Sin datos</div>';
+  return rows.map(([name,total])=>`<div class="bar-row"><span class="bar-label" title="${esc(name)}">${esc(name)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,Math.abs(total)/mx*100).toFixed(1)}%;background:${total<0?'var(--danger)':colorVar}"></div></div><span class="bar-value ${total<0?'danger':''}">${fmt(total)}</span></div>`).join('')||'<div class="empty">Sin datos</div>';
 }
 
 
@@ -483,6 +542,7 @@ async function saveShowToSheet(show){
       }
     }
     if(lastError) throw lastError;
+    S.isSaving=false;SAVE_LOCK=false;
     await loadFromSheet();
     S.view='shows';S.selectedId=null;S.editShowId=null;S.newShowDraft=null;S.isDuplicating=false;S.duplicateSourceId=null;
     showToast(wasDuplicating?'Función duplicada y guardada como nuevo registro':'Función guardada correctamente','success');
@@ -506,7 +566,7 @@ async function deleteShowFromSheet(show){
 async function saveConfigToSheet(){
   if(S.role!=='admin') return showToast('No tienes permisos.','error');
   S.isSaving=true;render();
-  try{syncAllWorkAgreementsToConfig();await apiPost({action:'saveConfig',config:S.config});S.configDirty=false;showToast('Configuración guardada','success');await loadFromSheet();}
+  try{syncAllWorkAgreementsToConfig();await apiPost({action:'saveConfig',config:S.config});S.configDirty=false;showToast('Configuración guardada','success');S.isSaving=false;await loadFromSheet();}
   catch(err){showToast('Error al guardar configuración: '+err.message,'error');}
   finally{S.isSaving=false;render();}
 }
@@ -553,9 +613,21 @@ function bindLogin(){
 function renderSidebar(){
   const isAdmin=S.role==='admin';
   const items=isAdmin
-    ?[{id:'businessDashboard',label:'Dashboard del negocio',icon:'💼'},{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Nueva Función',icon:'➕'},{id:'barBilling',label:'Facturación barra',icon:'🥤'},{id:'businessExpenses',label:'Gastos',icon:'🧾'},{id:'barDashboard',label:'Dashboard barras',icon:'📈'},{id:'summary',label:'Resumen Mensual',icon:'📋'},{id:'admin',label:'Administración',icon:'⚙️'}]
+    ?[
+      {section:'Paneles'},
+      {id:'businessDashboard',label:'Dashboard del negocio',icon:'💼'},
+      {id:'dashboard',label:'Dashboard funciones',icon:'📊'},
+      {id:'barDashboard',label:'Dashboard barras',icon:'📈'},
+      {section:'Gestión'},
+      {id:'shows',label:'Funciones',icon:'🎭'},
+      {id:'newshow',label:'Nueva Función',icon:'➕'},
+      {id:'barBilling',label:'Facturación barra',icon:'🥤'},
+      {id:'businessExpenses',label:'Gastos',icon:'🧾'},
+      {id:'summary',label:'Resumen Mensual',icon:'📋'},
+      {id:'admin',label:'Administración',icon:'⚙️'}
+    ]
     :[{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar Ingreso',icon:'➕'},{id:'barBilling',label:'Facturación barra',icon:'🥤'},{id:'businessExpenses',label:'Gastos',icon:'🧾'}];
-  const navBtns=items.map(it=>`<button class="nav-btn ${S.view===it.id?'active':''}" data-view="${it.id}">${it.icon} ${it.label}</button>`).join('');
+  const navBtns=items.map(it=>it.section?`<div class="nav-section">${esc(it.section)}</div>`:`<button class="nav-btn ${S.view===it.id?'active':''}" data-view="${it.id}">${it.icon} ${it.label}</button>`).join('');
   const rc=isAdmin?'var(--pink-dim)':'var(--cyan-dim)',rt=isAdmin?'var(--pink)':'var(--cyan)';
   return `<div class="sidebar"><div class="sidebar-header">${logoSVG(155)}</div><div class="nav">${navBtns}</div><div class="sidebar-footer"><div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><div class="role-pill" style="background:${rc};color:${rt}">${isAdmin?'A':'U'}</div><div><div style="font-size:12px;font-weight:600">${esc(S.user.email)}</div><div style="font-size:10px;color:var(--text-dim)">${roleLabel(S.role)}</div></div></div><button class="btn btn-ghost btn-sm" data-action="logout" style="width:100%;justify-content:flex-start;gap:7px">🚪 Cerrar sesión</button></div></div>`;
 }
@@ -580,6 +652,9 @@ function renderView(){
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// DASHBOARD (CORREGIDO)
+// ══════════════════════════════════════════════════════════════
 function renderDashboard(){
   if(S.shows.length===0&&!S.isLoading)return`<h1 class="page-title">Dashboard</h1><p class="page-sub mb20">La Opción Producciones</p><div class="card"><div class="empty"><p style="font-size:16px;margin-bottom:8px">Sin datos todavía</p><button class="btn btn-primary mt10" data-action="refresh">🔄 Actualizar desde Sheet</button></div></div>`;
 
@@ -593,55 +668,42 @@ function renderDashboard(){
     `<option value="cashBox" ${f.platformId==='cashBox'?'selected':''}>Taquilla efectivo</option>`,
     `<option value="cardBox" ${f.platformId==='cardBox'?'selected':''}>Taquilla tarjeta</option>`
   ].join('');
-  const agreementOpts=getAgreementCatalog().map(a=>`<option value="${a.id}" ${f.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
+  const agreementOpts=getAgreementCatalog().map(a=>`<option value="${a.id}" ${f.agreementId===a.id?'selected':''}>${esc(a.name)} · ${agreementValueLabel(a)}</option>`).join('');
 
-  const filtered=getDashboardFilteredShows();
-  const cs=filtered.map(s=>{
-    const c=calcShow(s);
-    const saved=s.dashboardAmounts||{};
-    // En el dashboard, usar los importes reales recibidos de Google Sheets.
-    // Cero es un importe válido; recalcular solo si el campo no está disponible.
-    const readAmount=(value,fallback)=>{
-      if(value===null || value===undefined || String(value).trim()==='') return fallback;
-      const amount=Number(value);
-      return Number.isFinite(amount)?amount:fallback;
-    };
-    c.autorImporte=readAmount(saved.autor,c.autorImporte);
-    c.restanteOpcion=readAmount(saved.restanteLaOpcion,c.restanteOpcion);
-    return {...s,c};
-  });
+  // Todas las métricas salen de los importes guardados en el Sheet
+  const cs=getDashboardFilteredShows().map(s=>({...s,c:showAmounts(s)}));
   const t=cs.reduce((a,s)=>({
-    vb:a.vb+s.c.ventaBruta,
-    vn:a.vn+s.c.ventaNeta,
-    g:a.g+s.c.totalGastos,
-    tn:a.tn+s.c.totalNeto,
-    ca:a.ca+s.c.cache,
-    ro:a.ro+s.c.restanteOpcion,
-    comm:a.comm+s.c.totalComm,
-    autor:a.autor+s.c.autorImporte,
-    alquiler:a.alquiler+s.c.venueRental,
-    otros:a.otros+s.c.otrosGastosRegulares,
-  }),{vb:0,vn:0,g:0,tn:0,ca:0,ro:0,comm:0,autor:0,alquiler:0,otros:0});
+    vb:a.vb+s.c.ventaBruta, vn:a.vn+s.c.ventaNeta, g:a.g+s.c.totalGastos, tn:a.tn+s.c.totalNeto,
+    ca:a.ca+s.c.cache, ro:a.ro+s.c.restanteOpcion, comm:a.comm+s.c.totalComm, autor:a.autor+s.c.autorImporte,
+    alquiler:a.alquiler+s.c.venueRental, otros:a.otros+s.c.otrosGastosRegulares, extraCache:a.extraCache+s.c.otrosCache,
+  }),{vb:0,vn:0,g:0,tn:0,ca:0,ro:0,comm:0,autor:0,alquiler:0,otros:0,extraCache:0});
+  Object.keys(t).forEach(k=>{t[k]=r2(t[k]);});
 
   const n=cs.length;
   const margen=t.vn?r2(t.ro/t.vn*100):0;
   const gastoPct=t.vn?r2(t.g/t.vn*100):0;
+  const cachePct=t.tn?r2(t.ca/t.tn*100):0;
   const avg=n?r2(t.ro/n):0;
+  const avgVenta=n?r2(t.vb/n):0;
 
-  const byWork=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>s.c.restanteOpcion);
-  const rankingAmount=(show,field,fallback)=>{
-    const value=show.dashboardAmounts?.[field];
-    if(value===null || value===undefined || String(value).trim()==='') return fallback;
-    return Number.isFinite(Number(value))?Number(value):fallback;
-  };
-  const workNetTotals=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>rankingAmount(s,'totalNeto',s.c.totalNeto));
-  const workBillingTotals=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>rankingAmount(s,'ventaBruta',s.c.ventaBruta));
-  const venueNetTotals=groupTotal(cs,s=>dashboardEntityName(s,'venues'),s=>rankingAmount(s,'totalNeto',s.c.totalNeto));
-  const byVenue=groupTotal(cs,s=>dashboardEntityName(s,'venues'),s=>s.c.restanteOpcion);
+  const allToCompany=cs.filter(s=>s.c.allToCompany);
+  const mismatched=cs.filter(s=>s.c.mismatch);
+  const notes=[];
+  if(f.from&&f.to&&f.from>f.to) notes.push('La fecha «Desde» es posterior a «Hasta»: no puede haber resultados.');
+  if(n&&allToCompany.length===n) notes.push(`En las ${n} funciones filtradas el caché es el 100 % del total neto (acuerdo al 100 % de taquilla). Por eso «Beneficio La Opción», «Media por función», «Mejor obra» y «Mejor sala» valen 0 €: los datos son correctos. Si el acuerdo real no es del 100 %, cámbialo en Administración → Obras y vuelve a guardar esas funciones.`);
+  else if(allToCompany.length) notes.push(`${allToCompany.length} de ${n} funciones dejan 0 € a La Opción porque todo el neto va a la compañía (acuerdo al 100 %).`);
+  if(mismatched.length) notes.push(`${mismatched.length} ${mismatched.length===1?'función tiene':'funciones tienen'} importes descuadrados en el Sheet (caché + restante ≠ total neto), marcadas con ⚠️. Ábrelas, pulsa Editar y Guardar para recalcularlas.`);
+  const notesHtml=notes.map(x=>`<div class="dirty-note">ℹ️ ${esc(x)}</div>`).join('');
+
+  const byWorkBenefit=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>s.c.restanteOpcion);
+  const byVenueBenefit=groupTotal(cs,s=>dashboardEntityName(s,'venues'),s=>s.c.restanteOpcion);
+  const workNetTotals=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>s.c.totalNeto);
+  const workBillingTotals=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>s.c.ventaBruta);
+  const venueNetTotals=groupTotal(cs,s=>dashboardEntityName(s,'venues'),s=>s.c.totalNeto);
   const selectedWorkForAutor=(S.config.works||[]).find(w=>w.id===f.workId);
   const autorScopeLabel=f.workId?(selectedWorkForAutor?.name||'Obra seleccionada'):'Todas las obras filtradas';
-  const [bestWork,bestWorkVal]=bestEntry(byWork);
-  const [bestVenue,bestVenueVal]=bestEntry(byVenue);
+  const [bestWork,bestWorkVal]=bestEntry(byWorkBenefit);
+  const [bestVenue,bestVenueVal]=bestEntry(byVenueBenefit);
 
   const platformTotals={};
   cs.forEach(s=>{
@@ -659,8 +721,7 @@ function renderDashboard(){
     .map(([name,v])=>({name,income:r2(v.income),commission:r2(v.commission),benefit:r2(v.income-v.commission)}))
     .filter(v=>v.income>0)
     .sort((a,b)=>b.income-a.income);
-  const platformEntries=platformFinanceEntries.map(v=>[v.name,v.income]);
-  const [bestPlatform,bestPlatformVal]=bestEntry(platformEntries.length?Object.fromEntries(platformEntries):{});
+  const [bestPlatform,bestPlatformVal]=bestEntry(Object.fromEntries(platformFinanceEntries.map(v=>[v.name,v.income])));
   const platformFinanceTotals=platformFinanceEntries.reduce((a,v)=>({
     income:r2(a.income+v.income),commission:r2(a.commission+v.commission),benefit:r2(a.benefit+v.benefit)
   }),{income:0,commission:0,benefit:0});
@@ -669,7 +730,7 @@ function renderDashboard(){
       <span>Canal</span>
       <span class="platform-finance-value">Facturado ${infoTip('Suma de la venta bruta registrada en este canal para las funciones que cumplen los filtros.')}</span>
       <span class="platform-finance-value">Comisión ${infoTip('Coste de intermediación: facturado × porcentaje de comisión. Si la plataforma aplica IVA a la comisión, también se incluye.')}</span>
-      <span class="platform-finance-value">Beneficio ${infoTip('Beneficio del canal antes de otros gastos: facturado menos coste de comisión. No descuenta IVA de entradas, autor, alquiler, caché ni otros gastos.')}</span>
+      <span class="platform-finance-value">Beneficio ${infoTip('Facturado menos comisión. No descuenta IVA de entradas, autor, alquiler, caché ni otros gastos.')}</span>
     </div>
     ${platformFinanceEntries.map(v=>`<div class="platform-finance-row">
       <span class="platform-finance-name" title="${esc(v.name)}">${esc(v.name)}</span>
@@ -683,54 +744,26 @@ function renderDashboard(){
       <span class="platform-finance-value danger">${platformFinanceTotals.commission>0?'-':''}${fmt(platformFinanceTotals.commission)}</span>
       <span class="platform-finance-value ${platformFinanceTotals.benefit>=0?'success':'danger'}">${fmt(platformFinanceTotals.benefit)}</span>
     </div>
-  </div><p class="platform-finance-note">Taquilla figura sin comisión porque actualmente no hay un coste de TPV o gestión configurado para esos canales.</p>`:'<div class="empty">Sin ingresos de plataforma</div>';
+  </div><p class="platform-finance-note">Taquilla figura sin comisión porque no hay un coste de TPV o gestión configurado para esos canales.</p>`:'<div class="empty">Sin ingresos de plataforma</div>';
 
-  const workEntries=Object.entries(workNetTotals).sort(([,a],[,b])=>b-a);
-  const billingWorkEntries=Object.entries(workBillingTotals).sort(([,a],[,b])=>b-a);
-  const venueEntries=Object.entries(venueNetTotals).sort(([,a],[,b])=>b-a);
-  const gastosEntries=[
-    ['Comisiones',t.comm],
-    ['Autor',t.autor],
-    ['Alquiler',t.alquiler],
-    ['Otros gastos',t.otros],
-  ].filter(([,v])=>v>0).sort(([,a],[,b])=>b-a);
+  const sortDesc=obj=>Object.entries(obj).sort(([,a],[,b])=>b-a);
+  const gastosEntries=[['Comisiones',t.comm],['Autor',t.autor],['Alquiler',t.alquiler],['Otros gastos',t.otros]].filter(([,v])=>v>0).sort(([,a],[,b])=>b-a);
 
   const monthGroups={};
   cs.forEach(s=>{
     const m=(s.date||'Sin fecha').slice(0,7)||'Sin fecha';
-    if(!monthGroups[m]) monthGroups[m]={
-      funciones:0,
-      ventaBruta:0,
-      ventaNeta:0,
-      comisiones:0,
-      autor:0,
-      alquiler:0,
-      otros:0,
-      totalGastos:0,
-      totalNeto:0,
-      cache:0,
-      restante:0,
-    };
-    monthGroups[m].funciones+=1;
-    monthGroups[m].ventaBruta+=s.c.ventaBruta;
-    monthGroups[m].ventaNeta+=s.c.ventaNeta;
-    monthGroups[m].comisiones+=s.c.totalComm;
-    monthGroups[m].autor+=s.c.autorImporte;
-    monthGroups[m].alquiler+=s.c.venueRental;
-    monthGroups[m].otros+=s.c.otrosGastosRegulares;
-    monthGroups[m].totalGastos+=s.c.totalGastos;
-    monthGroups[m].totalNeto+=s.c.totalNeto;
-    monthGroups[m].cache+=s.c.cache;
-    monthGroups[m].restante+=s.c.restanteOpcion;
+    if(!monthGroups[m]) monthGroups[m]={funciones:0,ventaBruta:0,ventaNeta:0,comisiones:0,autor:0,alquiler:0,otros:0,totalGastos:0,totalNeto:0,cache:0,restante:0};
+    const g=monthGroups[m];
+    g.funciones+=1; g.ventaBruta+=s.c.ventaBruta; g.ventaNeta+=s.c.ventaNeta; g.comisiones+=s.c.totalComm;
+    g.autor+=s.c.autorImporte; g.alquiler+=s.c.venueRental; g.otros+=s.c.otrosGastosRegulares;
+    g.totalGastos+=s.c.totalGastos; g.totalNeto+=s.c.totalNeto; g.cache+=s.c.cache; g.restante+=s.c.restanteOpcion;
   });
   const monthEntries=Object.entries(monthGroups).sort(([a],[b])=>a.localeCompare(b));
-  const monthMax=Math.max(...monthEntries.flatMap(([,v])=>[
-    v.ventaBruta,v.ventaNeta,v.totalGastos,Math.abs(v.totalNeto),v.cache,Math.abs(v.restante),v.autor
-  ]),1);
+  const monthMax=Math.max(...monthEntries.flatMap(([,v])=>[v.ventaBruta,v.ventaNeta,v.totalGastos,Math.abs(v.totalNeto),v.cache,Math.abs(v.restante),v.autor]),1);
   const monthLine=(label,value,colorVar='var(--cyan)',strong=false)=>`<div class="mini-series" style="grid-template-columns:82px 1fr 92px"><span title="${esc(label)}">${esc(label)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,Math.abs(value)/monthMax*100).toFixed(1)}%;background:${colorVar}"></div></div><span class="${strong?(value>=0?'success':'danger')+' fw700':''}">${fmt(value)}</span></div>`;
   const monthHtml=monthEntries.map(([m,v])=>`<div style="padding:12px 0;border-bottom:1px solid var(--border)">
     <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:10px;align-items:flex-start">
-      <div><strong style="font-size:12px">${esc(m)}</strong><div class="dim" style="font-size:10px;margin-top:2px">${v.funciones} función${v.funciones===1?'':'es'}</div></div>
+      <div><strong style="font-size:12px">${esc(m)}</strong><div class="dim" style="font-size:10px;margin-top:2px">${v.funciones} ${v.funciones===1?'función':'funciones'} · margen ${fmtPct(v.ventaNeta?v.restante/v.ventaNeta*100:0)}</div></div>
       <div style="text-align:right"><div class="${v.restante>=0?'success':'danger'} fw700">${fmt(v.restante)}</div><div class="dim" style="font-size:10px">Restante La Opción</div></div>
     </div>
     ${monthLine('V. bruta',v.ventaBruta,'var(--cyan)')}
@@ -744,7 +777,11 @@ function renderDashboard(){
     ${monthLine('Caché',v.cache,'var(--pink)')}
     ${monthLine('Restante',v.restante,v.restante>=0?'var(--success)':'var(--danger)',true)}
   </div>`).join('')||'<div class="empty">Sin datos</div>';
-  const rowsHtml=cs.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12).map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right">${fmt(s.c.autorImporte)}</td><td class="right">${fmt(s.c.totalGastos)}</td><td class="right">${fmt(s.c.cache)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td><td class="right">${fmtPct(s.c.ventaNeta?s.c.restanteOpcion/s.c.ventaNeta*100:0)}</td></tr>`).join('');
+
+  const rowsHtml=[...cs].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12).map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right">${fmt(s.c.autorImporte)}</td><td class="right">${fmt(s.c.totalGastos)}</td><td class="right">${fmt(s.c.cache)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}${s.c.mismatch?' ⚠️':''}</td><td class="right">${fmtPct(s.c.ventaNeta?s.c.restanteOpcion/s.c.ventaNeta*100:0)}</td></tr>`).join('');
+
+  const bestLabel=(name,val)=>n&&val>0?esc(name):'—';
+  const bestSub=(val)=>n&&val>0?fmt(val):'Sin beneficio para La Opción';
 
   return `<div class="section-top"><div><h1 class="page-title">Dashboard profesional</h1><p class="page-sub">La Opción Producciones · ${n} de ${S.shows.length} funciones${S.lastSyncAt?` · Última actualización: ${S.lastSyncAt}`:''}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="resetDashboardFilters">🧹 Limpiar filtros</button><button class="btn btn-secondary btn-sm" data-action="refresh">${S.isRefreshing?'⏳ Actualizando...':'🔄 Actualizar desde Sheet'}</button></div></div>
 
@@ -759,44 +796,55 @@ function renderDashboard(){
       <div class="field"><label>Acuerdo</label><select data-dash-filter="agreementId"><option value="">Todos</option>${agreementOpts}</select></div>
     </div>
   </div>
+  ${notesHtml}
 
   <div class="grid grid-kpis mb20">
-    <div class="card"><div class="kpi-label">Venta Bruta ${infoTip('Suma de todos los ingresos registrados: plataformas, taquilla en efectivo y taquilla con tarjeta.')}</div><div class="kpi-value cyan">${fmt(t.vb)}</div><div class="kpi-sub">${n} funciones filtradas</div></div>
+    <div class="card"><div class="kpi-label">Venta Bruta ${infoTip('Suma de todos los ingresos registrados: plataformas, taquilla en efectivo y taquilla con tarjeta.')}</div><div class="kpi-value cyan">${fmt(t.vb)}</div><div class="kpi-sub">${n} funciones · ${fmt(avgVenta)} de media</div></div>
     <div class="card"><div class="kpi-label">Venta Neta ${infoTip('Venta bruta sin el 10% de IVA de las entradas. Es la base utilizada antes de descontar gastos.')}</div><div class="kpi-value purple">${fmt(t.vn)}</div><div class="kpi-sub">Base antes de gastos</div></div>
     <div class="card"><div class="kpi-label">Total Gastos ${infoTip('Suma de comisiones, alquiler, autor y otros gastos regulares de las funciones filtradas.')}</div><div class="kpi-value danger">${fmt(t.g)}</div><div class="kpi-sub">${fmtPct(gastoPct)} sobre venta neta</div></div>
-    <div class="card"><div class="kpi-label">Beneficio La Opción ${infoTip('Importe restante para La Opción después de gastos comunes, reparto con la compañía y gastos asignados a La Opción.')}</div><div class="kpi-value ${t.ro>=0?'success':'danger'}">${fmt(t.ro)}</div><div class="kpi-sub">Margen ${fmtPct(margen)}</div></div>
-    <div class="card"><div class="kpi-label">Caché total ${infoTip('Importe total correspondiente a las compañías según el acuerdo de cada obra y los ajustes de gastos asignados.')}</div><div class="kpi-value pink">${fmt(t.ca)}</div><div class="kpi-sub">Coste compañía</div></div>
+    <div class="card"><div class="kpi-label">Total neto ${infoTip('Venta neta menos gastos. Es lo que se reparte entre la compañía (caché) y La Opción.')}</div><div class="kpi-value yellow">${fmt(t.tn)}</div><div class="kpi-sub">A repartir</div></div>
+    <div class="card"><div class="kpi-label">Caché total ${infoTip('Importe total para las compañías según el acuerdo con el que se guardó cada función.')}</div><div class="kpi-value pink">${fmt(t.ca)}</div><div class="kpi-sub">${fmtPct(cachePct)} del total neto</div></div>
+    <div class="card"><div class="kpi-label">Beneficio La Opción ${infoTip('Importe restante para La Opción después de gastos, caché y gastos asignados a La Opción.')}</div><div class="kpi-value ${t.ro>=0?'success':'danger'}">${fmt(t.ro)}</div><div class="kpi-sub">Margen ${fmtPct(margen)} s/ venta neta</div></div>
     <div class="card"><div class="kpi-label">Autor acumulado ${infoTip('Derechos de autor calculados sobre la venta neta de las funciones filtradas.')}</div><div class="kpi-value danger">${fmt(t.autor)}</div><div class="kpi-sub">${esc(autorScopeLabel)}</div></div>
-    <div class="card"><div class="kpi-label">Media por función ${infoTip('Beneficio total de La Opción dividido entre el número de funciones incluidas en los filtros.')}</div><div class="kpi-value yellow">${fmt(avg)}</div><div class="kpi-sub">Beneficio medio</div></div>
-    <div class="card"><div class="kpi-label">Mejor obra ${infoTip('Obra con mayor beneficio acumulado para La Opción dentro de los filtros actuales.')}</div><div class="kpi-value" style="font-size:17px">${esc(bestWork)}</div><div class="kpi-sub">${fmt(bestWorkVal)}</div></div>
-    <div class="card"><div class="kpi-label">Mejor sala ${infoTip('Sala con mayor beneficio acumulado para La Opción dentro de los filtros actuales.')}</div><div class="kpi-value" style="font-size:17px">${esc(bestVenue)}</div><div class="kpi-sub">${fmt(bestVenueVal)}</div></div>
-    <div class="card"><div class="kpi-label">Top canal ${infoTip('Canal con mayor facturación bruta dentro de las funciones filtradas.')}</div><div class="kpi-value" style="font-size:17px">${esc(bestPlatform)}</div><div class="kpi-sub">${fmt(bestPlatformVal)}</div></div>
+    <div class="card"><div class="kpi-label">Media por función ${infoTip('Beneficio total de La Opción dividido entre el número de funciones filtradas.')}</div><div class="kpi-value yellow">${fmt(avg)}</div><div class="kpi-sub">Beneficio medio</div></div>
+    <div class="card"><div class="kpi-label">Mejor obra ${infoTip('Obra con mayor beneficio acumulado para La Opción dentro de los filtros.')}</div><div class="kpi-value" style="font-size:17px">${bestLabel(bestWork,bestWorkVal)}</div><div class="kpi-sub">${bestSub(bestWorkVal)}</div></div>
+    <div class="card"><div class="kpi-label">Mejor sala ${infoTip('Sala con mayor beneficio acumulado para La Opción dentro de los filtros.')}</div><div class="kpi-value" style="font-size:17px">${bestLabel(bestVenue,bestVenueVal)}</div><div class="kpi-sub">${bestSub(bestVenueVal)}</div></div>
+    <div class="card"><div class="kpi-label">Top canal ${infoTip('Canal con mayor facturación bruta dentro de las funciones filtradas.')}</div><div class="kpi-value" style="font-size:17px">${n&&bestPlatformVal>0?esc(bestPlatform):'—'}</div><div class="kpi-sub">${fmt(bestPlatformVal)}</div></div>
   </div>
 
   <div class="card mb20">
-    ${panelTitle('Funciones recientes filtradas','Muestra hasta las 12 funciones más recientes que cumplen los filtros, con sus principales importes y margen para La Opción.')}
-    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th class="right">V. Neta</th><th class="right">Autor</th><th class="right">Gastos</th><th class="right">Caché</th><th class="right">Restante</th><th class="right">Margen</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="9" class="empty">Sin funciones con estos filtros</td></tr>'}</tbody></table></div>
+    ${panelTitle('Funciones recientes filtradas','Hasta 12 funciones más recientes que cumplen los filtros. ⚠️ indica importes descuadrados en el Sheet.')}
+    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th><th class="right">V. Neta</th><th class="right">Autor</th><th class="right">Gastos</th><th class="right">Caché</th><th class="right">Restante</th><th class="right">Margen</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="10" class="empty">Sin funciones con estos filtros</td></tr>'}</tbody></table></div>
   </div>
 
   <div class="grid grid-2 mb20">
-    <div class="card">${panelTitle('Evolución mensual','Compara por mes ventas, gastos, caché y beneficio de las funciones incluidas en los filtros.')}${monthHtml}</div>
-    <div class="card">${panelTitle('Ingresos por plataforma','Desglosa por canal lo facturado, el coste real de comisión —con IVA cuando aplica— y el beneficio antes de otros gastos.')}${platformFinanceHtml}</div>
-    <div class="card">${panelTitle('Ranking de obras por neto antes del caché','Suma el total neto de cada obra: venta neta menos gastos, antes de descontar el caché de la compañía. Aplica los filtros seleccionados.')}${renderMiniBars(workEntries,0,'var(--success)',8)}</div>
-    <div class="card">${panelTitle('Facturación acumulada por obra','Suma la venta bruta, con IVA, de cada obra en el mes, sala y demás filtros seleccionados.')}${renderMiniBars(billingWorkEntries,0,'var(--danger)',10)}</div>
-    <div class="card">${panelTitle('Ranking de salas por neto antes del caché','Suma el total neto de las funciones de cada sala: venta neta menos gastos, antes de descontar el caché de las compañías. Aplica los filtros seleccionados.')}${renderMiniBars(venueEntries,0,'var(--purple)',8)}</div>
-    <div class="card">${panelTitle('Desglose de gastos','Agrupa los costes de las funciones filtradas en comisiones, autor, alquiler y otros gastos.')}${renderMiniBars(gastosEntries,0,'var(--danger)',6)}</div>
-    <div class="card">${panelTitle('Resumen financiero','Resume el recorrido desde la venta bruta hasta el importe final restante para La Opción.')}
+    <div class="card">${panelTitle('Evolución mensual','Compara por mes ventas, gastos, caché y beneficio de las funciones filtradas.')}${monthHtml}</div>
+    <div class="card">${panelTitle('Ingresos por plataforma','Por canal: facturado, comisión (con IVA si aplica) y beneficio antes de otros gastos.')}${platformFinanceHtml}</div>
+    <div class="card">${panelTitle('Ranking de obras por beneficio La Opción','Restante para La Opción por obra, después del caché.')}${renderMiniBars(sortDesc(byWorkBenefit),0,'var(--success)',8)}</div>
+    <div class="card">${panelTitle('Ranking de obras por neto antes del caché','Total neto por obra: venta neta menos gastos, antes de descontar el caché.')}${renderMiniBars(sortDesc(workNetTotals),0,'var(--yellow)',8)}</div>
+    <div class="card">${panelTitle('Facturación acumulada por obra','Venta bruta, con IVA, de cada obra con los filtros seleccionados.')}${renderMiniBars(sortDesc(workBillingTotals),0,'var(--cyan)',10)}</div>
+    <div class="card">${panelTitle('Ranking de salas por beneficio La Opción','Restante para La Opción por sala, después del caché.')}${renderMiniBars(sortDesc(byVenueBenefit),0,'var(--success)',8)}</div>
+    <div class="card">${panelTitle('Ranking de salas por neto antes del caché','Total neto por sala antes de descontar el caché de las compañías.')}${renderMiniBars(sortDesc(venueNetTotals),0,'var(--purple)',8)}</div>
+    <div class="card">${panelTitle('Desglose de gastos','Comisiones, autor, alquiler y otros gastos de las funciones filtradas.')}${renderMiniBars(gastosEntries,0,'var(--danger)',6)}</div>
+    <div class="card">${panelTitle('Resumen financiero','Recorrido desde la venta bruta hasta el restante para La Opción.')}
       <div class="finance-split"><span>Venta bruta</span><strong class="cyan">${fmt(t.vb)}</strong></div>
+      <div class="finance-split"><span>IVA entradas (10 %)</span><strong class="danger">-${fmt(r2(t.vb-t.vn))}</strong></div>
       <div class="finance-split"><span>Venta neta</span><strong class="purple">${fmt(t.vn)}</strong></div>
-      <div class="finance-split"><span>Autor a pagar</span><strong class="danger">-${fmt(t.autor)}</strong></div>
-      <div class="finance-split"><span>Total gastos</span><strong class="danger">-${fmt(t.g)}</strong></div>
+      <div class="finance-split"><span>Comisiones</span><strong class="danger">-${fmt(t.comm)}</strong></div>
+      <div class="finance-split"><span>Autor</span><strong class="danger">-${fmt(t.autor)}</strong></div>
+      <div class="finance-split"><span>Alquiler</span><strong class="danger">-${fmt(t.alquiler)}</strong></div>
+      <div class="finance-split"><span>Otros gastos</span><strong class="danger">-${fmt(t.otros)}</strong></div>
       <div class="finance-split"><span>Total neto</span><strong class="yellow">${fmt(t.tn)}</strong></div>
       <div class="finance-split"><span>Caché compañías</span><strong class="pink">-${fmt(t.ca)}</strong></div>
+      ${t.extraCache>0?`<div class="finance-split"><span>Extra de caché (ya incluido en caché)</span><strong class="dim">${fmt(t.extraCache)}</strong></div>`:''}
       <div class="finance-split total"><span>Restante La Opción</span><strong class="${t.ro>=0?'success':'danger'}">${fmt(t.ro)}</strong></div>
     </div>
   </div>`;
 }
 
+// ══════════════════════════════════════════════════════════════
+// LISTA DE FUNCIONES
+// ══════════════════════════════════════════════════════════════
 function ensureShowFilters(){
   if(!S.showFilters) S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};
   if(S.search===undefined||S.search===null) S.search='';
@@ -805,16 +853,18 @@ function ensureShowFilters(){
 function getShowMonths(){
   return [...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
 }
+// CORREGIDO: importes guardados y filtro de sala/obra también por nombre
 function getFilteredShowList(){
   const f=ensureShowFilters();
   const q=normalize(S.search);
-  let cs=S.shows.map(s=>({...s,c:calcShow(s)})).filter(s=>{
+  const catalog=f.agreementId?getAgreementCatalog():null;
+  let cs=S.shows.map(s=>({...s,c:showAmounts(s)})).filter(s=>{
     const searchText=normalize([s.date,s.workName,s.venueName,s.agreementSnapshot?.name,s.notes].join(' '));
     if(q && !searchText.includes(q)) return false;
     if(f.month && !(s.date||'').startsWith(f.month)) return false;
-    if(f.venueId && s.venueId!==f.venueId) return false;
-    if(f.workId && s.workId!==f.workId) return false;
-    if(f.agreementId && !matchesAgreementFilter(s,f.agreementId)) return false;
+    if(!matchesDashboardEntity(s,'venues',f.venueId)) return false;
+    if(!matchesDashboardEntity(s,'works',f.workId)) return false;
+    if(f.agreementId && !matchesAgreementFilter(s,f.agreementId,catalog)) return false;
     return true;
   });
   const sort=f.sort||'dateDesc';
@@ -863,11 +913,11 @@ function renderShowList(){
   const thAdmin=`<th class="right">V.Bruta</th><th class="right">V.Neta</th><th class="right">Restante</th>`;
   const rowsHtml=cs.map(s=>{
     const txt=esc([s.date,s.workName,s.venueName,s.agreementSnapshot?.name,s.notes].join(' '));
-    return `<tr data-show-row="1" data-search-text="${txt}"><td>${esc(s.date)}</td><td><strong>${esc(s.workName||'—')}</strong></td><td>${esc(s.venueName||'—')}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td>${isAdmin?`<td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}</td>`:''}<td><div class="row-actions"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button>${isAdmin?`<button class="btn btn-danger btn-sm" data-action="deleteShow" data-show-id="${s.id}">🗑️ Eliminar</button>`:''}</div></td></tr>`;
+    return `<tr data-show-row="1" data-search-text="${txt}"><td>${esc(s.date)}</td><td><strong>${esc(s.workName||'—')}</strong></td><td>${esc(s.venueName||'—')}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td>${isAdmin?`<td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}${s.c.mismatch?' ⚠️':''}</td>`:''}<td><div class="row-actions"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button>${isAdmin?`<button class="btn btn-danger btn-sm" data-action="deleteShow" data-show-id="${s.id}">🗑️ Eliminar</button>`:''}</div></td></tr>`;
   }).join('');
   const cardsHtml=cs.map(s=>{
     const txt=esc([s.date,s.workName,s.venueName,s.agreementSnapshot?.name,s.notes].join(' '));
-    return `<div class="card show-mobile-card" data-show-card="1" data-search-text="${txt}" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="fw700">${esc(s.workName||'—')}</div><div class="muted" style="font-size:12px">${esc(s.venueName||'—')} · ${esc(s.date||'—')}</div><div class="dim" style="font-size:11px;margin-top:4px">${esc(s.agreementSnapshot?.name||'Sin acuerdo')}</div></div>${isAdmin?`<div style="text-align:right"><div class="success fw700">${fmt(s.c.restanteOpcion)}</div><div class="dim" style="font-size:11px">Restante</div></div>`:''}</div><div class="row-actions" style="margin-top:12px"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button>${isAdmin?`<button class="btn btn-danger btn-sm" data-action="deleteShow" data-show-id="${s.id}">🗑️ Eliminar</button>`:''}</div></div>`;
+    return `<div class="card show-mobile-card" data-show-card="1" data-search-text="${txt}" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="fw700">${esc(s.workName||'—')}</div><div class="muted" style="font-size:12px">${esc(s.venueName||'—')} · ${esc(s.date||'—')}</div><div class="dim" style="font-size:11px;margin-top:4px">${esc(s.agreementSnapshot?.name||'Sin acuerdo')}</div></div>${isAdmin?`<div style="text-align:right"><div class="${s.c.restanteOpcion>=0?'success':'danger'} fw700">${fmt(s.c.restanteOpcion)}</div><div class="dim" style="font-size:11px">Restante</div></div>`:''}</div><div class="row-actions" style="margin-top:12px"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button>${isAdmin?`<button class="btn btn-danger btn-sm" data-action="deleteShow" data-show-id="${s.id}">🗑️ Eliminar</button>`:''}</div></div>`;
   }).join('');
   const colspan=isAdmin?8:5;
   return `<div class="section-top"><div><h1 class="page-title">Funciones</h1><p class="page-sub"><span id="show-list-count">${cs.length} de ${S.shows.length} funciones</span>${activeFilters?` · ${activeFilters} filtro${activeFilters>1?'s':''} activo${activeFilters>1?'s':''}`:''}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Actualizar</button><button class="btn btn-primary" data-view="newshow">➕ Nueva</button></div></div>
@@ -888,11 +938,12 @@ function renderShowList(){
 
 // ══════════════════════════════════════════════════════════════
 // DETALLE — admin ve todo, usuario NO ve ingresos totales
+// CORREGIDO: usa los importes guardados
 // ══════════════════════════════════════════════════════════════
 function renderShowDetail(){
   const show=S.shows.find(s=>s.id===S.selectedId);
   if(!show) return '<div class="card"><div class="empty">Función no encontrada</div></div>';
-  const c=calcShow(show);
+  const c=showAmounts(show);
   const isA=S.role==='admin';
   const incomeRows=c.commissions.filter(x=>x.income>0).map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px">${esc(x.name)}</div>${isA?`<div style="font-size:10px;color:var(--text-dim)">Com: ${fmt(x.commBase)}${x.commIva>0?` +IVA ${fmt(x.commIva)}`:''} = ${fmt(x.commTotal)}</div>`:''}</div><div style="text-align:right"><div style="font-size:13px;font-weight:700;color:var(--cyan)">${fmt(x.income)}</div>${isA?`<div style="font-size:10px;color:var(--danger)">-${fmt(x.commTotal)}</div>`:''}</div></div>`).join('');
   const cashRows=[];
@@ -906,17 +957,20 @@ function renderShowDetail(){
   }
   if(c.venueRental>0)  gastoRows.push(`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span>Alquiler sala</span><span class="fw700 danger">-${fmt(c.venueRental)}</span></div>`);
 
-  // KPIs: admin ve todo, usuario solo ve Caché y Restante
+  const agrLabel=c.agreement?`${esc(c.agreement.name)} · ${agreementValueLabel(c.agreement)}`:'—';
+  const warn=[];
+  if(c.mismatch) warn.push('Los importes guardados de esta función no cuadran (caché + restante ≠ total neto). Pulsa «Editar función» y guarda para recalcularla.');
+  if(isA&&c.allToCompany) warn.push('Todo el total neto de esta función va a la compañía (acuerdo al 100 %), por eso el restante de La Opción es 0 €.');
+  const warnHtml=warn.map(x=>`<div class="dirty-note">ℹ️ ${esc(x)}</div>`).join('');
+
   const kpisAdmin=`<div class="card"><div class="kpi-label">V. Bruta</div><div class="kpi-value cyan">${fmt(c.ventaBruta)}</div></div><div class="card"><div class="kpi-label">V. Neta</div><div class="kpi-value purple">${fmt(c.ventaNeta)}</div></div><div class="card"><div class="kpi-label">Autor a pagar</div><div class="kpi-value danger">${fmt(c.autorImporte)}</div><div class="kpi-sub">${fmtPct(show.autorPct)} · ${expenseOwnerLabel(c.autorOwner)}</div></div><div class="card"><div class="kpi-label">Gastos</div><div class="kpi-value danger">${fmt(c.totalGastos)}</div></div><div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow">${fmt(c.totalNeto)}</div></div><div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink">${fmt(c.cache)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</div></div>`;
   const kpisUser=`<div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink">${fmt(c.cache)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</div></div>`;
 
-  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">←</button><div style="flex:1"><h1 class="page-title" style="font-size:22px">${esc(show.workName)}</h1><p class="page-sub">${esc(show.venueName)} · ${esc(show.date)}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${show.id}">📄 Duplicar</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${show.id}">✏️ Editar función</button></div></div><div class="grid grid-kpis mb20">${isA?kpisAdmin:kpisUser}</div><div class="grid grid-2 mb20"><div class="card"><h3>Ingresos por plataforma</h3>${incomeRows||'<div class="empty">Sin ingresos de plataforma</div>'}${cashRows.length?`<div style="padding-top:6px">${cashRows.join('')}</div>`:''}</div><div class="card"><h3>Reparto (${esc(c.agreement?.name||'—')})</h3>${isA?`<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Total Neto</span><span class="fw700">${fmt(c.totalNeto)}</span></div>`:''}${gastoRows.length?`<div style="padding-top:4px;border-top:1px solid var(--border);margin-top:4px">${gastoRows.join('')}</div>`:''}${(c.autorImporte>0||c.otrosGastos>0)?`<p class="dim" style="font-size:11px;margin-top:8px">Asignación: Autor → <strong>${expenseOwnerLabel(c.autorOwner)}</strong>${c.otrosGastos>0?` · Otros gastos → <strong>${expenseOwnerLabel(c.expenseOwner)}</strong>`:''}</p>`:''}<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Caché sala</span><span class="fw700 pink">${fmt(c.cache)}</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800;border-top:1px solid var(--border);margin-top:4px"><span>Restante La Opción</span><span class="${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</span></div></div></div>`;
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">←</button><div style="flex:1"><h1 class="page-title" style="font-size:22px">${esc(show.workName)}</h1><p class="page-sub">${esc(show.venueName)} · ${esc(show.date)}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${show.id}">📄 Duplicar</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${show.id}">✏️ Editar función</button></div></div>${warnHtml}<div class="grid grid-kpis mb20">${isA?kpisAdmin:kpisUser}</div><div class="grid grid-2 mb20"><div class="card"><h3>Ingresos por plataforma</h3>${incomeRows||'<div class="empty">Sin ingresos de plataforma</div>'}${cashRows.length?`<div style="padding-top:6px">${cashRows.join('')}</div>`:''}</div><div class="card"><h3>Reparto (${agrLabel})</h3>${isA?`<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Total Neto</span><span class="fw700">${fmt(c.totalNeto)}</span></div>`:''}${gastoRows.length?`<div style="padding-top:4px;border-top:1px solid var(--border);margin-top:4px">${gastoRows.join('')}</div>`:''}${(c.autorImporte>0||c.otrosGastos>0)?`<p class="dim" style="font-size:11px;margin-top:8px">Asignación: Autor → <strong>${expenseOwnerLabel(c.autorOwner)}</strong>${c.otrosGastos>0?` · Otros gastos → <strong>${expenseOwnerLabel(c.expenseOwner)}</strong>`:''}</p>`:''}<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Caché compañía</span><span class="fw700 pink">${fmt(c.cache)}</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800;border-top:1px solid var(--border);margin-top:4px"><span>Restante La Opción</span><span class="${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</span></div></div></div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
-// FORMULARIO — sirve tanto para nueva función como para editar
-// isEdit=true carga el draft desde el show existente
-// Usuario: no ve los campos de ingresos totales calculados
+// FORMULARIO — nueva función o edición
 // ══════════════════════════════════════════════════════════════
 function renderShowForm(isEdit){
   const isU=S.role==='user';
@@ -939,7 +993,7 @@ function renderShowForm(isEdit){
 
   const agreementInfo=d.workId
     ? (resolvedAgreement.snapshot
-      ? `<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">Acuerdo vinculado a la obra: <strong style="color:var(--cyan)">${esc(resolvedAgreement.snapshot.name)}</strong> · ${resolvedAgreement.snapshot.mode==='fixed'?'Fijo':'Porcentaje'} ${agreementValueLabel(resolvedAgreement.snapshot)}</p>`
+      ? `<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">Acuerdo vinculado a la obra: <strong style="color:var(--cyan)">${esc(resolvedAgreement.snapshot.name)}</strong> · ${resolvedAgreement.snapshot.mode==='fixed'?'Fijo':'Porcentaje'} ${agreementValueLabel(resolvedAgreement.snapshot)}${resolvedAgreement.snapshot.mode==='percentage'&&Number(resolvedAgreement.snapshot.value)>=100?' <span style="color:var(--warn)">(todo el neto irá a la compañía)</span>':''}</p>`
       : `<div class="dirty-note">⚠️ Esta obra todavía no tiene acuerdo configurado. Ve a Administración → Obras y completa tipo y valor del acuerdo.</div>`)
     : `<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">Selecciona una obra para aplicar automáticamente su acuerdo.</p>`;
 
@@ -952,34 +1006,47 @@ function renderShowForm(isEdit){
   const title=isEdit?'Editar función':(isDup?'Duplicar función':(isU?'Registrar ingreso':'Nueva función'));
   const btnLabel=isEdit?'💾 Guardar cambios':(isDup?'📄 Crear función duplicada':'💾 Guardar');
   const duplicateNote=isDup?`<div class="dirty-note">📄 Estás duplicando una función. Puedes cambiar fecha, sala, obra o importes. Al guardar se creará un registro nuevo y el original no se modificará.</div>`:'';
+  const editNote=isEdit?`<div class="dirty-note">✏️ Al guardar, la función se recalcula con el acuerdo y las comisiones que tiene ahora la configuración.</div>`:'';
 
-  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="${isEdit?'shows':'shows'}">← Volver</button><h1 class="page-title" style="font-size:22px">${title}</h1></div>${duplicateNote}<div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div>${agreementInfo}<div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div></div><div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox"/></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox"/></div></div></div><div class="card"><h3>Gastos</h3><div class="field"><label>Autor (% sobre venta neta)</label><input type="number" min="0" max="100" step="0.01" placeholder="0" value="${d.autorPct||''}" data-expense-flat="autorPct"/></div><div class="field"><label>¿A quién va autor?</label><select data-autor-owner><option value="both" ${normalizeAutorOwner(d.autorOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeAutorOwner(d.autorOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeAutorOwner(d.autorOwner)==='company'?'selected':''}>Compañía — se resta del caché</option></select></div><div class="field"><label>Otros gastos (€)</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.otrosGastos||''}" data-expense-flat="otrosGastos"/></div><div class="field"><label>¿A quién van otros gastos?</label><select data-expense-owner><option value="both" ${normalizeExpenseOwner(d.expenseOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeExpenseOwner(d.expenseOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeExpenseOwner(d.expenseOwner)==='company'?'selected':''}>Compañía — se resta del caché</option><option value="cache" ${normalizeExpenseOwner(d.expenseOwner)==='cache'?'selected':''}>Extra de caché — se suma al caché y se cobra a La Opción</option></select></div><p class="dim" style="font-size:11px;margin-top:-4px">Por defecto “Ambas partes” mantiene el cálculo anterior. “Extra de caché” aumenta el caché y reduce el restante de La Opción por el mismo importe.</p></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':btnLabel}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">← Volver</button><h1 class="page-title" style="font-size:22px">${title}</h1></div>${duplicateNote}${editNote}<div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div>${agreementInfo}<div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div></div><div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox"/></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox"/></div></div></div><div class="card"><h3>Gastos</h3><div class="field"><label>Autor (% sobre venta neta)</label><input type="number" min="0" max="100" step="0.01" placeholder="0" value="${d.autorPct||''}" data-expense-flat="autorPct"/></div><div class="field"><label>¿A quién va autor?</label><select data-autor-owner><option value="both" ${normalizeAutorOwner(d.autorOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeAutorOwner(d.autorOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeAutorOwner(d.autorOwner)==='company'?'selected':''}>Compañía — se resta del caché</option></select></div><div class="field"><label>Otros gastos (€)</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.otrosGastos||''}" data-expense-flat="otrosGastos"/></div><div class="field"><label>¿A quién van otros gastos?</label><select data-expense-owner><option value="both" ${normalizeExpenseOwner(d.expenseOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeExpenseOwner(d.expenseOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeExpenseOwner(d.expenseOwner)==='company'?'selected':''}>Compañía — se resta del caché</option><option value="cache" ${normalizeExpenseOwner(d.expenseOwner)==='cache'?'selected':''}>Extra de caché — se suma al caché y se cobra a La Opción</option></select></div><p class="dim" style="font-size:11px;margin-top:-4px">Por defecto “Ambas partes” mantiene el cálculo anterior. “Extra de caché” aumenta el caché y reduce el restante de La Opción por el mismo importe.</p></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':btnLabel}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
 }
 
+// ══════════════════════════════════════════════════════════════
+// RESUMEN MENSUAL (CORREGIDO: importes guardados)
+// ══════════════════════════════════════════════════════════════
 function renderSummary(){
   const months=[...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
   const sel=S.summaryMonth||months[0]||'';
   const opts=months.map(m=>`<option value="${m}" ${m===sel?'selected':''}>${m}</option>`).join('');
-  const cs=S.shows.filter(s=>(s.date||'').startsWith(sel)).map(s=>({...s,c:calcShow(s)}));
+  const cs=S.shows.filter(s=>(s.date||'').startsWith(sel)).map(s=>({...s,c:showAmounts(s)}));
   const byWork={};
-  cs.forEach(s=>{const k=s.workName||'Sin obra';if(!byWork[k])byWork[k]={work:k,venue:s.venueName,ingreso:0,coste:0,beneficio:0};byWork[k].ingreso+=s.c.totalNeto;byWork[k].coste+=s.c.cache;byWork[k].beneficio+=s.c.restanteOpcion;});
-  const rows=Object.values(byWork);
+  cs.forEach(s=>{
+    const k=`${s.workName||'Sin obra'}||${s.venueName||''}`;
+    if(!byWork[k])byWork[k]={work:s.workName||'Sin obra',venue:s.venueName,funciones:0,ingreso:0,coste:0,beneficio:0};
+    byWork[k].funciones+=1;byWork[k].ingreso+=s.c.totalNeto;byWork[k].coste+=s.c.cache;byWork[k].beneficio+=s.c.restanteOpcion;
+  });
+  const rows=Object.values(byWork).sort((a,b)=>b.beneficio-a.beneficio);
   const totB=rows.reduce((s,r)=>s+r.beneficio,0);
+  const totI=rows.reduce((s,r)=>s+r.ingreso,0);
+  const totC=rows.reduce((s,r)=>s+r.coste,0);
   rows.forEach(r=>{r.pct=totB!==0?r2(r.beneficio/totB*100):0;});
-  const tableRows=rows.map(r=>`<tr><td>${esc(r.venue)}</td><td>${esc(r.work)}</td><td class="right">${fmt(r.ingreso)}</td><td class="right">${fmt(r.coste)}</td><td class="right fw700 ${r.beneficio>=0?'success':'danger'}">${fmt(r.beneficio)}</td><td class="right">${fmtPct(r.pct)}</td></tr>`).join('');
+  const tableRows=rows.map(r=>`<tr><td>${esc(r.venue)}</td><td>${esc(r.work)}</td><td class="right">${r.funciones}</td><td class="right">${fmt(r.ingreso)}</td><td class="right">${fmt(r.coste)}</td><td class="right fw700 ${r.beneficio>=0?'success':'danger'}">${fmt(r.beneficio)}</td><td class="right">${fmtPct(r.pct)}</td></tr>`).join('');
   const platTotals={};
   cs.forEach(s=>{s.c.commissions.forEach(c=>{platTotals[c.name]=(platTotals[c.name]||0)+c.income;});platTotals['Taq. Efectivo']=(platTotals['Taq. Efectivo']||0)+s.c.cashBox;platTotals['Taq. Tarjeta']=(platTotals['Taq. Tarjeta']||0)+s.c.cardBox;});
-  const platCards=Object.entries(platTotals).sort(([,a],[,b])=>b-a).map(([name,total])=>`<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;padding:14px 16px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:4px">${esc(name)}</div><div style="font-size:18px;font-family:'Outfit',sans-serif;font-weight:800;color:var(--cyan)">${fmt(total)}</div></div>`).join('');
-  return `<h1 class="page-title">Resumen Mensual</h1><p class="page-sub mb20">Visión por obra y plataforma</p><div style="display:flex;gap:8px;align-items:center;margin-bottom:18px"><span class="dim">📅</span><select data-bind="summaryMonth" class="inline-input" style="max-width:160px">${opts}</select><span class="dim" style="font-size:12px">${cs.length} funciones</span></div><div class="card mb20"><h3>Resumen por obra</h3><div class="table-wrap"><table><thead><tr><th>Sala</th><th>Obra</th><th class="right">Ingreso</th><th class="right">Coste CIA</th><th class="right">Beneficios</th><th class="right">%</th></tr></thead><tbody>${tableRows||'<tr><td colspan="6" class="empty">Sin datos</td></tr>'}</tbody></table></div></div><div class="card"><h3>Resumen por plataforma</h3><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${platCards||'<div class="empty">Sin datos</div>'}</div></div>`;
+  const platCards=Object.entries(platTotals).filter(([,v])=>v>0).sort(([,a],[,b])=>b-a).map(([name,total])=>`<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;padding:14px 16px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:4px">${esc(name)}</div><div style="font-size:18px;font-family:'Outfit',sans-serif;font-weight:800;color:var(--cyan)">${fmt(total)}</div></div>`).join('');
+  return `<h1 class="page-title">Resumen Mensual</h1><p class="page-sub mb20">Visión por obra y plataforma</p><div style="display:flex;gap:8px;align-items:center;margin-bottom:18px"><span class="dim">📅</span><select data-bind="summaryMonth" class="inline-input" style="max-width:160px">${opts}</select><span class="dim" style="font-size:12px">${cs.length} funciones</span></div><div class="card mb20"><h3>Resumen por obra</h3><div class="table-wrap"><table><thead><tr><th>Sala</th><th>Obra</th><th class="right">Funciones</th><th class="right">Ingreso (neto)</th><th class="right">Coste CIA</th><th class="right">Beneficios</th><th class="right">%</th></tr></thead><tbody>${tableRows||'<tr><td colspan="7" class="empty">Sin datos</td></tr>'}</tbody>${rows.length?`<tfoot><tr><th colspan="2">Total</th><th class="right">${cs.length}</th><th class="right">${fmt(totI)}</th><th class="right">${fmt(totC)}</th><th class="right">${fmt(totB)}</th><th class="right">100.00%</th></tr></tfoot>`:''}</table></div></div><div class="card"><h3>Resumen por plataforma</h3><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${platCards||'<div class="empty">Sin datos</div>'}</div></div>`;
 }
 
+// ══════════════════════════════════════════════════════════════
+// ADMINISTRACIÓN
+// ══════════════════════════════════════════════════════════════
 function renderAdmin(){
   if(S.role!=='admin') return '<div class="card"><div class="empty">Acceso denegado</div></div>';
   if(S.adminTab==='agreements') S.adminTab='works';
   const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras y acuerdos'},{id:'expenses',label:'Gastos de funciones'},{id:'businessTypes',label:'Tipos de gasto del negocio'},{id:'barMethods',label:'Pagos de barra'},{id:'users',label:'Usuarios'}];
   const tabBtns=tabs.map(t=>`<button class="btn ${S.adminTab===t.id?'btn-primary':'btn-ghost'} btn-sm" data-admin-tab="${t.id}">${t.label}</button>`).join('');
   const content=S.adminTab==='businessTypes'?renderBusinessTypes():(S.adminTab==='barMethods'?renderBarMethods():(S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab)));
-  return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
+  return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}${S.adminTab==='works'?'<div class="dirty-note">Cambiar el acuerdo de una obra no modifica las funciones ya guardadas. Para aplicarlo a una función existente, ábrela, pulsa Editar y guarda.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
 }
 function renderConfigEditor(tab){
   const meta=CONFIG_META[tab]||CONFIG_META.platforms;
@@ -1143,15 +1210,13 @@ function bindEvents(){
     el.oninput=()=>{
       if(!S.newShowDraft) S.newShowDraft=emptyDraft();
       if(!S.newShowDraft.income) S.newShowDraft.income={};
-      // Guardar como número directamente, nunca como string
       S.newShowDraft.income[el.dataset.platId]=parseFloat(el.value)||0;
     };
   });
-  // gastos planos: UN SOLO evento, valor numérico inmediato
+  // gastos planos: un solo evento, valor numérico inmediato
   document.querySelectorAll('[data-expense-flat]').forEach(el=>{
     el.oninput=()=>{
       if(!S.newShowDraft) S.newShowDraft=emptyDraft();
-      // parseFloat una sola vez, nunca acumular
       S.newShowDraft[el.dataset.expenseFlat]=parseFloat(el.value)||0;
     };
   });
@@ -1193,10 +1258,15 @@ function addConfigItem(tab){
   const values={};inputs.forEach(i=>values[i.dataset.add]=i.value);
   const name=String(values.name||'').trim();
   if(!name)return showToast('Introduce un nombre.','error');
+  if((S.config[meta.key]||[]).some(x=>normalize(x.name)===normalize(name))) return showToast(`Ya existe un elemento llamado "${name}" (o casi igual). Usa otro nombre.`,'error');
   let item={id:gid(meta.prefix),name,active:true};
   if(tab==='platforms') item={...item,commission:Number(values.commission||0),ivaOnCommission:values.ivaOnCommission==='true'};
   if(tab==='venues')    item={...item,alquiler:Number(values.alquiler||0)};
-  if(tab==='works')     item={...item,agreementId:gid('wa'),agreementName:String(values.agreementName||name).trim(),agreementMode:values.agreementMode||'percentage',agreementValue:Number(values.agreementValue||0)};
+  if(tab==='works'){
+    const agreementName=String(values.agreementName||name).trim();
+    if((S.config.agreements||[]).some(a=>normalize(a.name)===normalize(agreementName))) return showToast(`Ya existe un acuerdo llamado "${agreementName}" (o casi igual). Usa otro nombre de acuerdo.`,'error');
+    item={...item,agreementId:gid('wa'),agreementName,agreementMode:values.agreementMode||'percentage',agreementValue:Number(values.agreementValue||0)};
+  }
   if(tab==='agreements')item={...item,mode:values.mode||'percentage',value:Number(values.value||0)};
   S.config[meta.key].push(item);
   if(tab==='works') syncWorkAgreementToConfig(item);
@@ -1229,10 +1299,10 @@ async function handleUpdateUser(id){
 async function handleSaveShow(){
   if(SAVE_LOCK||S.isSaving)return showToast('Ya se está guardando. Espera.','warn');
   const d=S.newShowDraft;
-  if(!d)          return showToast('Rellena el formulario','error');
-  if(!d.workId)   return showToast('Selecciona una obra','error');
-  if(!d.venueId)  return showToast('Selecciona una sala','error');
-  if(!d.date)     return showToast('Introduce una fecha','error');
+  if(!d)          {render();return showToast('Rellena el formulario','error');}
+  if(!d.workId)   {render();return showToast('Selecciona una obra','error');}
+  if(!d.venueId)  {render();return showToast('Selecciona una sala','error');}
+  if(!d.date)     {render();return showToast('Introduce una fecha','error');}
 
   const work=S.config.works.find(w=>w.id===d.workId);
   const venue=S.config.venues.find(v=>v.id===d.venueId);
@@ -1244,11 +1314,8 @@ async function handleSaveShow(){
   income.cashBox=parseFloat(d.income?.cashBox)||0;
   income.cardBox=parseFloat(d.income?.cardBox)||0;
 
-  if(Object.values(income).some(v=>v<0))return showToast('No se admiten importes negativos','error');
+  if(Object.values(income).some(v=>v<0)){render();return showToast('No se admiten importes negativos','error');}
 
-  // Sanitizar al guardar: parseFloat sobre el valor crudo del draft,
-  // nunca Number(string_acumulado). Si el draft tiene "4.424.42" por
-  // doble disparo, parseFloat devuelve 4.42 (para en el primer punto).
   const autorPct   = Math.max(0, parseFloat(String(d.autorPct    ?? 0)) || 0);
   const autorOwner = normalizeAutorOwner(d.autorOwner||'both');
   const otrosGastos= Math.max(0, parseFloat(String(d.otrosGastos ?? 0)) || 0);
@@ -1279,7 +1346,10 @@ async function handleSaveShow(){
   await saveShowToSheet(show);
 }
 
+// ══════════════════════════════════════════════════════════════
+// FACTURACIÓN DE BARRA
 // Estado independiente: nunca se mezcla con S.shows ni sus filtros.
+// ══════════════════════════════════════════════════════════════
 const B={records:[],methods:[],originalMethods:[],loaded:false,loading:false,error:'',draft:null,methodDraft:null,filters:{month:'',from:'',to:'',venueId:''},generation:0};
 function resetBars(){
   B.generation++;B.records=[];B.methods=[];B.originalMethods=[];B.loaded=false;B.loading=false;B.error='';B.draft=null;B.methodDraft=null;B.filters={month:'',from:'',to:'',venueId:''};
@@ -1423,6 +1493,9 @@ function bindBarEvents(){
   };});
 }
 
+// ══════════════════════════════════════════════════════════════
+// GASTOS DEL NEGOCIO
+// ══════════════════════════════════════════════════════════════
 const MONTH_NAMES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 function currentBusinessPeriod(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
 const E={records:[],types:[],originalTypes:[],typeDraft:null,draft:null,loaded:false,loading:false,error:'',generation:0,filters:{year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),venueId:'',typeId:''}};
@@ -1517,6 +1590,9 @@ function bindExpenseEvents(){
   };});
 }
 
+// ══════════════════════════════════════════════════════════════
+// DASHBOARD DEL NEGOCIO
+// ══════════════════════════════════════════════════════════════
 const N={snapshot:null,loaded:false,loading:false,error:'',generation:0,filters:{year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),venueId:'',basis:'benefit'}};
 async function loadBusiness(force=false){
   if(N.loading||N.loaded&&!force)return;const generation=N.generation;N.loading=true;N.error='';render();
