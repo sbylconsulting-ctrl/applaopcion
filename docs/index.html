@@ -1577,7 +1577,7 @@ function currentBusinessPeriod(){const d=new Date();return `${d.getFullYear()}-$
 const E={records:[],types:[],originalTypes:[],typeDraft:null,draft:null,loaded:false,loading:false,error:'',generation:0,filters:{year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),venueId:'',typeId:''}};
 function resetBusiness(){
   E.generation++;E.records=[];E.types=[];E.originalTypes=[];E.typeDraft=null;E.draft=null;E.loaded=false;E.loading=false;E.error='';E.filters={year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),venueId:'',typeId:''};
-  N.generation++;N.loaded=false;N.loading=false;N.error='';N.snapshot=null;N.filters={year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),venueId:'',basis:'benefit'};
+  N.generation++;N.loaded=false;N.loading=false;N.error='';N.snapshot=null;N.filters={year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),weekday:'',venueId:'',basis:'benefit'};
 }
 function invalidateBusiness(action){
   if(['saveShow','deleteShow','saveConfig','saveBarRecord','deleteBarRecord','saveBusinessExpense','deleteBusinessExpense','saveBusinessTypes'].includes(action))N.loaded=false;
@@ -1669,7 +1669,7 @@ function bindExpenseEvents(){
 // ══════════════════════════════════════════════════════════════
 // DASHBOARD DEL NEGOCIO
 // ══════════════════════════════════════════════════════════════
-const N={snapshot:null,loaded:false,loading:false,error:'',generation:0,filters:{year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),venueId:'',basis:'benefit'}};
+const N={snapshot:null,loaded:false,loading:false,error:'',generation:0,filters:{year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),weekday:'',venueId:'',basis:'benefit'}};
 async function loadBusiness(force=false){
   if(N.loading||N.loaded&&!force)return;const generation=N.generation;N.loading=true;N.error='';render();
   try{
@@ -1688,15 +1688,18 @@ function summarizeBusiness(snapshot,filters){
   const rowFor=(id,name)=>{if(!rows.has(id))rows.set(id,{id,name,works:0,bars:0,expenses:0,gross:0,net:0,cache:0,count:0,barCount:0});return rows.get(id);};
   const matches=period=>period.slice(0,4)===filters.year&&(!filters.month||period.slice(5,7)===filters.month);
   const venueMatches=id=>!filters.venueId||filters.venueId===id;
+  const weekdayFiltered=filters.weekday!==''&&filters.weekday!==null&&filters.weekday!==undefined;
+  const dayMatches=date=>matchesWeekday(date,weekdayFiltered?filters.weekday:'');
   const addType=r=>{const type=types.get(r.typeId)||{name:snapshot.types.find(t=>t.id===r.typeId)?.name||r.typeName,cents:0};type.cents+=Math.round(r.amount*100);types.set(r.typeId,type);};
   snapshot.works.forEach(r=>{
-    if(!r.date){undated++;return;}if(!matches(r.date)||!venueMatches(r.venueId))return;
+    if(!r.date){undated++;return;}if(!matches(r.date)||!dayMatches(r.date)||!venueMatches(r.venueId))return;
     const v=rowFor(r.venueId,r.venueName),cents=Math.round(r[filters.basis==='net'?'net':'benefit']*100);
     v.works+=cents;v.gross+=Math.round(r.gross*100);v.net+=Math.round(r.net*100);v.cache+=Math.round(r.cache*100);v.count++;
     const w=works.get(r.workName)||{name:r.workName||'Sin obra',cents:0,count:0};w.cents+=cents;w.count++;works.set(r.workName,w);
   });
-  snapshot.bars.forEach(r=>{if(!r.date){undated++;return;}if(matches(r.date)&&venueMatches(r.venueId)){const v=rowFor(r.venueId,r.venueName);v.bars+=Math.round(r.total*100);v.barCount++;}});
-  snapshot.expenses.forEach(r=>{
+  snapshot.bars.forEach(r=>{if(!r.date){undated++;return;}if(matches(r.date)&&dayMatches(r.date)&&venueMatches(r.venueId)){const v=rowFor(r.venueId,r.venueName);v.bars+=Math.round(r.total*100);v.barCount++;}});
+  // Los gastos mensuales no tienen día: al filtrar por día de la semana quedan fuera.
+  if(!weekdayFiltered) snapshot.expenses.forEach(r=>{
     if(!matches(r.period))return;
     if(!r.venueId){periodGeneralCents+=Math.round(r.amount*100);if(!filters.venueId){generalCents+=Math.round(r.amount*100);addType(r);}return;}
     if(venueMatches(r.venueId)){rowFor(r.venueId,r.venueName).expenses+=Math.round(r.amount*100);addType(r);}
@@ -1704,7 +1707,7 @@ function summarizeBusiness(snapshot,filters){
   const ranking=[...rows.values()].map(v=>({...v,result:v.works+v.bars-v.expenses})).sort((a,b)=>b.result-a.result||a.name.localeCompare(b.name));
   const total=ranking.reduce((t,v)=>{for(const key of ['works','bars','expenses','gross','net','cache','count','barCount','result'])t[key]+=v[key];return t;},{works:0,bars:0,expenses:0,gross:0,net:0,cache:0,count:0,barCount:0,result:0});
   total.general=generalCents;total.periodGeneral=periodGeneralCents;total.result-=generalCents;
-  return {total,ranking,types:[...types.values()].sort((a,b)=>b.cents-a.cents),works:[...works.values()].sort((a,b)=>b.cents-a.cents),undated,hasData:ranking.length>0||generalCents>0};
+  return {weekdayFiltered,total,ranking,types:[...types.values()].sort((a,b)=>b.cents-a.cents),works:[...works.values()].sort((a,b)=>b.cents-a.cents),undated,hasData:ranking.length>0||generalCents>0};
 }
 function previousBusinessFilters(f){
   if(!f.month)return {...f,year:String(Number(f.year)-1)};
@@ -1729,15 +1732,23 @@ function renderBusinessDashboard(){
   const periods=[...snapshot.works.map(r=>r.date),...snapshot.bars.map(r=>r.date),...snapshot.expenses.map(r=>r.period)];
   const venueName=f.venueId?(snapshot.venues.find(v=>String(v.id)===f.venueId)?.name||summary.ranking[0]?.name||'Sala seleccionada'):'Todo el negocio';
   const basisLabel=f.basis==='net'?'Neto de obras antes del caché':'Beneficio de obras después del caché';
-  const resultLabel=f.venueId?'Resultado de la sala antes de gastos generales':f.basis==='net'?'Resultado antes del caché de obras':'Resultado del negocio';
+  const weekdayOn=summary.weekdayFiltered;
+  const weekdayPlural=name=>{const l=String(name||'').toLowerCase();return l.endsWith('s')?l:l+'s';};
+  const resultLabel=weekdayOn?`Obras + barras de los ${weekdayPlural(WEEKDAYS[Number(f.weekday)])}`:(f.venueId?'Resultado de la sala antes de gastos generales':f.basis==='net'?'Resultado antes del caché de obras':'Resultado del negocio');
+  const weekdaySummaries=WEEKDAYS.map((name,i)=>({name,s:summarizeBusiness(snapshot,{...f,weekday:String(i)})}));
+  const weekdayRowsHtml=weekdaySummaries.filter(x=>x.s.total.count||x.s.total.barCount)
+    .map(({name,s})=>`<tr><td>${name}</td><td class="right">${s.total.count}</td><td class="right">${fmt(s.total.works/100)}</td><td class="right">${s.total.barCount}</td><td class="right">${fmt(s.total.bars/100)}</td><td class="right fw700 ${(s.total.works+s.total.bars)<0?'danger':'success'}">${fmt((s.total.works+s.total.bars)/100)}</td></tr>`).join('')
+    ||'<tr><td colspan="6" class="empty">Sin actividad en este periodo</td></tr>';
   const totalCosts=t.expenses+t.general;
   return `<div class="nb-dashboard">${header}
-  <div class="card mb20"><div class="dashboard-filters"><div class="field"><label>Mes</label><select data-business-filter="month">${businessMonthOptions(f.month)}</select></div><div class="field"><label>Año</label><select data-business-filter="year">${businessYearOptions(f.year,periods)}</select></div><div class="field"><label>Sala</label><select data-business-filter="venueId">${businessVenueOptions()}</select></div><div class="field"><label>Importe de obras que se suma</label><select data-business-filter="basis"><option value="benefit" ${f.basis==='benefit'?'selected':''}>Beneficio después del caché</option><option value="net" ${f.basis==='net'?'selected':''}>Neto antes del caché</option></select></div></div></div>
+  <div class="card mb20"><div class="dashboard-filters"><div class="field"><label>Mes</label><select data-business-filter="month">${businessMonthOptions(f.month)}</select></div><div class="field"><label>Año</label><select data-business-filter="year">${businessYearOptions(f.year,periods)}</select></div><div class="field"><label>Día de la semana</label><select data-business-filter="weekday">${weekdayFilterOptions(f.weekday)}</select></div><div class="field"><label>Sala</label><select data-business-filter="venueId">${businessVenueOptions()}</select></div><div class="field"><label>Importe de obras que se suma</label><select data-business-filter="basis"><option value="benefit" ${f.basis==='benefit'?'selected':''}>Beneficio después del caché</option><option value="net" ${f.basis==='net'?'selected':''}>Neto antes del caché</option></select></div></div></div>
   <div class="nb-hero mb20 ${t.result<0?'negative':''}"><div><p class="nb-eyebrow">${esc(periodName(f.year,f.month))} · ${esc(venueName)}</p><h2>${esc(resultLabel)}</h2><div class="nb-result ${t.result<0?'danger':'success'}" id="business-result">${summary.hasData?fmt(t.result/100):'Sin registros'}</div><p class="nb-comparison">${summary.hasData&&previous.hasData?`${delta>=0?'+':''}${fmt(delta/100)} frente a ${esc(periodName(prevFilter.year,prevFilter.month))}`:'Sin registros comparables en el periodo anterior'}</p></div><div class="nb-formula"><div><span>${esc(basisLabel)}</span><strong>${fmt(t.works/100)}</strong></div><div><span>+ Cobros de barras</span><strong>${fmt(t.bars/100)}</strong></div><div><span>− Gastos asignados a salas</span><strong>${fmt(t.expenses/100)}</strong></div><div><span>− Gastos generales incluidos</span><strong>${fmt(t.general/100)}</strong></div></div></div>
   ${f.basis==='net'?'<div class="nb-context mb20">Vista antes del caché: el importe que corresponde a las compañías todavía no se ha descontado. Para ver el resultado después de ese coste, selecciona «Beneficio después del caché».</div>':''}
   ${f.venueId?`<div class="nb-context mb20">Hay ${fmt(t.periodGeneral/100)} de gastos generales del periodo. No están asignados a esta sala; se descuentan al seleccionar «Todo el negocio».</div>`:''}
+  ${weekdayOn?`<div class="nb-context mb20">Filtro por día de la semana activo (${esc(WEEKDAYS[Number(f.weekday)])}). Los gastos mensuales se registran por mes, no por día, así que no se incluyen en este resultado: aquí ves obras + barras de ese día.</div>`:''}
   ${summary.undated?`<div class="nb-context mb20">${summary.undated} registros de obras o barras carecen de fecha y no se pueden incluir en los periodos. Revisa sus fechas.</div>`:''}
   <div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">Aportación de obras</div><div class="kpi-value purple">${fmt(t.works/100)}</div><div class="nb-note">${t.count} funciones · ${f.basis==='net'?'antes':'después'} del caché</div></div><div class="card"><div class="kpi-label">Facturación de barras</div><div class="kpi-value cyan">${fmt(t.bars/100)}</div><div class="nb-note">${t.barCount} registros de cobros</div></div><div class="card"><div class="kpi-label">Gastos mensuales incluidos</div><div class="kpi-value danger">${fmt(totalCosts/100)}</div><div class="nb-note">${fmt(t.expenses/100)} asignados + ${fmt(t.general/100)} generales</div></div><div class="card"><div class="kpi-label">Salas con resultado negativo</div><div class="kpi-value ${summary.ranking.some(v=>v.result<0)?'danger':''}">${summary.ranking.filter(v=>v.result<0).length} / ${summary.ranking.length}</div><div class="nb-note">Antes de gastos generales</div></div></div>
+  <div class="card mb20"><h3>Resultado por día de la semana</h3><p class="nb-note" style="margin-bottom:14px">Obras + barras de cada día dentro del periodo y la sala seleccionados. No incluye gastos mensuales, que se registran por mes.</p><div class="table-wrap"><table><thead><tr><th>Día</th><th class="right">Funciones</th><th class="right">Obras</th><th class="right">Registros de barra</th><th class="right">Barras</th><th class="right">Total del día</th></tr></thead><tbody>${weekdayRowsHtml}</tbody></table></div></div>
   <div class="card mb20"><div class="section-top"><div><h3 style="margin-bottom:4px">Evolución mensual · ${esc(f.year)}</h3><p class="nb-note">${esc(venueName)} · ${esc(basisLabel)}</p></div></div>${businessChart(months)}</div>
   <div class="card mb20"><h3>Ranking de salas por resultado</h3><p class="nb-note" style="margin-bottom:14px">Obras + barras − gastos asignados. Pulsa una sala para ver su detalle.</p><div class="table-wrap"><table id="business-ranking"><thead><tr><th># / Sala</th><th class="right">Obras</th><th class="right">Barras</th><th class="right">Gastos asignados</th><th class="right">Resultado</th></tr></thead><tbody>${summary.ranking.map((v,i)=>`<tr><td><button class="nb-room-button" data-business-venue="${esc(v.id)}"><span class="nb-rank">${i+1}</span>${esc(v.name)}</button></td><td class="right">${fmt(v.works/100)}</td><td class="right">${fmt(v.bars/100)}</td><td class="right">${fmt(v.expenses/100)}</td><td class="right fw700 ${v.result<0?'danger':'success'}">${fmt(v.result/100)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin actividad en este periodo</td></tr>'}</tbody><tfoot><tr><th>Subtotal de salas</th><th class="right">${fmt(t.works/100)}</th><th class="right">${fmt(t.bars/100)}</th><th class="right">${fmt(t.expenses/100)}</th><th class="right">${fmt((t.result+t.general)/100)}</th></tr>${!f.venueId?`<tr><td colspan="4">Gastos generales sin asignar</td><td class="right danger">−${fmt(t.general/100)}</td></tr>`:''}<tr><th colspan="4">${esc(resultLabel)}</th><th class="right ${t.result<0?'danger':'success'}">${fmt(t.result/100)}</th></tr></tfoot></table></div></div>
   <div class="grid grid-2 mb20"><div class="card"><h3>Gastos mensuales por tipo</h3>${renderMiniBars(summary.types.map(t=>[t.name,t.cents/100]),0,'var(--danger)',summary.types.length)}<p class="nb-note">Solo gastos del nuevo apartado «Gastos», dentro de los filtros.</p></div><div class="card"><h3>Obras que más aportan</h3>${renderMiniBars(summary.works.slice(0,8).map(w=>[w.name,w.cents/100]),0,'var(--purple)',8)}<p class="nb-note">${esc(basisLabel)}. No se asignan a las obras los gastos generales del negocio.</p></div></div>
@@ -1791,7 +1802,6 @@ function buildShowsPdfHtml(){
   }),{vb:0,vn:0,g:0,tn:0,ca:0,ro:0,comm:0,autor:0,alquiler:0,otros:0});
   Object.keys(t).forEach(k=>{t[k]=r2(t[k]);});
   const n=cs.length;
-  const margen=t.vn?r2(t.ro/t.vn*100):0;
 
   const dates=cs.map(s=>s.date).filter(Boolean).sort();
   const periodo=dates.length?(dates[0]===dates[dates.length-1]?dates[0]:`${dates[0]} a ${dates[dates.length-1]}`):'Sin fechas';
@@ -1799,15 +1809,6 @@ function buildShowsPdfHtml(){
   const filtersHtml=filters.length
     ? filters.map(([k,v])=>`<span class="chip"><b>${esc(k)}:</b> ${esc(v)}</span>`).join('')
     : '<span class="chip">Sin filtros: todas las funciones</span>';
-
-  const kpis=[
-    ['Venta bruta',pdfMoney(t.vb),`${n} ${n===1?'función':'funciones'}`],
-    ['Venta neta',pdfMoney(t.vn),'Base antes de gastos'],
-    ['Total gastos',pdfMoney(t.g),t.vn?`${fmtPct(t.g/t.vn*100)} sobre venta neta`:'—'],
-    ['Total neto',pdfMoney(t.tn),'A repartir'],
-    ['Caché compañías',pdfMoney(t.ca),t.tn?`${fmtPct(t.ca/t.tn*100)} del total neto`:'—'],
-    ['Beneficio La Opción',pdfMoney(t.ro),`Margen ${fmtPct(margen)}`],
-  ].map(([label,value,sub],i)=>`<div class="kpi${i===5?' kpi-main':''}"><div class="kpi-l">${esc(label)}</div><div class="kpi-v">${esc(value)}</div><div class="kpi-s">${esc(sub)}</div></div>`).join('');
 
   const rows=cs.map(s=>`<tr>
     <td>${esc(s.date||'—')}</td>
@@ -1884,13 +1885,8 @@ h1{font-size:17pt;font-weight:700;letter-spacing:-.2px}
 .meta{text-align:right;font-size:9pt;color:#5B5B6E;min-width:38%}
 .chips{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
 .chip{border:1px solid #D3D3DE;border-radius:20px;padding:2px 9px;font-size:8.5pt;background:#F6F6FA}
-h2{font-size:11.5pt;margin:16px 0 7px;padding-bottom:4px;border-bottom:1px solid #D3D3DE}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.kpi{border:1px solid #D3D3DE;border-radius:7px;padding:9px 11px;background:#FBFBFD}
-.kpi-main{background:#F1F8FB;border-color:#1B86AC}
-.kpi-l{font-size:7.5pt;text-transform:uppercase;letter-spacing:.6px;color:#5B5B6E;font-weight:700}
-.kpi-v{font-size:14pt;font-weight:700;margin-top:3px}
-.kpi-s{font-size:8pt;color:#6B6B80;margin-top:2px}
+h2{font-size:11.5pt;margin:16px 0 7px;}
+h2:first-of-type{margin-top:6px;padding-bottom:4px;border-bottom:1px solid #D3D3DE}
 table{width:100%;border-collapse:collapse;font-size:8.5pt}
 th{text-align:left;background:#15151E;color:#fff;padding:5px 6px;font-size:7.5pt;text-transform:uppercase;letter-spacing:.4px}
 td{padding:4px 6px;border-bottom:1px solid #E4E4EC}
@@ -1918,8 +1914,6 @@ h2{break-after:avoid}
   </div>
 </header>
 
-<h2>Resumen</h2>
-<div class="kpis">${kpis}</div>
 ${avisosHtml}
 
 <h2>Detalle de funciones (${n})</h2>
