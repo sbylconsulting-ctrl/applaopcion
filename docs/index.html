@@ -68,7 +68,7 @@ const S = {
   adminTab:'platforms', summaryMonth:'', isLoading:false, isSaving:false, isRefreshing:false,
   isBooting:false, isLoggingIn:false, lastSyncAt:'', loadError:null, configDirty:false,
   users:[], newShowDraft:null, isDuplicating:false, duplicateSourceId:null,
-  dashboardFilters:{month:'',from:'',to:'',venueId:'',workId:'',platformId:'',agreementId:''},
+  dashboardFilters:{month:'',from:'',to:'',weekday:'',venueId:'',workId:'',platformId:'',agreementId:''},
   config:{ platforms:[], venues:[], works:[], expenseTypes:[], agreements:[] }, shows:[]
 };
 let SAVE_LOCK=false; let REFRESH_LOCK=false; let LOGIN_LOCK=false;
@@ -107,6 +107,32 @@ function expenseOwnerLabel(owner){
   if(key==='company') return 'Compañía';
   if(key==='cache') return 'Extra de caché a cargo de La Opción';
   return 'Ambas partes';
+}
+
+// ── DÍA DE LA SEMANA ─────────────────────────────────────────
+const WEEKDAYS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+const WEEKDAYS_SHORT=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+function weekdayIndexFromDate(dateStr){
+  if(!dateStr||!/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr))) return -1;
+  const d=new Date(dateStr+'T12:00:00');
+  if(isNaN(d.getTime())) return -1;
+  return (d.getDay()+6)%7; // 0 = lunes
+}
+function weekdayName(dateStr){ const i=weekdayIndexFromDate(dateStr); return i<0?'':WEEKDAYS[i]; }
+function weekdayShort(dateStr){ const i=weekdayIndexFromDate(dateStr); return i<0?'':WEEKDAYS_SHORT[i]; }
+function shiftDateToWeekday(dateStr,targetIndex){
+  const i=weekdayIndexFromDate(dateStr);
+  if(i<0) return dateStr;
+  const d=new Date(dateStr+'T12:00:00');
+  d.setDate(d.getDate()+(Number(targetIndex)-i));
+  const pad=x=>String(x).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function weekdayOptions(selectedIndex){ return WEEKDAYS.map((n,i)=>`<option value="${i}" ${String(selectedIndex)===String(i)?'selected':''}>${n}</option>`).join(''); }
+function weekdayFilterOptions(selected){ return `<option value="">Todos</option>`+WEEKDAYS.map((n,i)=>`<option value="${i}" ${String(selected)===String(i)?'selected':''}>${n}</option>`).join(''); }
+function matchesWeekday(dateStr,weekday){
+  if(weekday===''||weekday===null||weekday===undefined) return true;
+  return String(weekdayIndexFromDate(dateStr))===String(weekday);
 }
 
 function alphaSortByName(list){ return [...(list||[])].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es',{sensitivity:'base'})); }
@@ -448,7 +474,7 @@ function showToDuplicateDraft(show){
 }
 
 function resetDashboardFilters(){
-  S.dashboardFilters={month:'',from:'',to:'',venueId:'',workId:'',platformId:'',agreementId:''};
+  S.dashboardFilters={month:'',from:'',to:'',weekday:'',venueId:'',workId:'',platformId:'',agreementId:''};
 }
 
 function dashboardEntityName(show,type){
@@ -475,7 +501,8 @@ function getDashboardFilteredShows(){
   const catalog=f.agreementId?getAgreementCatalog():null;
   return S.shows.filter(show=>{
     const date=show.date||'';
-    if((f.month||f.from||f.to)&&!date) return false;
+    if((f.month||f.from||f.to||f.weekday!=='')&&!date) return false;
+    if(!matchesWeekday(date,f.weekday)) return false;
     if(f.month && !date.startsWith(f.month)) return false;
     if(f.from && date<f.from) return false;
     if(f.to && date>f.to) return false;
@@ -749,6 +776,19 @@ function renderDashboard(){
   const sortDesc=obj=>Object.entries(obj).sort(([,a],[,b])=>b-a);
   const gastosEntries=[['Comisiones',t.comm],['Autor',t.autor],['Alquiler',t.alquiler],['Otros gastos',t.otros]].filter(([,v])=>v>0).sort(([,a],[,b])=>b-a);
 
+  const weekdayGroups=WEEKDAYS.map(()=>({n:0,vb:0,vn:0,tn:0,ca:0,ro:0}));
+  cs.forEach(s=>{
+    const wi=weekdayIndexFromDate(s.date);
+    if(wi<0) return;
+    const g=weekdayGroups[wi];
+    g.n+=1; g.vb+=s.c.ventaBruta; g.vn+=s.c.ventaNeta; g.tn+=s.c.totalNeto; g.ca+=s.c.cache; g.ro+=s.c.restanteOpcion;
+  });
+  const weekdayBilling=weekdayGroups.map((g,i)=>[`${WEEKDAYS[i]} (${g.n})`,r2(g.vb)]).filter((e,i)=>weekdayGroups[i].n>0);
+  const weekdayBenefit=weekdayGroups.map((g,i)=>[`${WEEKDAYS[i]} (${g.n})`,r2(g.ro)]).filter((e,i)=>weekdayGroups[i].n>0);
+  const weekdayRowsHtml=weekdayGroups.map((g,i)=>({g,i})).filter(x=>x.g.n>0)
+    .map(({g,i})=>`<tr><td>${WEEKDAYS[i]}</td><td class="right">${g.n}</td><td class="right">${fmt(r2(g.vb))}</td><td class="right">${fmt(r2(g.vb/g.n))}</td><td class="right">${fmt(r2(g.tn))}</td><td class="right">${fmt(r2(g.ca))}</td><td class="right fw700 ${g.ro>=0?'success':'danger'}">${fmt(r2(g.ro))}</td></tr>`).join('')
+    ||'<tr><td colspan="7" class="empty">Sin funciones con fecha</td></tr>';
+
   const monthGroups={};
   cs.forEach(s=>{
     const m=(s.date||'Sin fecha').slice(0,7)||'Sin fecha';
@@ -778,7 +818,7 @@ function renderDashboard(){
     ${monthLine('Restante',v.restante,v.restante>=0?'var(--success)':'var(--danger)',true)}
   </div>`).join('')||'<div class="empty">Sin datos</div>';
 
-  const rowsHtml=[...cs].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12).map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)}</td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right">${fmt(s.c.autorImporte)}</td><td class="right">${fmt(s.c.totalGastos)}</td><td class="right">${fmt(s.c.cache)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}${s.c.mismatch?' ⚠️':''}</td><td class="right">${fmtPct(s.c.ventaNeta?s.c.restanteOpcion/s.c.ventaNeta*100:0)}</td></tr>`).join('');
+  const rowsHtml=[...cs].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12).map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)} <span class="dim">${weekdayShort(s.date)}</span></td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right">${fmt(s.c.autorImporte)}</td><td class="right">${fmt(s.c.totalGastos)}</td><td class="right">${fmt(s.c.cache)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}${s.c.mismatch?' ⚠️':''}</td><td class="right">${fmtPct(s.c.ventaNeta?s.c.restanteOpcion/s.c.ventaNeta*100:0)}</td></tr>`).join('');
 
   const bestLabel=(name,val)=>n&&val>0?esc(name):'—';
   const bestSub=(val)=>n&&val>0?fmt(val):'Sin beneficio para La Opción';
@@ -790,6 +830,7 @@ function renderDashboard(){
       <div class="field"><label>Mes</label><select data-dash-filter="month"><option value="">Todos</option>${monthOpts}</select></div>
       <div class="field"><label>Desde</label><input type="date" value="${esc(f.from||'')}" data-dash-filter="from"/></div>
       <div class="field"><label>Hasta</label><input type="date" value="${esc(f.to||'')}" data-dash-filter="to"/></div>
+      <div class="field"><label>Día de la semana</label><select data-dash-filter="weekday">${weekdayFilterOptions(f.weekday)}</select></div>
       <div class="field"><label>Sala</label><select data-dash-filter="venueId"><option value="">Todas</option>${venueOpts}</select></div>
       <div class="field"><label>Obra</label><select data-dash-filter="workId"><option value="">Todas</option>${workOpts}</select></div>
       <div class="field"><label>Plataforma</label><select data-dash-filter="platformId"><option value="">Todas</option>${platformOpts}</select></div>
@@ -813,8 +854,20 @@ function renderDashboard(){
   </div>
 
   <div class="card mb20">
-    ${panelTitle('Funciones recientes filtradas','Hasta 12 funciones más recientes que cumplen los filtros. ⚠️ indica importes descuadrados en el Sheet.')}
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      ${panelTitle('Funciones recientes filtradas','Hasta 12 funciones más recientes que cumplen los filtros. ⚠️ indica importes descuadrados en el Sheet. El PDF incluye todas las funciones filtradas.')}
+      <button class="btn btn-secondary btn-sm" data-action="exportShowsPdf" ${n?'':'disabled'}>📄 Descargar PDF (${n})</button>
+    </div>
     <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th><th class="right">V. Neta</th><th class="right">Autor</th><th class="right">Gastos</th><th class="right">Caché</th><th class="right">Restante</th><th class="right">Margen</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="10" class="empty">Sin funciones con estos filtros</td></tr>'}</tbody></table></div>
+  </div>
+
+  <div class="card mb20">
+    ${panelTitle('Facturación por día de la semana','Agrupa las funciones filtradas por el día en que se celebraron: cuántas hubo, cuánto facturaron y qué beneficio dejaron.')}
+    <div class="table-wrap"><table><thead><tr><th>Día</th><th class="right">Funciones</th><th class="right">V. bruta</th><th class="right">Media por función</th><th class="right">T. neto</th><th class="right">Caché</th><th class="right">Restante</th></tr></thead><tbody>${weekdayRowsHtml}</tbody></table></div>
+    <div class="grid grid-2" style="margin-top:14px">
+      <div><p class="dim" style="font-size:11px;margin-bottom:6px">Venta bruta por día</p>${renderMiniBars(weekdayBilling,0,'var(--cyan)',7)}</div>
+      <div><p class="dim" style="font-size:11px;margin-bottom:6px">Beneficio La Opción por día</p>${renderMiniBars(weekdayBenefit,0,'var(--success)',7)}</div>
+    </div>
   </div>
 
   <div class="grid grid-2 mb20">
@@ -1008,7 +1061,7 @@ function renderShowForm(isEdit){
   const duplicateNote=isDup?`<div class="dirty-note">📄 Estás duplicando una función. Puedes cambiar fecha, sala, obra o importes. Al guardar se creará un registro nuevo y el original no se modificará.</div>`:'';
   const editNote=isEdit?`<div class="dirty-note">✏️ Al guardar, la función se recalcula con el acuerdo y las comisiones que tiene ahora la configuración.</div>`:'';
 
-  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">← Volver</button><h1 class="page-title" style="font-size:22px">${title}</h1></div>${duplicateNote}${editNote}<div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div>${agreementInfo}<div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div></div><div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox"/></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox"/></div></div></div><div class="card"><h3>Gastos</h3><div class="field"><label>Autor (% sobre venta neta)</label><input type="number" min="0" max="100" step="0.01" placeholder="0" value="${d.autorPct||''}" data-expense-flat="autorPct"/></div><div class="field"><label>¿A quién va autor?</label><select data-autor-owner><option value="both" ${normalizeAutorOwner(d.autorOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeAutorOwner(d.autorOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeAutorOwner(d.autorOwner)==='company'?'selected':''}>Compañía — se resta del caché</option></select></div><div class="field"><label>Otros gastos (€)</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.otrosGastos||''}" data-expense-flat="otrosGastos"/></div><div class="field"><label>¿A quién van otros gastos?</label><select data-expense-owner><option value="both" ${normalizeExpenseOwner(d.expenseOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeExpenseOwner(d.expenseOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeExpenseOwner(d.expenseOwner)==='company'?'selected':''}>Compañía — se resta del caché</option><option value="cache" ${normalizeExpenseOwner(d.expenseOwner)==='cache'?'selected':''}>Extra de caché — se suma al caché y se cobra a La Opción</option></select></div><p class="dim" style="font-size:11px;margin-top:-4px">Por defecto “Ambas partes” mantiene el cálculo anterior. “Extra de caché” aumenta el caché y reduce el restante de La Opción por el mismo importe.</p></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':btnLabel}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">← Volver</button><h1 class="page-title" style="font-size:22px">${title}</h1></div>${duplicateNote}${editNote}<div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div>${agreementInfo}<div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div><div class="field" style="flex:1"><label>Día de la semana</label><select data-weekday-field ${d.date?'':'disabled'}>${d.date?weekdayOptions(weekdayIndexFromDate(d.date)):'<option value="">— Pon la fecha —</option>'}</select></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div></div><p class="dim" style="font-size:11px;margin-top:-6px;margin-bottom:12px">El día se rellena solo con la fecha. Si cambias el día, la fecha se mueve a ese día de la misma semana.</p><div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox"/></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox"/></div></div></div><div class="card"><h3>Gastos</h3><div class="field"><label>Autor (% sobre venta neta)</label><input type="number" min="0" max="100" step="0.01" placeholder="0" value="${d.autorPct||''}" data-expense-flat="autorPct"/></div><div class="field"><label>¿A quién va autor?</label><select data-autor-owner><option value="both" ${normalizeAutorOwner(d.autorOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeAutorOwner(d.autorOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeAutorOwner(d.autorOwner)==='company'?'selected':''}>Compañía — se resta del caché</option></select></div><div class="field"><label>Otros gastos (€)</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.otrosGastos||''}" data-expense-flat="otrosGastos"/></div><div class="field"><label>¿A quién van otros gastos?</label><select data-expense-owner><option value="both" ${normalizeExpenseOwner(d.expenseOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeExpenseOwner(d.expenseOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeExpenseOwner(d.expenseOwner)==='company'?'selected':''}>Compañía — se resta del caché</option><option value="cache" ${normalizeExpenseOwner(d.expenseOwner)==='cache'?'selected':''}>Extra de caché — se suma al caché y se cobra a La Opción</option></select></div><p class="dim" style="font-size:11px;margin-top:-4px">Por defecto “Ambas partes” mantiene el cálculo anterior. “Extra de caché” aumenta el caché y reduce el restante de La Opción por el mismo importe.</p></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':btnLabel}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1115,6 +1168,7 @@ function bindEvents(){
       if(a==='logout')       return handleLogout();
       if(a==='refresh')      return S.view==='admin'&&S.adminTab==='businessTypes'?loadExpenses(true):(S.view==='admin'&&S.adminTab==='barMethods'?loadBars(true):loadFromSheet({manual:true}));
       if(a==='resetDashboardFilters'){resetDashboardFilters();return render();}
+      if(a==='exportShowsPdf')  return exportShowsPdf();
       if(a==='clearShowFilters'){S.search='';S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};return render();}
       if(a==='saveNewShow')  {btn.disabled=true;btn.innerHTML='⏳ Guardando...';return handleSaveShow();}
       if(a==='saveConfig')   return saveConfigToSheet();
@@ -1218,6 +1272,17 @@ function bindEvents(){
     el.oninput=()=>{
       if(!S.newShowDraft) S.newShowDraft=emptyDraft();
       S.newShowDraft[el.dataset.expenseFlat]=parseFloat(el.value)||0;
+    };
+  });
+  document.querySelectorAll('[data-weekday-field]').forEach(el=>{
+    el.onchange=()=>{
+      if(!S.newShowDraft||!S.newShowDraft.date) return;
+      const nueva=shiftDateToWeekday(S.newShowDraft.date,el.value);
+      if(nueva!==S.newShowDraft.date){
+        S.newShowDraft.date=nueva;
+        showToast(`Fecha ajustada a ${WEEKDAYS[Number(el.value)]} ${nueva}`,'warn');
+      }
+      render();
     };
   });
   document.querySelectorAll('[data-autor-owner]').forEach(el=>{
@@ -1350,9 +1415,9 @@ async function handleSaveShow(){
 // FACTURACIÓN DE BARRA
 // Estado independiente: nunca se mezcla con S.shows ni sus filtros.
 // ══════════════════════════════════════════════════════════════
-const B={records:[],methods:[],originalMethods:[],loaded:false,loading:false,error:'',draft:null,methodDraft:null,filters:{month:'',from:'',to:'',venueId:''},generation:0};
+const B={records:[],methods:[],originalMethods:[],loaded:false,loading:false,error:'',draft:null,methodDraft:null,filters:{month:'',from:'',to:'',weekday:'',venueId:''},generation:0};
 function resetBars(){
-  B.generation++;B.records=[];B.methods=[];B.originalMethods=[];B.loaded=false;B.loading=false;B.error='';B.draft=null;B.methodDraft=null;B.filters={month:'',from:'',to:'',venueId:''};
+  B.generation++;B.records=[];B.methods=[];B.originalMethods=[];B.loaded=false;B.loading=false;B.error='';B.draft=null;B.methodDraft=null;B.filters={month:'',from:'',to:'',weekday:'',venueId:''};
 }
 async function loadBars(force=false){
   if(B.loading||(!force&&B.loaded)) return;
@@ -1374,17 +1439,20 @@ function barDraftMethods(){
 }
 function filteredBars(){
   const f=B.filters;
-  return B.records.filter(r=>(!f.month||r.date.startsWith(f.month))&&(!f.from||r.date>=f.from)&&(!f.to||r.date<=f.to)&&(!f.venueId||r.venueId===f.venueId)).sort((a,b)=>b.date.localeCompare(a.date)||a.venueName.localeCompare(b.venueName));
+  return B.records.filter(r=>(!f.month||r.date.startsWith(f.month))&&(!f.from||r.date>=f.from)&&(!f.to||r.date<=f.to)&&matchesWeekday(r.date,f.weekday)&&(!f.venueId||r.venueId===f.venueId)).sort((a,b)=>b.date.localeCompare(a.date)||a.venueName.localeCompare(b.venueName));
 }
 function barSummary(records){
   const days=new Map(),venues=new Map(),methods=new Map();let totalCents=0;
+  const weekdays=WEEKDAYS.map(()=>({n:0,cents:0}));
   records.forEach(r=>{
+    const wi=weekdayIndexFromDate(r.date);
+    if(wi>=0){weekdays[wi].n+=1;weekdays[wi].cents+=Math.round(r.total*100);}
     const cents=Math.round(r.total*100);totalCents+=cents;
     days.set(r.date,(days.get(r.date)||0)+cents);
     const v=venues.get(r.venueId)||{name:r.venueName,cents:0};v.cents+=cents;venues.set(r.venueId,v);
     r.payments.forEach(p=>{const m=methods.get(p.id)||{name:B.methods.find(x=>x.id===p.id)?.name||p.name,cents:0};m.cents+=Math.round(p.amount*100);methods.set(p.id,m);});
   });
-  return {total:totalCents/100,days:[...days].sort(([a],[b])=>a.localeCompare(b)).map(([name,cents])=>[name,cents/100]),venues:[...venues.values()].sort((a,b)=>b.cents-a.cents).map(v=>[v.name,v.cents/100]),methods:[...methods.values()].sort((a,b)=>b.cents-a.cents).map(m=>[m.name,m.cents/100])};
+  return {weekdays,total:totalCents/100,days:[...days].sort(([a],[b])=>a.localeCompare(b)).map(([name,cents])=>[name,cents/100]),venues:[...venues.values()].sort((a,b)=>b.cents-a.cents).map(v=>[v.name,v.cents/100]),methods:[...methods.values()].sort((a,b)=>b.cents-a.cents).map(m=>[m.name,m.cents/100])};
 }
 function barLoadNotice(){
   if(B.loading) return '<div class="card mb20"><p>Cargando facturación de barra…</p></div>';
@@ -1399,10 +1467,11 @@ function barFiltersHtml(){
     <div class="field"><label>Sala</label><select data-bar-filter="venueId"><option value="">Todas</option>${[...venues].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,name])=>`<option value="${esc(id)}" ${f.venueId===id?'selected':''}>${esc(name)}</option>`).join('')}</select></div>
     <div class="field"><label>Desde</label><input type="date" data-bar-filter="from" value="${esc(f.from)}"/></div>
     <div class="field"><label>Hasta</label><input type="date" data-bar-filter="to" value="${esc(f.to)}"/></div>
+    <div class="field"><label>Día de la semana</label><select data-bar-filter="weekday">${weekdayFilterOptions(f.weekday)}</select></div>
   </div><button class="btn btn-ghost btn-sm mt10" data-bar-action="clearFilters">Limpiar filtros</button>${f.from&&f.to&&f.from>f.to?'<p class="danger">La fecha inicial es posterior a la final.</p>':''}</div>`;
 }
 function barRecordsHtml(records){
-  return `<div class="card"><h3>Registros de barra · ${records.length}</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Sala</th><th>Ingresos por método</th><th class="right">Total</th><th>Acciones</th></tr></thead><tbody>${records.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.venueName)}</td><td>${r.payments.filter(p=>p.amount!==0).map(p=>`${esc(p.name)}: ${fmt(p.amount)}`).join('<br>')}</td><td class="right fw700 cyan">${fmt(r.total)}</td><td><div class="row-actions"><button class="btn btn-secondary btn-sm" data-bar-action="edit" data-bar-id="${esc(r.id)}">✏️ Editar</button>${S.role==='admin'?`<button class="btn btn-danger btn-sm" data-bar-action="delete" data-bar-id="${esc(r.id)}">Eliminar</button>`:''}</div></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin registros con estos filtros</td></tr>'}</tbody></table></div></div>`;
+  return `<div class="card"><h3>Registros de barra · ${records.length}</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Sala</th><th>Ingresos por método</th><th class="right">Total</th><th>Acciones</th></tr></thead><tbody>${records.map(r=>`<tr><td>${esc(r.date)} <span class="dim">${weekdayShort(r.date)}</span></td><td>${esc(r.venueName)}</td><td>${r.payments.filter(p=>p.amount!==0).map(p=>`${esc(p.name)}: ${fmt(p.amount)}`).join('<br>')}</td><td class="right fw700 cyan">${fmt(r.total)}</td><td><div class="row-actions"><button class="btn btn-secondary btn-sm" data-bar-action="edit" data-bar-id="${esc(r.id)}">✏️ Editar</button>${S.role==='admin'?`<button class="btn btn-danger btn-sm" data-bar-action="delete" data-bar-id="${esc(r.id)}">Eliminar</button>`:''}</div></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin registros con estos filtros</td></tr>'}</tbody></table></div></div>`;
 }
 function renderBarBilling(){
   if(!B.draft) B.draft=emptyBarDraft();
@@ -1411,7 +1480,7 @@ function renderBarBilling(){
   const methods=barDraftMethods();
   return `<div class="section-top"><div><h1 class="page-title">Facturación barra</h1><p class="page-sub">Consumos por sala y fecha</p></div><button class="btn btn-secondary btn-sm" data-bar-action="reload" ${B.loading?'disabled':''}>🔄 Actualizar barras</button></div>
     ${barLoadNotice()}${!B.loaded?'':`<form id="bar-form"><div class="grid grid-2 mb20">
-    <div class="card"><h3>${d.version?'Editar registro':'Nuevo registro'}</h3><div class="field"><label>Sala *</label><select data-bar-field="venueId" required><option value="">— Seleccionar —</option>${venues.map(v=>`<option value="${esc(v.id)}" ${d.venueId===v.id?'selected':''}>${esc(v.name)}${v.active===false?' (inactiva)':''}</option>`).join('')}</select></div><div class="field"><label>Fecha *</label><input type="date" data-bar-field="date" required value="${esc(d.date)}"/></div></div>
+    <div class="card"><h3>${d.version?'Editar registro':'Nuevo registro'}</h3><div class="field"><label>Sala *</label><select data-bar-field="venueId" required><option value="">— Seleccionar —</option>${venues.map(v=>`<option value="${esc(v.id)}" ${d.venueId===v.id?'selected':''}>${esc(v.name)}${v.active===false?' (inactiva)':''}</option>`).join('')}</select></div><div class="field"><label>Fecha *</label><input type="date" data-bar-field="date" required value="${esc(d.date)}"/></div><div class="field"><label>Día de la semana</label><select data-bar-weekday ${d.date?'':'disabled'}>${d.date?weekdayOptions(weekdayIndexFromDate(d.date)):'<option value="">— Pon la fecha —</option>'}</select></div><p class="dim" style="font-size:11px;margin-top:-6px">El día se rellena solo con la fecha. Si cambias el día, la fecha se mueve a ese día de la misma semana.</p></div>
     <div class="card"><h3>Ingresos</h3>${methods.map(m=>`<div class="field"><label>${esc(m.name)}${m.active===false?' (inactivo; registro histórico)':''}</label><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00" data-bar-payment="${esc(m.id)}" value="${esc(d.payments.find(p=>p.id===m.id)?.amount??'')}"/></div>`).join('')||'<p>No hay métodos activos. Añádelos en Administración.</p>'}<div class="finance-split total"><span>Total</span><strong id="bar-draft-total" class="cyan">${fmt(d.payments.reduce((a,p)=>a+(Number(p.amount)||0),0))}</strong></div></div></div>
     <div style="display:flex;gap:10px;margin-bottom:24px"><button type="submit" class="btn btn-primary" ${S.isSaving||!methods.length?'disabled':''}>${d.version?'Guardar cambios':'Guardar ingreso de barra'}</button><button type="button" class="btn btn-secondary" data-bar-action="new">${d.version?'Cancelar edición':'Limpiar formulario'}</button></div></form>${barFiltersHtml()}${barRecordsHtml(filteredBars())}`}`;
 }
@@ -1420,6 +1489,7 @@ function renderBarDashboard(){
   return `<div class="section-top"><div><h1 class="page-title">Dashboard barras</h1><p class="page-sub">Facturación de consumiciones</p></div><button class="btn btn-secondary btn-sm" data-bar-action="reload" ${B.loading?'disabled':''}>🔄 Actualizar barras</button></div>${barLoadNotice()}${!B.loaded?'':`${barFiltersHtml()}
     <div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">Total facturado</div><div class="kpi-value cyan">${fmt(summary.total)}</div></div><div class="card"><div class="kpi-label">Registros</div><div class="kpi-value">${records.length}</div></div><div class="card"><div class="kpi-label">Días con registros</div><div class="kpi-value">${summary.days.length}</div></div><div class="card"><div class="kpi-label">Media por día registrado</div><div class="kpi-value purple">${fmt(summary.days.length?summary.total/summary.days.length:0)}</div></div></div>
     <div class="grid grid-2 mb20"><div class="card"><h3>Facturación por sala</h3>${renderMiniBars(summary.venues,0,'var(--purple)',summary.venues.length)}</div><div class="card"><h3>Facturación por método de pago</h3>${renderMiniBars(summary.methods,0,'var(--cyan)',summary.methods.length)}</div></div>
+    <div class="card mb20"><h3>Facturación por día de la semana</h3><div class="table-wrap"><table><thead><tr><th>Día</th><th class="right">Registros</th><th class="right">Facturado</th><th class="right">Media por registro</th></tr></thead><tbody>${summary.weekdays.map((w,i)=>({w,i})).filter(x=>x.w.n>0).map(({w,i})=>`<tr><td>${WEEKDAYS[i]}</td><td class="right">${w.n}</td><td class="right cyan fw700">${fmt(w.cents/100)}</td><td class="right">${fmt(w.cents/100/w.n)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">Sin registros con estos filtros</td></tr>'}</tbody></table></div><div style="margin-top:14px">${renderMiniBars(summary.weekdays.map((w,i)=>[`${WEEKDAYS[i]} (${w.n})`,w.cents/100]).filter((e,i)=>summary.weekdays[i].n>0),0,'var(--cyan)',7)}</div></div>
     <div class="card mb20"><h3>Facturación por día</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th class="right">Facturado</th></tr></thead><tbody>${summary.days.map(([date,total])=>`<tr><td>${esc(date)}</td><td class="right cyan fw700">${fmt(total)}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">Sin registros con estos filtros</td></tr>'}</tbody><tfoot><tr><th>Total</th><th class="right">${fmt(summary.total)}</th></tr></tfoot></table></div></div>${barRecordsHtml(records)}`}`;
 }
 function renderBarMethods(){
@@ -1469,6 +1539,12 @@ function bindBarEvents(){
     if(!p){p={id,amount:'',name:B.methods.find(m=>m.id===id)?.name||id};B.draft.payments.push(p);}p.amount=el.value;
     const total=document.getElementById('bar-draft-total');if(total)total.textContent=fmt(B.draft.payments.reduce((a,x)=>a+(Number(x.amount)||0),0));
   };});
+  document.querySelectorAll('[data-bar-weekday]').forEach(el=>{el.onchange=()=>{
+    if(!B.draft||!B.draft.date)return;
+    const nueva=shiftDateToWeekday(B.draft.date,el.value);
+    if(nueva!==B.draft.date){B.draft.date=nueva;showToast(`Fecha ajustada a ${WEEKDAYS[Number(el.value)]} ${nueva}`,'warn');}
+    render();
+  };});
   document.querySelectorAll('[data-bar-filter]').forEach(el=>{el.onchange=()=>{B.filters[el.dataset.barFilter]=el.value;render();};});
   document.querySelectorAll('[data-bar-method-name]').forEach(el=>{el.oninput=()=>{B.methodDraft.find(m=>m.id===el.dataset.barMethodName).name=el.value;};});
   document.querySelectorAll('[data-bar-method-active]').forEach(el=>{el.onchange=()=>{B.methodDraft.find(m=>m.id===el.dataset.barMethodActive).active=el.checked;};});
@@ -1484,7 +1560,7 @@ function bindBarEvents(){
       B.methodDraft.push({id:gid('bm'),name,active:true});return render();
     }
     if(action==='new'){B.draft=emptyBarDraft();return render();}
-    if(action==='clearFilters'){B.filters={month:'',from:'',to:'',venueId:''};return render();}
+    if(action==='clearFilters'){B.filters={month:'',from:'',to:'',weekday:'',venueId:''};return render();}
     if(action==='delete')return deleteBarEntry(el.dataset.barId);
     if(action==='edit'){
       const record=B.records.find(r=>r.id===el.dataset.barId);if(!record)return;
@@ -1675,6 +1751,247 @@ function bindBusinessEvents(){
   document.querySelectorAll('[data-business-month]').forEach(el=>{el.onclick=()=>{N.filters.month=el.dataset.businessMonth;render();};});
   document.querySelectorAll('[data-business-venue]').forEach(el=>{el.onclick=()=>{N.filters.venueId=el.dataset.businessVenue;render();window.scrollTo(0,0);};});
   document.querySelectorAll('[data-business-action="reload"]').forEach(el=>{el.onclick=()=>loadBusiness(true);});
+}
+
+// ══════════════════════════════════════════════════════════════
+// INFORME PDF CORPORATIVO DE FUNCIONES FILTRADAS
+// Usa la impresión del navegador: «Guardar como PDF».
+// Incluye TODAS las funciones que cumplen los filtros del dashboard.
+// ══════════════════════════════════════════════════════════════
+function pdfMoney(n){ return `${new Intl.NumberFormat('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n||0))} €`; }
+
+function activeDashboardFilterLabels(){
+  const f=S.dashboardFilters||{};
+  const out=[];
+  if(f.month) out.push(['Mes',f.month]);
+  if(f.from) out.push(['Desde',f.from]);
+  if(f.to) out.push(['Hasta',f.to]);
+  if(f.weekday!==''&&f.weekday!==null&&f.weekday!==undefined) out.push(['Día',WEEKDAYS[Number(f.weekday)]||'—']);
+  if(f.venueId) out.push(['Sala',(S.config.venues||[]).find(v=>v.id===f.venueId)?.name||f.venueId]);
+  if(f.workId) out.push(['Obra',(S.config.works||[]).find(w=>w.id===f.workId)?.name||f.workId]);
+  if(f.platformId){
+    const name=f.platformId==='cashBox'?'Taquilla efectivo':(f.platformId==='cardBox'?'Taquilla tarjeta':((S.config.platforms||[]).find(p=>p.id===f.platformId)?.name||f.platformId));
+    out.push(['Plataforma',name]);
+  }
+  if(f.agreementId) out.push(['Acuerdo',getAgreementCatalog().find(a=>a.id===f.agreementId)?.name||f.agreementId]);
+  return out;
+}
+
+function pdfLogo(){
+  return `<svg viewBox="0 0 280 150" width="190" height="102" xmlns="http://www.w3.org/2000/svg"><text x="140" y="60" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="42" font-weight="700" letter-spacing="3" fill="#15151E">LA OPCIÓN</text><rect x="4" y="76" width="272" height="4" fill="#1B86AC"/><rect x="4" y="86" width="272" height="4" fill="#C93C86"/><rect x="4" y="96" width="272" height="4" fill="#B49A18"/><text x="140" y="126" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="17" letter-spacing="7" fill="#6B6B80">PRODUCCIONES</text></svg>`;
+}
+
+function buildShowsPdfHtml(){
+  const cs=getDashboardFilteredShows().map(s=>({...s,c:showAmounts(s)}))
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||'')||String(a.workName).localeCompare(String(b.workName),'es'));
+  const t=cs.reduce((a,s)=>({
+    vb:a.vb+s.c.ventaBruta, vn:a.vn+s.c.ventaNeta, g:a.g+s.c.totalGastos, tn:a.tn+s.c.totalNeto,
+    ca:a.ca+s.c.cache, ro:a.ro+s.c.restanteOpcion, comm:a.comm+s.c.totalComm, autor:a.autor+s.c.autorImporte,
+    alquiler:a.alquiler+s.c.venueRental, otros:a.otros+s.c.otrosGastosRegulares,
+  }),{vb:0,vn:0,g:0,tn:0,ca:0,ro:0,comm:0,autor:0,alquiler:0,otros:0});
+  Object.keys(t).forEach(k=>{t[k]=r2(t[k]);});
+  const n=cs.length;
+  const margen=t.vn?r2(t.ro/t.vn*100):0;
+
+  const dates=cs.map(s=>s.date).filter(Boolean).sort();
+  const periodo=dates.length?(dates[0]===dates[dates.length-1]?dates[0]:`${dates[0]} a ${dates[dates.length-1]}`):'Sin fechas';
+  const filters=activeDashboardFilterLabels();
+  const filtersHtml=filters.length
+    ? filters.map(([k,v])=>`<span class="chip"><b>${esc(k)}:</b> ${esc(v)}</span>`).join('')
+    : '<span class="chip">Sin filtros: todas las funciones</span>';
+
+  const kpis=[
+    ['Venta bruta',pdfMoney(t.vb),`${n} ${n===1?'función':'funciones'}`],
+    ['Venta neta',pdfMoney(t.vn),'Base antes de gastos'],
+    ['Total gastos',pdfMoney(t.g),t.vn?`${fmtPct(t.g/t.vn*100)} sobre venta neta`:'—'],
+    ['Total neto',pdfMoney(t.tn),'A repartir'],
+    ['Caché compañías',pdfMoney(t.ca),t.tn?`${fmtPct(t.ca/t.tn*100)} del total neto`:'—'],
+    ['Beneficio La Opción',pdfMoney(t.ro),`Margen ${fmtPct(margen)}`],
+  ].map(([label,value,sub],i)=>`<div class="kpi${i===5?' kpi-main':''}"><div class="kpi-l">${esc(label)}</div><div class="kpi-v">${esc(value)}</div><div class="kpi-s">${esc(sub)}</div></div>`).join('');
+
+  const rows=cs.map(s=>`<tr>
+    <td>${esc(s.date||'—')}</td>
+    <td>${esc(weekdayShort(s.date))}</td>
+    <td class="ell">${esc(s.workName||'—')}</td>
+    <td class="ell">${esc(s.venueName||'—')}</td>
+    <td class="ell">${esc(s.agreementSnapshot?.name||'—')}</td>
+    <td class="r">${pdfMoney(s.c.ventaBruta)}</td>
+    <td class="r">${pdfMoney(s.c.ventaNeta)}</td>
+    <td class="r">${pdfMoney(s.c.totalGastos)}</td>
+    <td class="r">${pdfMoney(s.c.cache)}</td>
+    <td class="r b ${s.c.restanteOpcion<0?'neg':''}">${pdfMoney(s.c.restanteOpcion)}</td>
+  </tr>`).join('')||'<tr><td colspan="10" class="empty">No hay funciones con estos filtros.</td></tr>';
+
+  const months={};
+  cs.forEach(s=>{
+    const m=(s.date||'Sin fecha').slice(0,7)||'Sin fecha';
+    if(!months[m]) months[m]={n:0,vb:0,vn:0,g:0,tn:0,ca:0,ro:0};
+    const g=months[m];
+    g.n+=1; g.vb+=s.c.ventaBruta; g.vn+=s.c.ventaNeta; g.g+=s.c.totalGastos; g.tn+=s.c.totalNeto; g.ca+=s.c.cache; g.ro+=s.c.restanteOpcion;
+  });
+  const monthRows=Object.entries(months).sort(([a],[b])=>a.localeCompare(b)).map(([m,v])=>`<tr><td>${esc(m)}</td><td class="r">${v.n}</td><td class="r">${pdfMoney(v.vb)}</td><td class="r">${pdfMoney(v.vn)}</td><td class="r">${pdfMoney(v.g)}</td><td class="r">${pdfMoney(v.tn)}</td><td class="r">${pdfMoney(v.ca)}</td><td class="r b ${v.ro<0?'neg':''}">${pdfMoney(v.ro)}</td></tr>`).join('')||'<tr><td colspan="8" class="empty">Sin datos</td></tr>';
+
+  const wd=WEEKDAYS.map(()=>({n:0,vb:0,tn:0,ca:0,ro:0}));
+  cs.forEach(s=>{
+    const wi=weekdayIndexFromDate(s.date);
+    if(wi<0) return;
+    wd[wi].n+=1; wd[wi].vb+=s.c.ventaBruta; wd[wi].tn+=s.c.totalNeto; wd[wi].ca+=s.c.cache; wd[wi].ro+=s.c.restanteOpcion;
+  });
+  const weekdayRows=wd.map((v,i)=>({v,i})).filter(x=>x.v.n>0)
+    .map(({v,i})=>`<tr><td>${WEEKDAYS[i]}</td><td class="r">${v.n}</td><td class="r">${pdfMoney(v.vb)}</td><td class="r">${pdfMoney(v.vb/v.n)}</td><td class="r">${pdfMoney(v.tn)}</td><td class="r">${pdfMoney(v.ca)}</td><td class="r b ${v.ro<0?'neg':''}">${pdfMoney(v.ro)}</td></tr>`).join('')
+    ||'<tr><td colspan="7" class="empty">Sin funciones con fecha</td></tr>';
+
+  const plat={};
+  cs.forEach(s=>{
+    s.c.commissions.forEach(c=>{
+      if(!plat[c.name]) plat[c.name]={income:0,commission:0};
+      plat[c.name].income+=c.income; plat[c.name].commission+=c.commTotal;
+    });
+    if(!plat['Taquilla efectivo']) plat['Taquilla efectivo']={income:0,commission:0};
+    if(!plat['Taquilla tarjeta']) plat['Taquilla tarjeta']={income:0,commission:0};
+    plat['Taquilla efectivo'].income+=s.c.cashBox;
+    plat['Taquilla tarjeta'].income+=s.c.cardBox;
+  });
+  const platEntries=Object.entries(plat).map(([name,v])=>({name,income:r2(v.income),commission:r2(v.commission)})).filter(v=>v.income>0).sort((a,b)=>b.income-a.income);
+  const platRows=platEntries.map(v=>`<tr><td class="ell">${esc(v.name)}</td><td class="r">${pdfMoney(v.income)}</td><td class="r">${v.commission>0?'-':''}${pdfMoney(v.commission)}</td><td class="r">${t.vb?fmtPct(v.income/t.vb*100):'—'}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">Sin ingresos</td></tr>';
+
+  const works={};
+  cs.forEach(s=>{
+    const k=dashboardEntityName(s,'works')||'Sin obra';
+    if(!works[k]) works[k]={n:0,vb:0,tn:0,ca:0,ro:0};
+    works[k].n+=1; works[k].vb+=s.c.ventaBruta; works[k].tn+=s.c.totalNeto; works[k].ca+=s.c.cache; works[k].ro+=s.c.restanteOpcion;
+  });
+  const workRows=Object.entries(works).sort((a,b)=>b[1].ro-a[1].ro).map(([name,v])=>`<tr><td class="ell">${esc(name)}</td><td class="r">${v.n}</td><td class="r">${pdfMoney(v.vb)}</td><td class="r">${pdfMoney(v.tn)}</td><td class="r">${pdfMoney(v.ca)}</td><td class="r b ${v.ro<0?'neg':''}">${pdfMoney(v.ro)}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Sin datos</td></tr>';
+
+  const avisos=[];
+  const allToCompany=cs.filter(s=>s.c.allToCompany).length;
+  const mismatched=cs.filter(s=>s.c.mismatch).length;
+  if(n&&allToCompany===n) avisos.push('En todas las funciones de este informe el caché equivale al total neto (acuerdo al 100 % de taquilla), por lo que el beneficio de La Opción es 0 €.');
+  else if(allToCompany) avisos.push(`${allToCompany} de ${n} funciones dejan 0 € a La Opción porque todo el neto va a la compañía.`);
+  if(mismatched) avisos.push(`${mismatched} función(es) tienen importes descuadrados en la hoja de cálculo (caché + restante ≠ total neto).`);
+  const avisosHtml=avisos.length?`<div class="avisos"><b>Notas</b><ul>${avisos.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:'';
+
+  const generado=new Date().toLocaleString('es-ES');
+  const titulo=filters.find(([k])=>k==='Obra')?`Informe de funciones · ${filters.find(([k])=>k==='Obra')[1]}`:'Informe de funciones';
+
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(titulo)} · La Opción Producciones</title><style>
+@page{size:A4 portrait;margin:14mm 12mm 16mm}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Helvetica,Arial,sans-serif;color:#15151E;font-size:10pt;line-height:1.35;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:2px solid #15151E;padding-bottom:12px;margin-bottom:16px}
+h1{font-size:17pt;font-weight:700;letter-spacing:-.2px}
+.sub{color:#5B5B6E;font-size:9.5pt;margin-top:3px}
+.meta{text-align:right;font-size:9pt;color:#5B5B6E;min-width:38%}
+.chips{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
+.chip{border:1px solid #D3D3DE;border-radius:20px;padding:2px 9px;font-size:8.5pt;background:#F6F6FA}
+h2{font-size:11.5pt;margin:16px 0 7px;padding-bottom:4px;border-bottom:1px solid #D3D3DE}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{border:1px solid #D3D3DE;border-radius:7px;padding:9px 11px;background:#FBFBFD}
+.kpi-main{background:#F1F8FB;border-color:#1B86AC}
+.kpi-l{font-size:7.5pt;text-transform:uppercase;letter-spacing:.6px;color:#5B5B6E;font-weight:700}
+.kpi-v{font-size:14pt;font-weight:700;margin-top:3px}
+.kpi-s{font-size:8pt;color:#6B6B80;margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:8.5pt}
+th{text-align:left;background:#15151E;color:#fff;padding:5px 6px;font-size:7.5pt;text-transform:uppercase;letter-spacing:.4px}
+td{padding:4px 6px;border-bottom:1px solid #E4E4EC}
+tbody tr:nth-child(even) td{background:#FAFAFC}
+tfoot td{border-top:2px solid #15151E;font-weight:700;background:#fff}
+.r{text-align:right;white-space:nowrap}
+.b{font-weight:700}
+.neg{color:#B3261E}
+.ell{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty{text-align:center;color:#6B6B80;padding:12px}
+.avisos{margin-top:14px;border-left:3px solid #B49A18;background:#FCFAF0;padding:8px 12px;font-size:8.5pt}
+.avisos ul{margin:4px 0 0 16px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+footer{position:fixed;bottom:-10mm;left:0;right:0;border-top:1px solid #D3D3DE;padding-top:4px;font-size:7.5pt;color:#6B6B80;display:flex;justify-content:space-between}
+thead{display:table-header-group}
+tr{break-inside:avoid}
+h2{break-after:avoid}
+</style></head><body>
+<header>
+  <div>${pdfLogo()}</div>
+  <div class="meta">
+    <h1>${esc(titulo)}</h1>
+    <div class="sub">Periodo: ${esc(periodo)} · ${n} ${n===1?'función':'funciones'}</div>
+    <div class="chips">${filtersHtml}</div>
+  </div>
+</header>
+
+<h2>Resumen</h2>
+<div class="kpis">${kpis}</div>
+${avisosHtml}
+
+<h2>Detalle de funciones (${n})</h2>
+<table>
+  <thead><tr><th>Fecha</th><th>Día</th><th>Obra</th><th>Sala</th><th>Acuerdo</th><th class="r">V. bruta</th><th class="r">V. neta</th><th class="r">Gastos</th><th class="r">Caché</th><th class="r">Restante</th></tr></thead>
+  <tbody>${rows}</tbody>
+  <tfoot><tr><td colspan="5">Total · ${n} ${n===1?'función':'funciones'}</td><td class="r">${pdfMoney(t.vb)}</td><td class="r">${pdfMoney(t.vn)}</td><td class="r">${pdfMoney(t.g)}</td><td class="r">${pdfMoney(t.ca)}</td><td class="r">${pdfMoney(t.ro)}</td></tr></tfoot>
+</table>
+
+<h2>Resumen por mes</h2>
+<table>
+  <thead><tr><th>Mes</th><th class="r">Func.</th><th class="r">V. bruta</th><th class="r">V. neta</th><th class="r">Gastos</th><th class="r">T. neto</th><th class="r">Caché</th><th class="r">Restante</th></tr></thead>
+  <tbody>${monthRows}</tbody>
+</table>
+
+<h2>Resumen por día de la semana</h2>
+<table>
+  <thead><tr><th>Día</th><th class="r">Func.</th><th class="r">V. bruta</th><th class="r">Media/func.</th><th class="r">T. neto</th><th class="r">Caché</th><th class="r">Restante</th></tr></thead>
+  <tbody>${weekdayRows}</tbody>
+</table>
+
+<h2>Resumen por obra</h2>
+<table>
+  <thead><tr><th>Obra</th><th class="r">Func.</th><th class="r">V. bruta</th><th class="r">T. neto</th><th class="r">Caché</th><th class="r">Restante</th></tr></thead>
+  <tbody>${workRows}</tbody>
+</table>
+
+<h2>Ingresos por canal</h2>
+<table>
+  <thead><tr><th>Canal</th><th class="r">Facturado</th><th class="r">Comisión</th><th class="r">% del total</th></tr></thead>
+  <tbody>${platRows}</tbody>
+  <tfoot><tr><td>Total</td><td class="r">${pdfMoney(t.vb)}</td><td class="r">${t.comm>0?'-':''}${pdfMoney(t.comm)}</td><td class="r">100,00 %</td></tr></tfoot>
+</table>
+
+<h2>Desglose de gastos</h2>
+<table>
+  <thead><tr><th>Concepto</th><th class="r">Importe</th><th class="r">% sobre venta neta</th></tr></thead>
+  <tbody>
+    <tr><td>Comisiones de plataformas</td><td class="r">${pdfMoney(t.comm)}</td><td class="r">${t.vn?fmtPct(t.comm/t.vn*100):'—'}</td></tr>
+    <tr><td>Derechos de autor</td><td class="r">${pdfMoney(t.autor)}</td><td class="r">${t.vn?fmtPct(t.autor/t.vn*100):'—'}</td></tr>
+    <tr><td>Alquiler de sala</td><td class="r">${pdfMoney(t.alquiler)}</td><td class="r">${t.vn?fmtPct(t.alquiler/t.vn*100):'—'}</td></tr>
+    <tr><td>Otros gastos</td><td class="r">${pdfMoney(t.otros)}</td><td class="r">${t.vn?fmtPct(t.otros/t.vn*100):'—'}</td></tr>
+  </tbody>
+  <tfoot><tr><td>Total gastos</td><td class="r">${pdfMoney(t.g)}</td><td class="r">${t.vn?fmtPct(t.g/t.vn*100):'—'}</td></tr></tfoot>
+</table>
+
+<footer><span>La Opción Producciones · Informe interno de gestión</span><span>Generado el ${esc(generado)}${S.user?.email?` por ${esc(S.user.email)}`:''}</span></footer>
+</body></html>`;
+}
+
+function exportShowsPdf(){
+  const cs=getDashboardFilteredShows();
+  if(!cs.length) return showToast('No hay funciones con estos filtros para exportar.','warn');
+  try{
+    const html=buildShowsPdfHtml();
+    const previous=document.getElementById('pdf-print-frame');
+    if(previous) previous.remove();
+    const frame=document.createElement('iframe');
+    frame.id='pdf-print-frame';
+    frame.setAttribute('aria-hidden','true');
+    frame.style.cssText='position:fixed;right:0;bottom:0;width:1px;height:1px;opacity:0;border:0';
+    document.body.appendChild(frame);
+    const doc=frame.contentWindow.document;
+    doc.open();doc.write(html);doc.close();
+    const launch=()=>{
+      try{frame.contentWindow.focus();frame.contentWindow.print();}
+      catch(err){showToast('No se ha podido abrir la impresión: '+err.message,'error');}
+    };
+    if(doc.readyState==='complete') setTimeout(launch,350);
+    else frame.onload=()=>setTimeout(launch,350);
+    showToast(`Informe de ${cs.length} funciones listo. Elige «Guardar como PDF».`,'success');
+  }catch(err){showToast('Error al generar el informe: '+err.message,'error');}
 }
 
 boot();
