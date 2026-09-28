@@ -4,24 +4,29 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>La Opción Producciones</title>
+  <link rel="preconnect" href="https://script.google.com" crossorigin />
+  <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
     :root {
       --bg:#0A0A0F; --surface:#111118; --surface-alt:#16161F; --card:#1A1A24;
       --border:#2A2A3A; --border-light:#35354A; --text:#EEEEF4; --text-muted:#9090AA; --text-dim:#606078;
       --cyan:#6EC8E4; --cyan-dim:rgba(110,200,228,.12); --pink:#E85DA0; --pink-dim:rgba(232,93,160,.12);
       --yellow:#E8D44C; --success:#4ADE80; --success-dim:rgba(74,222,128,.10);
       --danger:#F87171; --danger-dim:rgba(248,113,113,.10); --purple:#A78BFA; --warn:#FBBF24; --warn-dim:rgba(251,191,36,.10);
+      --orange:#FB923C; --orange-dim:rgba(251,146,60,.12);
       --sidebar-w:230px; --radius:14px; --shadow:0 18px 40px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box;margin:0;padding:0} html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh} button,input,select,textarea{font:inherit}
     .app{display:flex;min-height:100vh}.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:30}.sidebar-header{padding:18px 10px 14px;border-bottom:1px solid var(--border);text-align:center}.nav{flex:1;padding:10px 8px;overflow-y:auto}.nav-btn{width:100%;border:0;background:transparent;color:var(--text-muted);border-radius:8px;padding:10px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.15s;text-align:left;margin-bottom:2px;font-size:13px}.nav-btn:hover{background:var(--surface-alt)}.nav-btn.active{background:var(--cyan-dim);color:var(--cyan);font-weight:700}.nav-section{padding:12px 13px 5px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-dim)}.nav-section:first-child{padding-top:4px}.sidebar-footer{border-top:1px solid var(--border);padding:14px}.role-pill{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800}.main{margin-left:var(--sidebar-w);flex:1;padding:28px 36px;min-width:0}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}.card h3{margin:0 0 14px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700}.page-title{font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;margin:0}.page-sub{color:var(--text-muted);font-size:13px;margin:4px 0 0}.section-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}.grid{display:grid;gap:14px}.grid-2{grid-template-columns:1fr 1fr}.grid-kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700}.kpi-value{margin-top:8px;font-size:22px;font-family:'Outfit',sans-serif;font-weight:800}.kpi-sub{margin-top:4px;font-size:11px;color:var(--text-dim)}
-    .btn{border:0;border-radius:8px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;transition:.15s;font-size:13px}.btn:disabled{opacity:.5;cursor:not-allowed}.btn-primary{background:var(--cyan);color:#0A0A0F}.btn-secondary{background:var(--surface-alt);color:var(--text);border:1px solid var(--border)}.btn-danger{background:var(--danger-dim);color:var(--danger)}.btn-ghost{background:transparent;color:var(--text-muted)}.btn-sm{padding:5px 10px;font-size:12px}.badge{display:inline-flex;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.3px}.badge-ok{background:var(--success-dim);color:var(--success)}.badge-off{background:var(--surface-alt);color:var(--text-dim)}
+    .btn{border:0;border-radius:8px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;transition:.15s;font-size:13px}.btn:disabled{opacity:.5;cursor:not-allowed}.btn-primary{background:var(--cyan);color:#0A0A0F}.btn-secondary{background:var(--surface-alt);color:var(--text);border:1px solid var(--border)}.btn-danger{background:var(--danger-dim);color:var(--danger)}.btn-ghost{background:transparent;color:var(--text-muted)}.btn-sm{padding:5px 10px;font-size:12px}.badge{display:inline-flex;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.3px}.badge-ok{background:var(--success-dim);color:var(--success)}.badge-off{background:var(--surface-alt);color:var(--text-dim)}.badge-event{background:var(--orange-dim);color:var(--orange)}.badge-show{background:var(--cyan-dim);color:var(--cyan)}
     .field{margin-bottom:12px}.field label{display:block;margin-bottom:4px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700}.field input,.field select,.field textarea{width:100%;padding:8px 11px;background:var(--surface-alt);color:var(--text);border:1px solid var(--border);border-radius:8px;outline:none;font-size:13px}.field textarea{min-height:64px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--cyan)}.inline-input{width:100%;min-width:120px;padding:7px 9px;background:var(--surface-alt);color:var(--text);border:1px solid var(--border);border-radius:8px;outline:none;font-size:12px}.inline-check{width:18px;height:18px;accent-color:var(--cyan)}
     .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}table{width:100%;border-collapse:collapse;font-size:13px}th{padding:11px 14px;text-align:left;color:var(--text-dim);font-size:10px;text-transform:uppercase;letter-spacing:.8px;background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap}th.right,td.right{text-align:right}td{padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap}tbody tr.clickable{cursor:pointer;transition:background .1s}tbody tr.clickable:hover{background:var(--surface-alt)}
-    .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}.bar-label{width:90px;flex-shrink:0;color:var(--text-muted);font-size:11px}.bar-track{flex:1;height:6px;background:var(--surface-alt);border-radius:3px;overflow:hidden}.bar-fill{height:100%;border-radius:3px;background:var(--cyan)}.bar-value{min-width:75px;text-align:right;font-size:12px;font-weight:700}.empty{text-align:center;color:var(--text-dim);padding:36px 10px}.success{color:var(--success)}.danger{color:var(--danger)}.cyan{color:var(--cyan)}.pink{color:var(--pink)}.yellow{color:var(--yellow)}.purple{color:var(--purple)}.fw700{font-weight:700}.mb20{margin-bottom:20px}.mt10{margin-top:10px}.muted{color:var(--text-muted)}.dim{color:var(--text-dim)}
-    .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 20%,var(--cyan-dim) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,var(--pink-dim) 0%,transparent 50%),var(--bg);padding:clamp(18px,4vw,42px);overflow:auto}.login-box{width:100%;max-width:430px;text-align:center}.login-logo{width:min(100%,340px);margin:0 auto 30px;display:flex;align-items:center;justify-content:center}.login-logo svg{display:block;width:100%;height:auto;max-height:170px;overflow:visible}.sidebar-header svg{max-width:100%;height:auto;overflow:visible}.toast{position:fixed;top:18px;right:18px;z-index:200;padding:11px 18px;border-radius:10px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;max-width:420px}.toast.success{border-color:rgba(74,222,128,.3);color:var(--success)}.toast.error{border-color:rgba(248,113,113,.3);color:var(--danger)}.toast.warn{border-color:rgba(251,191,36,.3);color:var(--warn)}.loading-overlay{position:fixed;inset:0;background:rgba(10,10,15,.85);z-index:150;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-text{color:var(--text-muted);font-size:14px}.dirty-note{background:var(--warn-dim);border:1px solid rgba(251,191,36,.25);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:12px;margin-bottom:14px}
+    .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}.bar-label{width:90px;flex-shrink:0;color:var(--text-muted);font-size:11px}.bar-track{flex:1;height:6px;background:var(--surface-alt);border-radius:3px;overflow:hidden}.bar-fill{height:100%;border-radius:3px;background:var(--cyan)}.bar-value{min-width:75px;text-align:right;font-size:12px;font-weight:700}.empty{text-align:center;color:var(--text-dim);padding:36px 10px}.success{color:var(--success)}.danger{color:var(--danger)}.cyan{color:var(--cyan)}.pink{color:var(--pink)}.yellow{color:var(--yellow)}.purple{color:var(--purple)}.orange{color:var(--orange)}.fw700{font-weight:700}.mb20{margin-bottom:20px}.mt10{margin-top:10px}.muted{color:var(--text-muted)}.dim{color:var(--text-dim)}
+    .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 20%,var(--cyan-dim) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,var(--pink-dim) 0%,transparent 50%),var(--bg);padding:clamp(18px,4vw,42px);overflow:auto}.login-box{width:100%;max-width:430px;text-align:center}.login-logo{width:min(100%,340px);margin:0 auto 30px;display:flex;align-items:center;justify-content:center}.login-logo svg{display:block;width:100%;height:auto;max-height:170px;overflow:visible}.sidebar-header svg{max-width:100%;height:auto;overflow:visible}.toast{position:fixed;top:18px;right:18px;z-index:200;padding:11px 18px;border-radius:10px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;max-width:420px}.toast.success{border-color:rgba(74,222,128,.3);color:var(--success)}.toast.error{border-color:rgba(248,113,113,.3);color:var(--danger)}.toast.warn{border-color:rgba(251,191,36,.3);color:var(--warn)}.loading-overlay{position:fixed;inset:0;background:rgba(10,10,15,.85);z-index:150;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-text{color:var(--text-muted);font-size:14px}.dirty-note{background:var(--warn-dim);border:1px solid rgba(251,191,36,.25);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:12px;margin-bottom:14px}.event-note{background:var(--orange-dim);border:1px solid rgba(251,146,60,.28);color:var(--orange);border-radius:10px;padding:9px 12px;font-size:12px;margin-bottom:14px}
     .dashboard-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}.dashboard-filters .field{margin-bottom:0}.mini-series{display:grid;grid-template-columns:52px 1fr 88px;align-items:center;gap:8px;margin:5px 0;font-size:11px;color:var(--text-muted)}.mini-series .bar-track{height:5px}.finance-split{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}.finance-split.total{border-bottom:0;border-top:1px solid var(--border-light);margin-top:6px;padding-top:14px;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800}.bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .panel-title{display:flex;align-items:center;gap:7px}.info-tip{position:relative;display:inline-grid;place-items:center;width:17px;height:17px;border:1px solid var(--border-light);border-radius:50%;color:var(--text-muted);font-size:11px;font-family:Arial,sans-serif;font-weight:800;line-height:1;cursor:help;outline:none;vertical-align:middle}.info-tip:hover,.info-tip:focus{color:var(--cyan);border-color:var(--cyan);background:var(--cyan-dim)}.info-tip::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 9px);transform:translateX(-50%) translateY(4px);width:max-content;max-width:min(290px,80vw);padding:9px 11px;border:1px solid var(--border-light);border-radius:8px;background:#242433;color:var(--text);box-shadow:0 12px 30px rgba(0,0,0,.45);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:400;line-height:1.45;text-transform:none;letter-spacing:0;white-space:normal;text-align:left;opacity:0;visibility:hidden;pointer-events:none;transition:.15s;z-index:80}.info-tip::before{content:'';position:absolute;left:50%;bottom:calc(100% + 4px);width:8px;height:8px;background:#242433;border-right:1px solid var(--border-light);border-bottom:1px solid var(--border-light);transform:translateX(-50%) rotate(45deg);opacity:0;visibility:hidden;transition:.15s;z-index:81}.info-tip:hover::after,.info-tip:focus::after,.info-tip:hover::before,.info-tip:focus::before{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}.info-tip:hover::before,.info-tip:focus::before{transform:translateX(-50%) rotate(45deg)}.platform-finance{border:1px solid var(--border);border-radius:10px;overflow:visible}.platform-finance-head,.platform-finance-row{display:grid;grid-template-columns:minmax(110px,1.25fr) repeat(3,minmax(84px,.75fr));gap:10px;align-items:center;padding:10px 12px}.platform-finance-head{background:var(--surface);border-radius:10px 10px 0 0;color:var(--text-dim);font-size:9px;text-transform:uppercase;letter-spacing:.65px;font-weight:800}.platform-finance-row{border-top:1px solid var(--border);font-size:12px}.platform-finance-row:hover{background:var(--surface-alt)}.platform-finance-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.platform-finance-value{text-align:right;font-variant-numeric:tabular-nums}.platform-finance-total{background:rgba(110,200,228,.05);border-radius:0 0 10px 10px;font-weight:800}.platform-finance-note{margin-top:10px;color:var(--text-dim);font-size:10px;line-height:1.4}@media(max-width:600px){.platform-finance{overflow-x:auto}.platform-finance-head,.platform-finance-row{min-width:520px}.info-tip::after{left:auto;right:-10px;transform:translateY(4px)}.info-tip:hover::after,.info-tip:focus::after{transform:translateY(0)}}
     .show-toolbar{display:grid;grid-template-columns:1.4fr repeat(5,minmax(120px,.7fr));gap:10px;align-items:end;margin-bottom:14px}.search-wrap{position:relative}.search-wrap .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}.search-wrap input{padding-left:38px}.show-count-pill{display:inline-flex;align-items:center;gap:6px;background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(110,200,228,.22);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}.row-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.show-mobile-card{display:none}.show-result-note{color:var(--text-dim);font-size:12px;margin:0 0 12px}.show-list-card{padding:16px}.filter-label{display:block;margin-bottom:4px;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:800}
@@ -50,6 +55,10 @@
 .nb-room-button:hover{color:var(--cyan)}
 .nb-rank{font-size:11px;color:var(--text-muted);background:var(--surface-alt);padding:4px 7px;border-radius:5px}
 .nb-dashboard .bar-label{width:150px}
+.nb-split{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--surface-alt);margin:10px 0 6px}
+.nb-split>span{display:block;height:100%}
+.sync-pill{position:fixed;bottom:16px;right:16px;z-index:120;display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:var(--card);border:1px solid var(--border-light);color:var(--text-muted);font-size:12px;box-shadow:var(--shadow)}
+.sync-pill .spinner{width:14px;height:14px;border-width:2px}
 @media(max-width:900px){.nb-hero{grid-template-columns:1fr}.nb-formula{border-left:0;border-top:1px solid var(--border-light);padding-left:0;padding-top:12px}.nb-dashboard .bar-label{width:100px}}
 @media(max-width:500px){.nb-hero{padding:20px}.nb-formula>div{font-size:11px}.nb-chart{grid-template-columns:repeat(12,76px)}}
 
@@ -60,16 +69,43 @@
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbyCwwMRxy6J4l1oqF9BqgvzHZ7DKSASqytV2B7anHsokG0VTraeTBLfTHXDEwS11uQDXQ/exec";
 const STORAGE_KEY = 'laopcion_session_v3';
+const DATA_CACHE_KEY = 'laopcion_data_v1'; // últimos datos descargados: la app se pinta al instante
 const $app = document.getElementById('app');
+
+// ══════════════════════════════════════════════════════════════
+// TIPOS DE REGISTRO: FUNCIONES Y EVENTOS
+// Mismos campos y cálculos; se guardan y contabilizan por separado.
+// ══════════════════════════════════════════════════════════════
+const KIND={
+  show:{key:'show',One:'Función',one:'función',Many:'Funciones',many:'funciones',thisOne:'esta función',aNew:'Nueva función',register:'Registrar función',
+    none:'Sin funciones',filtered:'funciones filtradas',per:'por función',saved:'Función guardada correctamente',duplicated:'Función duplicada y guardada como nuevo registro',
+    deleted:'Función eliminada correctamente',icon:'🎭',prefix:'s',listView:'shows',newView:'newshow',editView:'editshow',detailView:'detail',dashView:'dashboard',
+    dashTitle:'Dashboard funciones',count:n=>`${n} ${n===1?'función':'funciones'}`},
+  event:{key:'event',One:'Evento',one:'evento',Many:'Eventos',many:'eventos',thisOne:'este evento',aNew:'Nuevo evento',register:'Registrar evento',
+    none:'Sin eventos',filtered:'eventos filtrados',per:'por evento',saved:'Evento guardado correctamente',duplicated:'Evento duplicado y guardado como nuevo registro',
+    deleted:'Evento eliminado correctamente',icon:'🎉',prefix:'ev',listView:'events',newView:'newevent',editView:'editevent',detailView:'eventDetail',dashView:'eventDashboard',
+    dashTitle:'Dashboard eventos',count:n=>`${n} ${n===1?'evento':'eventos'}`}
+};
+const EVENT_VIEWS=['events','newevent','editevent','eventDetail','eventDashboard'];
+function normKind(k){ return k==='event'?'event':'show'; }
+function K(kind){ return KIND[normKind(kind)]; }
+function viewKind(view){ return EVENT_VIEWS.includes(view===undefined?S.view:view)?'event':'show'; }
+function recordsOf(kind){ return normKind(kind)==='event'?S.events:S.shows; }
+function findRecord(id,kind){ return recordsOf(kind).find(s=>s.id===id)||null; }
+function kindBadge(kind){ return normKind(kind)==='event'?'<span class="badge badge-event">Evento</span>':'<span class="badge badge-show">Función</span>'; }
+
+const EMPTY_LIST_FILTERS=()=>({month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'});
+const EMPTY_DASH_FILTERS=()=>({month:'',from:'',to:'',weekday:'',venueId:'',workId:'',platformId:'',agreementId:''});
+const EMPTY_LISTS=()=>({show:{search:'',filters:EMPTY_LIST_FILTERS()},event:{search:'',filters:EMPTY_LIST_FILTERS()}});
 
 const S = {
   token:'', user:null, role:null, view:'dashboard', selectedId:null, editShowId:null,
-  search:'', showFilters:{month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'}, toast:null, toastTimer:null,
-  adminTab:'platforms', summaryMonth:'', isLoading:false, isSaving:false, isRefreshing:false,
+  lists:EMPTY_LISTS(), toast:null, toastTimer:null,
+  adminTab:'platforms', summaryMonth:'', summaryKind:'show', isLoading:false, isSaving:false, isRefreshing:false,
   isBooting:false, isLoggingIn:false, lastSyncAt:'', loadError:null, configDirty:false,
   users:[], newShowDraft:null, isDuplicating:false, duplicateSourceId:null,
-  dashboardFilters:{month:'',from:'',to:'',weekday:'',venueId:'',workId:'',platformId:'',agreementId:''},
-  config:{ platforms:[], venues:[], works:[], expenseTypes:[], agreements:[] }, shows:[]
+  dashFilters:{show:EMPTY_DASH_FILTERS(),event:EMPTY_DASH_FILTERS()},
+  config:{ platforms:[], venues:[], works:[], expenseTypes:[], agreements:[] }, shows:[], events:[], eventsSupported:true
 };
 let SAVE_LOCK=false; let REFRESH_LOCK=false; let LOGIN_LOCK=false;
 
@@ -89,6 +125,12 @@ function esc(s){ return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&
 function normalize(t){ return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
 function infoTip(text){ return `<span class="info-tip" tabindex="0" role="img" aria-label="${esc(text)}" data-tip="${esc(text)}">i</span>`; }
 function panelTitle(title,help){ return `<h3 class="panel-title"><span>${esc(title)}</span>${infoTip(help)}</h3>`; }
+function listState(kind){ const key=normKind(kind); if(!S.lists) S.lists=EMPTY_LISTS(); if(!S.lists[key]) S.lists[key]={search:'',filters:EMPTY_LIST_FILTERS()}; return S.lists[key]; }
+function eventsBackendNote(kind){
+  return normKind(kind)==='event'&&!S.eventsSupported
+    ? '<div class="dirty-note">⚠️ El Apps Script todavía no tiene la sección de eventos. Publica la nueva versión del backend (Implementar → Gestionar implementaciones → Nueva versión) antes de registrar eventos.</div>'
+    : '';
+}
 
 function normalizeExpenseOwner(owner){
   owner=normalize(owner||'both');
@@ -184,7 +226,6 @@ function syncWorkAgreementToConfig(work,config=S.config){
 }
 function syncAllWorkAgreementsToConfig(config=S.config){ (config.works||[]).forEach(w=>syncWorkAgreementToConfig(w,config)); }
 
-// CORREGIDO: los acuerdos se identifican por id, no por nombre sin tildes
 function getAgreementCatalog(config=S.config){
   const byId=new Map();
   getActiveSorted(config.works||[]).forEach(w=>{
@@ -208,7 +249,7 @@ function showToast(msg,type='success'){ S.toast={message:msg,type}; clearTimeout
 function logoSVG(w=150){ const h=w*.55; return `<svg width="${w}" height="${h}" viewBox="-28 -8 336 174" preserveAspectRatio="xMidYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible"><text x="140" y="68" text-anchor="middle" font-family="'Outfit','Arial Black',sans-serif" font-size="48" font-weight="900" letter-spacing="4" fill="var(--text)">LA OPCIÓN</text><line x1="4" y1="82" x2="276" y2="82" stroke="var(--cyan)" stroke-width="4"/><line x1="4" y1="92" x2="276" y2="92" stroke="var(--pink)" stroke-width="4"/><line x1="4" y1="102" x2="276" y2="102" stroke="var(--yellow)" stroke-width="4"/><text x="140" y="132" text-anchor="middle" font-family="'Outfit','Arial',sans-serif" font-size="20" font-weight="300" letter-spacing="9" fill="var(--text-muted)">PRODUCCIONES</text></svg>`; }
 function roleLabel(r){ return r==='admin'?'Administrador':'Usuario'; }
 function defaultViewForRole(role){ return role==='admin'?'dashboard':'shows'; }
-function isAdminOnlyView(view){ return ['dashboard','summary','admin','barDashboard','businessDashboard'].includes(view); }
+function isAdminOnlyView(view){ return ['dashboard','eventDashboard','summary','admin','barDashboard','businessDashboard'].includes(view); }
 function isViewAllowedForRole(view,role){ return role==='admin'||!isAdminOnlyView(view); }
 function normalizeCurrentView(){
   if(S.user && !isViewAllowedForRole(S.view,S.role)){
@@ -237,6 +278,55 @@ async function apiPost(payload){
   return data;
 }
 
+// ── CACHÉ LOCAL (stale-while-revalidate) ─────────────────────
+// Al abrir la app se muestran los últimos datos conocidos y se actualizan en segundo plano.
+function readDataCache(){
+  try{
+    const raw=localStorage.getItem(DATA_CACHE_KEY); if(!raw) return null;
+    const c=JSON.parse(raw);
+    if(!c||!S.user||normalize(c.email)!==normalize(S.user.email)) return null;
+    return c;
+  }catch(e){ return null; }
+}
+function writeDataCache(){
+  try{
+    if(!S.user) return;
+    localStorage.setItem(DATA_CACHE_KEY,JSON.stringify({email:S.user.email,savedAt:Date.now(),config:S.rawConfig||null,shows:S.rawShows||[],events:S.rawEvents||[],eventsSupported:S.eventsSupported}));
+  }catch(e){ try{localStorage.removeItem(DATA_CACHE_KEY);}catch(_){} }
+}
+function applyData(config,shows,events,eventsSupported){
+  if(config){
+    S.rawConfig=config;
+    S.config={platforms:config.platforms||[],venues:config.venues||[],works:config.works||[],expenseTypes:config.expenseTypes||[],agreements:config.agreements||[]};
+  }
+  S.rawShows=Array.isArray(shows)?shows:[];
+  S.eventsSupported=eventsSupported!==false&&Array.isArray(events);
+  S.rawEvents=S.eventsSupported?events:[];
+  S.shows=S.rawShows.map(raw=>sheetShowToAppShow(raw,S.config,'show'));
+  S.events=S.rawEvents.map(raw=>sheetShowToAppShow(raw,S.config,'event'));
+  if((S.shows.length||S.events.length)&&!S.summaryMonth){const months=[...new Set([...S.shows,...S.events].map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();S.summaryMonth=months[0]||'';}
+}
+function hasLoadedData(){ return !!(S.rawConfig||S.shows.length||S.events.length); }
+// Actualiza un registro guardado sin volver a descargar todo el Sheet
+function upsertRawRecord(raw,kind){
+  kind=normKind(kind);
+  const key=kind==='event'?'rawEvents':'rawShows';
+  const list=[...(S[key]||[])];
+  const id=String(raw.appId||raw.id||'');
+  const i=list.findIndex(r=>String(r.appId||r.id||'')===id);
+  if(i>=0) list[i]=raw; else list.push(raw);
+  S[key]=list;
+  applyData(null,S.rawShows,S.rawEvents,S.eventsSupported);
+  writeDataCache();
+}
+function removeRawRecord(appId,kind){
+  kind=normKind(kind);
+  const key=kind==='event'?'rawEvents':'rawShows';
+  S[key]=(S[key]||[]).filter(r=>String(r.appId||r.id||'')!==String(appId));
+  applyData(null,S.rawShows,S.rawEvents,S.eventsSupported);
+  writeDataCache();
+}
+
 function saveSession(token,user){
   S.token=token;
   S.user=user;
@@ -244,7 +334,13 @@ function saveSession(token,user){
   normalizeCurrentView();
   localStorage.setItem(STORAGE_KEY,JSON.stringify({token,user}));
 }
-function clearSession(rn=true){ resetBars(); resetBusiness(); S.token='';S.user=null;S.role=null;S.view='dashboard';S.selectedId=null;S.editShowId=null;S.users=[];S.newShowDraft=null;S.search='';S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};S.isDuplicating=false;S.duplicateSourceId=null;localStorage.removeItem(STORAGE_KEY);if(rn)render(); }
+function clearSession(rn=true){
+  resetBars(); resetBusiness();
+  S.token='';S.user=null;S.role=null;S.view='dashboard';S.selectedId=null;S.editShowId=null;S.users=[];S.newShowDraft=null;
+  S.lists=EMPTY_LISTS();S.dashFilters={show:EMPTY_DASH_FILTERS(),event:EMPTY_DASH_FILTERS()};
+  S.shows=[];S.events=[];S.rawShows=[];S.rawEvents=[];S.rawConfig=null;S.isDuplicating=false;S.duplicateSourceId=null;
+  localStorage.removeItem(STORAGE_KEY);try{localStorage.removeItem(DATA_CACHE_KEY);}catch(e){}if(rn)render();
+}
 
 async function boot(){
   const raw=localStorage.getItem(STORAGE_KEY);
@@ -252,21 +348,28 @@ async function boot(){
   try{
     const saved=JSON.parse(raw);
     if(!saved.token) throw new Error('Sin token');
-    S.token=saved.token;S.user=saved.user||null;S.role=saved.user?.role||null;normalizeCurrentView();S.isBooting=true;render();
-    const me=await apiPost({action:'me'});
-    saveSession(S.token,me.user);
-    await loadFromSheet();
-    if(S.role==='admin') await loadUsers();
-  }catch(err){clearSession(false);}
+    S.token=saved.token;S.user=saved.user||null;S.role=saved.user?.role||null;normalizeCurrentView();
+    const cached=S.user?readDataCache():null;
+    if(cached){
+      applyData(cached.config,cached.shows,cached.events,cached.eventsSupported);
+      S.lastSyncAt='caché local';
+      render(); // la app aparece al instante con los últimos datos
+    } else { S.isBooting=true; render(); }
+    // getAll valida el token y trae los datos en una sola petición
+    await loadFromSheet({background:!!cached,throwOnError:true});
+    saveSession(S.token,S.user);
+    if(S.view==='businessDashboard') loadBusiness();
+  }catch(err){
+    if(err&&err.code==='AUTH_REQUIRED') clearSession(false);
+    else if(!hasLoadedData()) clearSession(false);
+  }
   S.isBooting=false;render();
 }
 
 // ══════════════════════════════════════════════════════════════
-// CONVERSIÓN SHEET → APP
-// CORREGIDO: usa el acuerdo con el que se guardó la función, respeta
-// un alquiler guardado de 0 € y conserva los importes del Sheet.
+// CONVERSIÓN SHEET → APP (funciones y eventos)
 // ══════════════════════════════════════════════════════════════
-function sheetShowToAppShow(raw,config){
+function sheetShowToAppShow(raw,config,kind='show'){
   const venue=config.venues.find(v=>normalize(v.name)===normalize(raw.sala))||null;
   const work=config.works.find(w=>String(w.name||'').trim()===String(raw.obra||'').trim())
           ||config.works.find(w=>normalize(w.name)===normalize(raw.obra))||null;
@@ -306,7 +409,8 @@ function sheetShowToAppShow(raw,config){
     : {ventaBruta:raw.ventaBruta,ventaNeta:raw.ventaNeta,autor:raw.autor,alquiler:raw.alquiler,totalGastos:raw.totalGastos,totalNeto:raw.totalNeto,cache:raw.cache,restante:raw.restanteLaOpcion};
 
   return {
-    id:raw.id||raw.appId||gid('s'), appId:raw.appId||raw.id||'',
+    id:raw.id||raw.appId||gid(K(kind).prefix), appId:raw.appId||raw.id||'',
+    kind:normKind(kind),
     venueId:venue?.id||'', workId:work?.id||'',
     venueName:raw.sala||'', workName:raw.obra||'',
     date:raw.fecha||'', time:'',
@@ -325,8 +429,7 @@ function sheetShowToAppShow(raw,config){
 }
 
 // ══════════════════════════════════════════════════════════════
-// CONVERSIÓN APP → SHEET
-// CORREGIDO: envía workId y acuerdoId para que el backend no dependa del nombre
+// CONVERSIÓN APP → SHEET (envía kind para que el backend separe)
 // ══════════════════════════════════════════════════════════════
 function appShowToSheetData(show,config){
   const ps=show.platformSnapshots||{};
@@ -344,7 +447,7 @@ function appShowToSheetData(show,config){
   const alquiler=r2(Number(show.venueRental??venue?.alquiler??0));
   const c=calcShow({...show,autorOwner,expenseOwner});
   return {
-    action:'saveShow', appId:show.appId||show.id||gid('s'),
+    action:'saveShow', kind:normKind(show.kind), appId:show.appId||show.id||gid(K(show.kind).prefix),
     sala:show.venueName||'', obra:show.workName||'', fecha:show.date||'',
     workId:show.workId||'',
     acuerdoId:c.agreement?(show.agreementId||''):'',
@@ -358,7 +461,7 @@ function appShowToSheetData(show,config){
 }
 
 // ══════════════════════════════════════════════════════════════
-// CÁLCULO LOCAL (se usa al crear/editar una función)
+// CÁLCULO LOCAL (se usa al crear/editar)
 // ══════════════════════════════════════════════════════════════
 function calcShow(show){
   const ps=show.platformSnapshots||{}, inc=show.income||{};
@@ -411,10 +514,7 @@ function calcShow(show){
 }
 
 // ══════════════════════════════════════════════════════════════
-// NUEVO: IMPORTES PARA MOSTRAR
-// Todas las métricas (dashboard, lista, detalle, resumen) salen de los
-// importes GUARDADOS en el Sheet. Antes se mezclaba el "Restante" guardado
-// con el "Caché" recalculado con el acuerdo actual, y no cuadraba.
+// IMPORTES PARA MOSTRAR (salen de los importes GUARDADOS en el Sheet)
 // ══════════════════════════════════════════════════════════════
 function showAmounts(show){
   const c=calcShow(show);
@@ -434,19 +534,16 @@ function showAmounts(show){
   out.totalNeto=pick(st.totalNeto,c.totalNeto);
   out.cache=pick(st.cache,c.cache);
   out.restanteOpcion=pick(st.restante,c.restanteOpcion);
-  // Comisiones coherentes con el total de gastos guardado
   if(st.totalGastos!==null&&st.totalGastos!==undefined&&String(st.totalGastos).trim()!==''){
     out.totalComm=r2(Math.max(0,out.totalGastos-out.autorImporte-c.otrosGastosRegulares-out.venueRental));
   }
-  // Comprobación: caché + restante = total neto
   out.mismatch=Math.abs(r2(out.totalNeto-out.cache-out.restanteOpcion))>0.02;
-  // Todo el neto va a la compañía (acuerdo al 100 % o similar)
   out.allToCompany=out.totalNeto>0&&Math.abs(out.restanteOpcion)<0.005&&out.cache>=out.totalNeto-0.02;
   return out;
 }
 
 // ══════════════════════════════════════════════════════════════
-// DRAFT HELPERS — nuevo show o edición
+// DRAFT HELPERS — nuevo registro o edición
 // ══════════════════════════════════════════════════════════════
 function emptyDraft(){ return {appId:'',workId:'',venueId:'',date:'',time:'',agreementId:'',notes:'',income:{},autorPct:0,autorOwner:'both',otrosGastos:0,expenseOwner:'both'}; }
 
@@ -467,14 +564,20 @@ function showToDraft(show){
 
 function showToDuplicateDraft(show){
   const d=showToDraft(show);
-  // CLAVE: se elimina el appId original para que el backend cree una fila nueva
   d.appId='';
   d.sourceAppId=show.appId||show.id||'';
   return d;
 }
 
-function resetDashboardFilters(){
-  S.dashboardFilters={month:'',from:'',to:'',weekday:'',venueId:'',workId:'',platformId:'',agreementId:''};
+function resetDashboardFilters(kind){
+  if(!S.dashFilters) S.dashFilters={show:EMPTY_DASH_FILTERS(),event:EMPTY_DASH_FILTERS()};
+  S.dashFilters[normKind(kind)]=EMPTY_DASH_FILTERS();
+}
+function dashFiltersOf(kind){
+  const key=normKind(kind);
+  if(!S.dashFilters) S.dashFilters={show:EMPTY_DASH_FILTERS(),event:EMPTY_DASH_FILTERS()};
+  if(!S.dashFilters[key]) S.dashFilters[key]=EMPTY_DASH_FILTERS();
+  return S.dashFilters[key];
 }
 
 function dashboardEntityName(show,type){
@@ -495,11 +598,10 @@ function matchesDashboardEntity(show,type,selectedId){
   return !!(selected && name && nameKey(name)===nameKey(selected.name));
 }
 
-// CORREGIDO: las funciones sin fecha no se cuelan al filtrar por mes o fechas
-function getDashboardFilteredShows(){
-  const f=S.dashboardFilters||{};
+function getDashboardFilteredShows(kind='show'){
+  const f=dashFiltersOf(kind);
   const catalog=f.agreementId?getAgreementCatalog():null;
-  return S.shows.filter(show=>{
+  return recordsOf(kind).filter(show=>{
     const date=show.date||'';
     if((f.month||f.from||f.to||f.weekday!=='')&&!date) return false;
     if(!matchesWeekday(date,f.weekday)) return false;
@@ -540,28 +642,36 @@ function renderMiniBars(entries,maxValue,colorVar='var(--cyan)',limit=8){
 
 async function loadFromSheet(opts={}){
   const manual=!!opts.manual;
+  const background=!!opts.background||(!manual&&hasLoadedData());
   if(REFRESH_LOCK) return;
-  REFRESH_LOCK=true;S.isLoading=!S.isSaving;S.isRefreshing=manual;S.loadError=null;render();
+  REFRESH_LOCK=true;S.isLoading=!background&&!S.isSaving;S.isRefreshing=true;S.loadError=null;render();
   try{
-    const data=await apiPost({action:'getAll'});
-    if(data.config) S.config={platforms:data.config.platforms||[],venues:data.config.venues||[],works:data.config.works||[],expenseTypes:data.config.expenseTypes||[],agreements:data.config.agreements||[]};
-    S.shows=Array.isArray(data.shows)?data.shows.map(raw=>sheetShowToAppShow(raw,S.config)):[];
-    if(S.shows.length>0&&!S.summaryMonth){const months=[...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();S.summaryMonth=months[0]||'';}
+    // manual → fresh:true: el servidor ignora su caché (útil si se editó el Sheet a mano)
+    const data=await apiPost({action:'getAll',fresh:manual||undefined});
+    applyData(data.config||S.rawConfig,data.shows,data.events,Array.isArray(data.events));
+    writeDataCache();
     S.lastSyncAt=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    if(manual) showToast(`Datos actualizados (${S.shows.length} funciones)`,'success');
-  }catch(err){S.loadError=err.message;showToast('Error al cargar datos: '+err.message,'error');}
+    if(manual) showToast(`Datos actualizados (${K('show').count(S.shows.length)} · ${K('event').count(S.events.length)})`,'success');
+  }catch(err){
+    S.loadError=err.message;
+    if(opts.throwOnError&&err.code==='AUTH_REQUIRED') throw err;
+    if(err.code!=='AUTH_REQUIRED') showToast('Error al cargar datos: '+err.message,'error');
+    if(opts.throwOnError&&!hasLoadedData()) throw err;
+  }
   finally{S.isLoading=false;S.isRefreshing=false;REFRESH_LOCK=false;render();}
 }
 
 async function saveShowToSheet(show){
   if(SAVE_LOCK||S.isSaving){showToast('Ya se está guardando. Espera.','warn');return;}
+  const kind=normKind(show.kind), k=K(kind);
+  if(kind==='event'&&!S.eventsSupported){render();return showToast('Actualiza el Apps Script antes de registrar eventos: con la versión antigua se guardarían como funciones.','error');}
   const wasDuplicating=S.isDuplicating===true;
   SAVE_LOCK=true;S.isSaving=true;render();
   try{
     const payload=appShowToSheetData(show,S.config);
-    let lastError=null;
+    let lastError=null,resp=null;
     for(let attempt=0;attempt<3;attempt++){
-      try{await apiPost(payload);lastError=null;break;}
+      try{resp=await apiPost(payload);lastError=null;break;}
       catch(err){
         lastError=err;
         if(err.code==='AUTH_REQUIRED'||!/ocupado|lock|concurr/i.test(err.message)||attempt===2) throw err;
@@ -570,30 +680,32 @@ async function saveShowToSheet(show){
     }
     if(lastError) throw lastError;
     S.isSaving=false;SAVE_LOCK=false;
-    await loadFromSheet();
-    S.view='shows';S.selectedId=null;S.editShowId=null;S.newShowDraft=null;S.isDuplicating=false;S.duplicateSourceId=null;
-    showToast(wasDuplicating?'Función duplicada y guardada como nuevo registro':'Función guardada correctamente','success');
+    if(resp&&resp.record&&typeof resp.record==='object') upsertRawRecord(resp.record,kind);
+    else await loadFromSheet({background:true}); // backend antiguo: recarga completa
+    S.view=k.listView;S.selectedId=null;S.editShowId=null;S.newShowDraft=null;S.isDuplicating=false;S.duplicateSourceId=null;
+    showToast(wasDuplicating?k.duplicated:k.saved,'success');
   }catch(err){showToast('Error al guardar: '+err.message,'error');}
   finally{S.isSaving=false;SAVE_LOCK=false;render();}
 }
 
 async function deleteShowFromSheet(show){
-  if(S.role!=='admin') return showToast('Solo el administrador puede eliminar funciones.','error');
-  if(!show) return showToast('Función no encontrada.','error');
+  if(S.role!=='admin') return showToast('Solo el administrador puede eliminar registros.','error');
+  if(!show) return showToast('Registro no encontrado.','error');
+  const k=K(show.kind);
   const label=[show.workName,show.venueName,show.date].filter(Boolean).join(' · ');
-  if(!window.confirm(`¿Eliminar definitivamente esta función?\n\n${label}\n\nEsta acción no se puede deshacer.`)) return;
+  if(!window.confirm(`¿Eliminar definitivamente ${k.thisOne}?\n\n${label}\n\nEsta acción no se puede deshacer.`)) return;
   try{
-    await apiPost({action:'deleteShow',appId:show.appId||show.id});
-    S.selectedId=null;S.editShowId=null;S.view='shows';
-    await loadFromSheet();
-    showToast('Función eliminada correctamente','success');
+    await apiPost({action:'deleteShow',kind:normKind(show.kind),appId:show.appId||show.id});
+    S.selectedId=null;S.editShowId=null;S.view=k.listView;
+    removeRawRecord(show.appId||show.id,show.kind);
+    showToast(k.deleted,'success');
   }catch(err){showToast('Error al eliminar: '+err.message,'error');}
 }
 
 async function saveConfigToSheet(){
   if(S.role!=='admin') return showToast('No tienes permisos.','error');
   S.isSaving=true;render();
-  try{syncAllWorkAgreementsToConfig();await apiPost({action:'saveConfig',config:S.config});S.configDirty=false;showToast('Configuración guardada','success');S.isSaving=false;await loadFromSheet();}
+  try{syncAllWorkAgreementsToConfig();await apiPost({action:'saveConfig',config:S.config});S.configDirty=false;showToast('Configuración guardada','success');S.isSaving=false;await loadFromSheet({background:true});}
   catch(err){showToast('Error al guardar configuración: '+err.message,'error');}
   finally{S.isSaving=false;render();}
 }
@@ -614,7 +726,8 @@ function render(){
   normalizeCurrentView();
   const toastHtml=S.toast?`<div class="toast ${S.toast.type}">${esc(S.toast.message)}</div>`:'';
   const loadingHtml=(S.isLoading||S.isSaving)?`<div class="loading-overlay"><div class="spinner"></div><div class="loading-text">${S.isSaving?'Guardando...':'Cargando datos...'}</div></div>`:'';
-  $app.innerHTML=`<div class="app">${renderSidebar()}<div class="main">${renderView()}</div></div>${toastHtml}${loadingHtml}`;
+  const syncHtml=(!S.isLoading&&!S.isSaving&&S.isRefreshing)?`<div class="sync-pill"><div class="spinner"></div>Sincronizando…</div>`:'';
+  $app.innerHTML=`<div class="app">${renderSidebar()}<div class="main">${renderView()}</div></div>${toastHtml}${loadingHtml}${syncHtml}`;
   bindEvents();
 }
 
@@ -631,7 +744,7 @@ function bindLogin(){
     if(!email||!password)return showToast('Introduce email y contraseña.','error');
     LOGIN_LOCK=true;S.isLoggingIn=true;
     const btn=document.getElementById('login-submit');if(btn){btn.disabled=true;btn.innerHTML='⏳ Entrando...';}
-    try{const res=await apiPost({action:'login',email,password});saveSession(res.token,res.user);await loadFromSheet();if(S.role==='admin')await loadUsers();showToast('Sesión iniciada','success');}
+    try{const res=await apiPost({action:'login',email,password});saveSession(res.token,res.user);const cached=readDataCache();if(cached){applyData(cached.config,cached.shows,cached.events,cached.eventsSupported);render();}await loadFromSheet({background:!!cached});showToast('Sesión iniciada','success');}
     catch(err){showToast(err.message,'error');}
     finally{S.isLoggingIn=false;LOGIN_LOCK=false;render();}
   };
@@ -644,16 +757,28 @@ function renderSidebar(){
       {section:'Paneles'},
       {id:'businessDashboard',label:'Dashboard del negocio',icon:'💼'},
       {id:'dashboard',label:'Dashboard funciones',icon:'📊'},
+      {id:'eventDashboard',label:'Dashboard eventos',icon:'🎟️'},
       {id:'barDashboard',label:'Dashboard barras',icon:'📈'},
-      {section:'Gestión'},
+      {section:'Funciones'},
       {id:'shows',label:'Funciones',icon:'🎭'},
-      {id:'newshow',label:'Nueva Función',icon:'➕'},
+      {id:'newshow',label:'Nueva función',icon:'➕'},
+      {section:'Eventos'},
+      {id:'events',label:'Eventos',icon:'🎉'},
+      {id:'newevent',label:'Nuevo evento',icon:'➕'},
+      {section:'Gestión'},
       {id:'barBilling',label:'Facturación barra',icon:'🥤'},
       {id:'businessExpenses',label:'Gastos',icon:'🧾'},
       {id:'summary',label:'Resumen Mensual',icon:'📋'},
       {id:'admin',label:'Administración',icon:'⚙️'}
     ]
-    :[{id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar Ingreso',icon:'➕'},{id:'barBilling',label:'Facturación barra',icon:'🥤'},{id:'businessExpenses',label:'Gastos',icon:'🧾'}];
+    :[
+      {section:'Funciones'},
+      {id:'shows',label:'Funciones',icon:'🎭'},{id:'newshow',label:'Registrar función',icon:'➕'},
+      {section:'Eventos'},
+      {id:'events',label:'Eventos',icon:'🎉'},{id:'newevent',label:'Registrar evento',icon:'➕'},
+      {section:'Gestión'},
+      {id:'barBilling',label:'Facturación barra',icon:'🥤'},{id:'businessExpenses',label:'Gastos',icon:'🧾'}
+    ];
   const navBtns=items.map(it=>it.section?`<div class="nav-section">${esc(it.section)}</div>`:`<button class="nav-btn ${S.view===it.id?'active':''}" data-view="${it.id}">${it.icon} ${it.label}</button>`).join('');
   const rc=isAdmin?'var(--pink-dim)':'var(--cyan-dim)',rt=isAdmin?'var(--pink)':'var(--cyan)';
   return `<div class="sidebar"><div class="sidebar-header">${logoSVG(155)}</div><div class="nav">${navBtns}</div><div class="sidebar-footer"><div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><div class="role-pill" style="background:${rc};color:${rt}">${isAdmin?'A':'U'}</div><div><div style="font-size:12px;font-weight:600">${esc(S.user.email)}</div><div style="font-size:10px;color:var(--text-dim)">${roleLabel(S.role)}</div></div></div><button class="btn btn-ghost btn-sm" data-action="logout" style="width:100%;justify-content:flex-start;gap:7px">🚪 Cerrar sesión</button></div></div>`;
@@ -668,11 +793,16 @@ function renderView(){
     case 'businessExpenses': return renderExpenseEntry();
     case 'barBilling': return renderBarBilling();
     case 'barDashboard': return renderBarDashboard();
-    case 'dashboard': return renderDashboard();
-    case 'shows':     return renderShowList();
-    case 'newshow':   return renderShowForm(false);
-    case 'editshow':  return renderShowForm(true);
-    case 'detail':    return renderShowDetail();
+    case 'dashboard':      return renderDashboard('show');
+    case 'eventDashboard': return renderDashboard('event');
+    case 'shows':     return renderShowList('show');
+    case 'events':    return renderShowList('event');
+    case 'newshow':   return renderShowForm(false,'show');
+    case 'editshow':  return renderShowForm(true,'show');
+    case 'newevent':  return renderShowForm(false,'event');
+    case 'editevent': return renderShowForm(true,'event');
+    case 'detail':      return renderShowDetail('show');
+    case 'eventDetail': return renderShowDetail('event');
     case 'summary':   return renderSummary();
     case 'admin':     return renderAdmin();
     default: return '<p>Vista no encontrada</p>';
@@ -680,13 +810,15 @@ function renderView(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// DASHBOARD (CORREGIDO)
+// DASHBOARD DE FUNCIONES / DASHBOARD DE EVENTOS (misma estructura)
 // ══════════════════════════════════════════════════════════════
-function renderDashboard(){
-  if(S.shows.length===0&&!S.isLoading)return`<h1 class="page-title">Dashboard</h1><p class="page-sub mb20">La Opción Producciones</p><div class="card"><div class="empty"><p style="font-size:16px;margin-bottom:8px">Sin datos todavía</p><button class="btn btn-primary mt10" data-action="refresh">🔄 Actualizar desde Sheet</button></div></div>`;
+function renderDashboard(kind='show'){
+  kind=normKind(kind); const k=K(kind); const all=recordsOf(kind);
+  const backendNote=eventsBackendNote(kind);
+  if(all.length===0&&!S.isLoading)return`${backendNote}<h1 class="page-title">${k.dashTitle}</h1><p class="page-sub mb20">La Opción Producciones</p><div class="card"><div class="empty"><p style="font-size:16px;margin-bottom:8px">${k.none} todavía</p><div class="mt10" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" data-view="${k.newView}">➕ ${k.aNew}</button><button class="btn btn-secondary" data-action="refresh">🔄 Actualizar desde Sheet</button></div></div></div>`;
 
-  const f=S.dashboardFilters||{};
-  const allMonths=[...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
+  const f=dashFiltersOf(kind);
+  const allMonths=[...new Set(all.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
   const monthOpts=allMonths.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('');
   const venueOpts=getActiveSorted(S.config.venues).map(v=>`<option value="${v.id}" ${f.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join('');
   const workOpts=getActiveSorted(S.config.works).map(w=>`<option value="${w.id}" ${f.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join('');
@@ -697,14 +829,13 @@ function renderDashboard(){
   ].join('');
   const agreementOpts=getAgreementCatalog().map(a=>`<option value="${a.id}" ${f.agreementId===a.id?'selected':''}>${esc(a.name)} · ${agreementValueLabel(a)}</option>`).join('');
 
-  // Todas las métricas salen de los importes guardados en el Sheet
-  const cs=getDashboardFilteredShows().map(s=>({...s,c:showAmounts(s)}));
+  const cs=getDashboardFilteredShows(kind).map(s=>({...s,c:showAmounts(s)}));
   const t=cs.reduce((a,s)=>({
     vb:a.vb+s.c.ventaBruta, vn:a.vn+s.c.ventaNeta, g:a.g+s.c.totalGastos, tn:a.tn+s.c.totalNeto,
     ca:a.ca+s.c.cache, ro:a.ro+s.c.restanteOpcion, comm:a.comm+s.c.totalComm, autor:a.autor+s.c.autorImporte,
     alquiler:a.alquiler+s.c.venueRental, otros:a.otros+s.c.otrosGastosRegulares, extraCache:a.extraCache+s.c.otrosCache,
   }),{vb:0,vn:0,g:0,tn:0,ca:0,ro:0,comm:0,autor:0,alquiler:0,otros:0,extraCache:0});
-  Object.keys(t).forEach(k=>{t[k]=r2(t[k]);});
+  Object.keys(t).forEach(key=>{t[key]=r2(t[key]);});
 
   const n=cs.length;
   const margen=t.vn?r2(t.ro/t.vn*100):0;
@@ -712,15 +843,27 @@ function renderDashboard(){
   const cachePct=t.tn?r2(t.ca/t.tn*100):0;
   const avg=n?r2(t.ro/n):0;
   const avgVenta=n?r2(t.vb/n):0;
+  const distinctWorks=new Set(cs.map(s=>normalize(dashboardEntityName(s,'works'))).filter(Boolean)).size;
+  const distinctVenues=new Set(cs.map(s=>normalize(dashboardEntityName(s,'venues'))).filter(Boolean)).size;
+
+  // Obras de este listado que también tienen registros del otro tipo en el mismo periodo filtrado
+  const otherKind=kind==='event'?'show':'event';
+  const otherK=K(otherKind);
+  const worksHere=new Set(cs.map(s=>normalize(dashboardEntityName(s,'works'))).filter(Boolean));
+  const inPeriod=s=>{const d=s.date||'';if(!d)return false;if(f.month&&!d.startsWith(f.month))return false;if(f.from&&d<f.from)return false;if(f.to&&d>f.to)return false;return true;};
+  const sharedWorks=new Set(recordsOf(otherKind).filter(inPeriod).map(s=>normalize(dashboardEntityName(s,'works'))).filter(w=>worksHere.has(w))).size;
 
   const allToCompany=cs.filter(s=>s.c.allToCompany);
   const mismatched=cs.filter(s=>s.c.mismatch);
   const notes=[];
   if(f.from&&f.to&&f.from>f.to) notes.push('La fecha «Desde» es posterior a «Hasta»: no puede haber resultados.');
-  if(n&&allToCompany.length===n) notes.push(`En las ${n} funciones filtradas el caché es el 100 % del total neto (acuerdo al 100 % de taquilla). Por eso «Beneficio La Opción», «Media por función», «Mejor obra» y «Mejor sala» valen 0 €: los datos son correctos. Si el acuerdo real no es del 100 %, cámbialo en Administración → Obras y vuelve a guardar esas funciones.`);
-  else if(allToCompany.length) notes.push(`${allToCompany.length} de ${n} funciones dejan 0 € a La Opción porque todo el neto va a la compañía (acuerdo al 100 %).`);
-  if(mismatched.length) notes.push(`${mismatched.length} ${mismatched.length===1?'función tiene':'funciones tienen'} importes descuadrados en el Sheet (caché + restante ≠ total neto), marcadas con ⚠️. Ábrelas, pulsa Editar y Guardar para recalcularlas.`);
+  if(n&&allToCompany.length===n) notes.push(`En los ${n} registros filtrados (${k.many}) el caché es el 100 % del total neto (acuerdo al 100 % de taquilla). Por eso «Beneficio La Opción», «Media», «Mejor obra» y «Mejor sala» valen 0 €: los datos son correctos. Si el acuerdo real no es del 100 %, cámbialo en Administración → Obras y vuelve a guardar esos registros.`);
+  else if(allToCompany.length) notes.push(`${allToCompany.length} de ${k.count(n)} dejan 0 € a La Opción porque todo el neto va a la compañía (acuerdo al 100 %).`);
+  if(mismatched.length) notes.push(`${mismatched.length} ${mismatched.length===1?'registro tiene':'registros tienen'} importes descuadrados en el Sheet (caché + restante ≠ total neto), marcados con ⚠️. Ábrelos, pulsa Editar y Guardar para recalcularlos.`);
   const notesHtml=notes.map(x=>`<div class="dirty-note">ℹ️ ${esc(x)}</div>`).join('');
+  const kindNote=kind==='event'
+    ?`<div class="event-note">🎉 Aquí solo se contabilizan los <strong>eventos</strong>. Las funciones tienen su propio dashboard y ambos se suman en el Dashboard del negocio.</div>`
+    :'';
 
   const byWorkBenefit=groupTotal(cs,s=>dashboardEntityName(s,'works'),s=>s.c.restanteOpcion);
   const byVenueBenefit=groupTotal(cs,s=>dashboardEntityName(s,'venues'),s=>s.c.restanteOpcion);
@@ -755,7 +898,7 @@ function renderDashboard(){
   const platformFinanceHtml=platformFinanceEntries.length?`<div class="platform-finance">
     <div class="platform-finance-head">
       <span>Canal</span>
-      <span class="platform-finance-value">Facturado ${infoTip('Suma de la venta bruta registrada en este canal para las funciones que cumplen los filtros.')}</span>
+      <span class="platform-finance-value">Facturado ${infoTip(`Suma de la venta bruta registrada en este canal para los ${k.many} que cumplen los filtros.`)}</span>
       <span class="platform-finance-value">Comisión ${infoTip('Coste de intermediación: facturado × porcentaje de comisión. Si la plataforma aplica IVA a la comisión, también se incluye.')}</span>
       <span class="platform-finance-value">Beneficio ${infoTip('Facturado menos comisión. No descuenta IVA de entradas, autor, alquiler, caché ni otros gastos.')}</span>
     </div>
@@ -787,7 +930,7 @@ function renderDashboard(){
   const weekdayBenefit=weekdayGroups.map((g,i)=>[`${WEEKDAYS[i]} (${g.n})`,r2(g.ro)]).filter((e,i)=>weekdayGroups[i].n>0);
   const weekdayRowsHtml=weekdayGroups.map((g,i)=>({g,i})).filter(x=>x.g.n>0)
     .map(({g,i})=>`<tr><td>${WEEKDAYS[i]}</td><td class="right">${g.n}</td><td class="right">${fmt(r2(g.vb))}</td><td class="right">${fmt(r2(g.vb/g.n))}</td><td class="right">${fmt(r2(g.tn))}</td><td class="right">${fmt(r2(g.ca))}</td><td class="right fw700 ${g.ro>=0?'success':'danger'}">${fmt(r2(g.ro))}</td></tr>`).join('')
-    ||'<tr><td colspan="7" class="empty">Sin funciones con fecha</td></tr>';
+    ||`<tr><td colspan="7" class="empty">${k.none} con fecha</td></tr>`;
 
   const monthGroups={};
   cs.forEach(s=>{
@@ -803,7 +946,7 @@ function renderDashboard(){
   const monthLine=(label,value,colorVar='var(--cyan)',strong=false)=>`<div class="mini-series" style="grid-template-columns:82px 1fr 92px"><span title="${esc(label)}">${esc(label)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,Math.abs(value)/monthMax*100).toFixed(1)}%;background:${colorVar}"></div></div><span class="${strong?(value>=0?'success':'danger')+' fw700':''}">${fmt(value)}</span></div>`;
   const monthHtml=monthEntries.map(([m,v])=>`<div style="padding:12px 0;border-bottom:1px solid var(--border)">
     <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:10px;align-items:flex-start">
-      <div><strong style="font-size:12px">${esc(m)}</strong><div class="dim" style="font-size:10px;margin-top:2px">${v.funciones} ${v.funciones===1?'función':'funciones'} · margen ${fmtPct(v.ventaNeta?v.restante/v.ventaNeta*100:0)}</div></div>
+      <div><strong style="font-size:12px">${esc(m)}</strong><div class="dim" style="font-size:10px;margin-top:2px">${k.count(v.funciones)} · margen ${fmtPct(v.ventaNeta?v.restante/v.ventaNeta*100:0)}</div></div>
       <div style="text-align:right"><div class="${v.restante>=0?'success':'danger'} fw700">${fmt(v.restante)}</div><div class="dim" style="font-size:10px">Restante La Opción</div></div>
     </div>
     ${monthLine('V. bruta',v.ventaBruta,'var(--cyan)')}
@@ -818,13 +961,14 @@ function renderDashboard(){
     ${monthLine('Restante',v.restante,v.restante>=0?'var(--success)':'var(--danger)',true)}
   </div>`).join('')||'<div class="empty">Sin datos</div>';
 
-  const rowsHtml=[...cs].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12).map(s=>`<tr class="clickable" data-show-id="${s.id}"><td>${esc(s.date)} <span class="dim">${weekdayShort(s.date)}</span></td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right">${fmt(s.c.autorImporte)}</td><td class="right">${fmt(s.c.totalGastos)}</td><td class="right">${fmt(s.c.cache)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}${s.c.mismatch?' ⚠️':''}</td><td class="right">${fmtPct(s.c.ventaNeta?s.c.restanteOpcion/s.c.ventaNeta*100:0)}</td></tr>`).join('');
+  const rowsHtml=[...cs].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,12).map(s=>`<tr class="clickable" data-show-id="${s.id}" data-kind="${kind}"><td>${esc(s.date)} <span class="dim">${weekdayShort(s.date)}</span></td><td>${esc(s.workName)}</td><td>${esc(s.venueName)}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right">${fmt(s.c.autorImporte)}</td><td class="right">${fmt(s.c.totalGastos)}</td><td class="right">${fmt(s.c.cache)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}${s.c.mismatch?' ⚠️':''}</td><td class="right">${fmtPct(s.c.ventaNeta?s.c.restanteOpcion/s.c.ventaNeta*100:0)}</td></tr>`).join('');
 
   const bestLabel=(name,val)=>n&&val>0?esc(name):'—';
   const bestSub=(val)=>n&&val>0?fmt(val):'Sin beneficio para La Opción';
+  const accent=kind==='event'?'orange':'cyan';
 
-  return `<div class="section-top"><div><h1 class="page-title">Dashboard profesional</h1><p class="page-sub">La Opción Producciones · ${n} de ${S.shows.length} funciones${S.lastSyncAt?` · Última actualización: ${S.lastSyncAt}`:''}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="resetDashboardFilters">🧹 Limpiar filtros</button><button class="btn btn-secondary btn-sm" data-action="refresh">${S.isRefreshing?'⏳ Actualizando...':'🔄 Actualizar desde Sheet'}</button></div></div>
-
+  return `${backendNote}<div class="section-top"><div><h1 class="page-title">${k.icon} ${k.dashTitle}</h1><p class="page-sub">La Opción Producciones · ${n} de ${k.count(all.length)}${S.lastSyncAt?` · Última actualización: ${S.lastSyncAt}`:''}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-view="${k.newView}">➕ ${k.aNew}</button><button class="btn btn-secondary btn-sm" data-action="resetDashboardFilters">🧹 Limpiar filtros</button><button class="btn btn-secondary btn-sm" data-action="refresh">${S.isRefreshing?'⏳ Actualizando...':'🔄 Actualizar desde Sheet'}</button></div></div>
+  ${kindNote}
   <div class="card mb20">
     <div class="dashboard-filters">
       <div class="field"><label>Mes</label><select data-dash-filter="month"><option value="">Todos</option>${monthOpts}</select></div>
@@ -840,30 +984,32 @@ function renderDashboard(){
   ${notesHtml}
 
   <div class="grid grid-kpis mb20">
-    <div class="card"><div class="kpi-label">Venta Bruta ${infoTip('Suma de todos los ingresos registrados: plataformas, taquilla en efectivo y taquilla con tarjeta.')}</div><div class="kpi-value cyan">${fmt(t.vb)}</div><div class="kpi-sub">${n} funciones · ${fmt(avgVenta)} de media</div></div>
+    <div class="card"><div class="kpi-label">${k.Many} ${infoTip(`Número de ${k.many} que cumplen los filtros.`)}</div><div class="kpi-value ${accent}">${n}</div><div class="kpi-sub">${distinctWorks} ${distinctWorks===1?'obra':'obras'} · ${distinctVenues} ${distinctVenues===1?'sala':'salas'}</div></div>
+    <div class="card"><div class="kpi-label">Venta Bruta ${infoTip('Suma de todos los ingresos registrados: plataformas, taquilla en efectivo y taquilla con tarjeta.')}</div><div class="kpi-value cyan">${fmt(t.vb)}</div><div class="kpi-sub">${fmt(avgVenta)} de media ${k.per}</div></div>
     <div class="card"><div class="kpi-label">Venta Neta ${infoTip('Venta bruta sin el 10% de IVA de las entradas. Es la base utilizada antes de descontar gastos.')}</div><div class="kpi-value purple">${fmt(t.vn)}</div><div class="kpi-sub">Base antes de gastos</div></div>
-    <div class="card"><div class="kpi-label">Total Gastos ${infoTip('Suma de comisiones, alquiler, autor y otros gastos regulares de las funciones filtradas.')}</div><div class="kpi-value danger">${fmt(t.g)}</div><div class="kpi-sub">${fmtPct(gastoPct)} sobre venta neta</div></div>
+    <div class="card"><div class="kpi-label">Total Gastos ${infoTip(`Suma de comisiones, alquiler, autor y otros gastos regulares de los ${k.filtered}.`)}</div><div class="kpi-value danger">${fmt(t.g)}</div><div class="kpi-sub">${fmtPct(gastoPct)} sobre venta neta</div></div>
     <div class="card"><div class="kpi-label">Total neto ${infoTip('Venta neta menos gastos. Es lo que se reparte entre la compañía (caché) y La Opción.')}</div><div class="kpi-value yellow">${fmt(t.tn)}</div><div class="kpi-sub">A repartir</div></div>
-    <div class="card"><div class="kpi-label">Caché total ${infoTip('Importe total para las compañías según el acuerdo con el que se guardó cada función.')}</div><div class="kpi-value pink">${fmt(t.ca)}</div><div class="kpi-sub">${fmtPct(cachePct)} del total neto</div></div>
+    <div class="card"><div class="kpi-label">Caché total ${infoTip('Importe total para las compañías según el acuerdo con el que se guardó cada registro.')}</div><div class="kpi-value pink">${fmt(t.ca)}</div><div class="kpi-sub">${fmtPct(cachePct)} del total neto</div></div>
     <div class="card"><div class="kpi-label">Beneficio La Opción ${infoTip('Importe restante para La Opción después de gastos, caché y gastos asignados a La Opción.')}</div><div class="kpi-value ${t.ro>=0?'success':'danger'}">${fmt(t.ro)}</div><div class="kpi-sub">Margen ${fmtPct(margen)} s/ venta neta</div></div>
-    <div class="card"><div class="kpi-label">Autor acumulado ${infoTip('Derechos de autor calculados sobre la venta neta de las funciones filtradas.')}</div><div class="kpi-value danger">${fmt(t.autor)}</div><div class="kpi-sub">${esc(autorScopeLabel)}</div></div>
-    <div class="card"><div class="kpi-label">Media por función ${infoTip('Beneficio total de La Opción dividido entre el número de funciones filtradas.')}</div><div class="kpi-value yellow">${fmt(avg)}</div><div class="kpi-sub">Beneficio medio</div></div>
+    <div class="card"><div class="kpi-label">Autor acumulado ${infoTip(`Derechos de autor calculados sobre la venta neta de los ${k.filtered}.`)}</div><div class="kpi-value danger">${fmt(t.autor)}</div><div class="kpi-sub">${esc(autorScopeLabel)}</div></div>
+    <div class="card"><div class="kpi-label">Media ${k.per} ${infoTip(`Beneficio total de La Opción dividido entre el número de ${k.filtered}.`)}</div><div class="kpi-value yellow">${fmt(avg)}</div><div class="kpi-sub">Beneficio medio</div></div>
     <div class="card"><div class="kpi-label">Mejor obra ${infoTip('Obra con mayor beneficio acumulado para La Opción dentro de los filtros.')}</div><div class="kpi-value" style="font-size:17px">${bestLabel(bestWork,bestWorkVal)}</div><div class="kpi-sub">${bestSub(bestWorkVal)}</div></div>
     <div class="card"><div class="kpi-label">Mejor sala ${infoTip('Sala con mayor beneficio acumulado para La Opción dentro de los filtros.')}</div><div class="kpi-value" style="font-size:17px">${bestLabel(bestVenue,bestVenueVal)}</div><div class="kpi-sub">${bestSub(bestVenueVal)}</div></div>
-    <div class="card"><div class="kpi-label">Top canal ${infoTip('Canal con mayor facturación bruta dentro de las funciones filtradas.')}</div><div class="kpi-value" style="font-size:17px">${n&&bestPlatformVal>0?esc(bestPlatform):'—'}</div><div class="kpi-sub">${fmt(bestPlatformVal)}</div></div>
+    <div class="card"><div class="kpi-label">Top canal ${infoTip('Canal con mayor facturación bruta dentro de los registros filtrados.')}</div><div class="kpi-value" style="font-size:17px">${n&&bestPlatformVal>0?esc(bestPlatform):'—'}</div><div class="kpi-sub">${fmt(bestPlatformVal)}</div></div>
+    <div class="card"><div class="kpi-label">Obras con ${otherK.many} ${infoTip(`Obras de este listado que también tienen ${otherK.many} en el mismo periodo (mes / fechas). El total conjunto está en el Dashboard del negocio.`)}</div><div class="kpi-value">${sharedWorks} / ${worksHere.size}</div><div class="kpi-sub">También con ${otherK.many}</div></div>
   </div>
 
   <div class="card mb20">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      ${panelTitle('Funciones recientes filtradas','Hasta 12 funciones más recientes que cumplen los filtros. ⚠️ indica importes descuadrados en el Sheet. El PDF incluye todas las funciones filtradas.')}
+      ${panelTitle(`${k.Many} recientes (filtros aplicados)`,`Hasta 12 ${k.many} más recientes que cumplen los filtros. ⚠️ indica importes descuadrados en el Sheet. El PDF incluye todos los registros filtrados.`)}
       <button class="btn btn-secondary btn-sm" data-action="exportShowsPdf" ${n?'':'disabled'}>📄 Descargar PDF (${n})</button>
     </div>
-    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th><th class="right">V. Neta</th><th class="right">Autor</th><th class="right">Gastos</th><th class="right">Caché</th><th class="right">Restante</th><th class="right">Margen</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="10" class="empty">Sin funciones con estos filtros</td></tr>'}</tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th><th class="right">V. Neta</th><th class="right">Autor</th><th class="right">Gastos</th><th class="right">Caché</th><th class="right">Restante</th><th class="right">Margen</th></tr></thead><tbody>${rowsHtml||`<tr><td colspan="10" class="empty">${k.none} con estos filtros</td></tr>`}</tbody></table></div>
   </div>
 
   <div class="card mb20">
-    ${panelTitle('Facturación por día de la semana','Agrupa las funciones filtradas por el día en que se celebraron: cuántas hubo, cuánto facturaron y qué beneficio dejaron.')}
-    <div class="table-wrap"><table><thead><tr><th>Día</th><th class="right">Funciones</th><th class="right">V. bruta</th><th class="right">Media por función</th><th class="right">T. neto</th><th class="right">Caché</th><th class="right">Restante</th></tr></thead><tbody>${weekdayRowsHtml}</tbody></table></div>
+    ${panelTitle('Facturación por día de la semana',`Agrupa los ${k.filtered} por el día en que se celebraron: cuántos hubo, cuánto facturaron y qué beneficio dejaron.`)}
+    <div class="table-wrap"><table><thead><tr><th>Día</th><th class="right">${k.Many}</th><th class="right">V. bruta</th><th class="right">Media ${k.per}</th><th class="right">T. neto</th><th class="right">Caché</th><th class="right">Restante</th></tr></thead><tbody>${weekdayRowsHtml}</tbody></table></div>
     <div class="grid grid-2" style="margin-top:14px">
       <div><p class="dim" style="font-size:11px;margin-bottom:6px">Venta bruta por día</p>${renderMiniBars(weekdayBilling,0,'var(--cyan)',7)}</div>
       <div><p class="dim" style="font-size:11px;margin-bottom:6px">Beneficio La Opción por día</p>${renderMiniBars(weekdayBenefit,0,'var(--success)',7)}</div>
@@ -871,14 +1017,14 @@ function renderDashboard(){
   </div>
 
   <div class="grid grid-2 mb20">
-    <div class="card">${panelTitle('Evolución mensual','Compara por mes ventas, gastos, caché y beneficio de las funciones filtradas.')}${monthHtml}</div>
+    <div class="card">${panelTitle('Evolución mensual',`Compara por mes ventas, gastos, caché y beneficio de los ${k.filtered}.`)}${monthHtml}</div>
     <div class="card">${panelTitle('Ingresos por plataforma','Por canal: facturado, comisión (con IVA si aplica) y beneficio antes de otros gastos.')}${platformFinanceHtml}</div>
     <div class="card">${panelTitle('Ranking de obras por beneficio La Opción','Restante para La Opción por obra, después del caché.')}${renderMiniBars(sortDesc(byWorkBenefit),0,'var(--success)',8)}</div>
     <div class="card">${panelTitle('Ranking de obras por neto antes del caché','Total neto por obra: venta neta menos gastos, antes de descontar el caché.')}${renderMiniBars(sortDesc(workNetTotals),0,'var(--yellow)',8)}</div>
     <div class="card">${panelTitle('Facturación acumulada por obra','Venta bruta, con IVA, de cada obra con los filtros seleccionados.')}${renderMiniBars(sortDesc(workBillingTotals),0,'var(--cyan)',10)}</div>
     <div class="card">${panelTitle('Ranking de salas por beneficio La Opción','Restante para La Opción por sala, después del caché.')}${renderMiniBars(sortDesc(byVenueBenefit),0,'var(--success)',8)}</div>
     <div class="card">${panelTitle('Ranking de salas por neto antes del caché','Total neto por sala antes de descontar el caché de las compañías.')}${renderMiniBars(sortDesc(venueNetTotals),0,'var(--purple)',8)}</div>
-    <div class="card">${panelTitle('Desglose de gastos','Comisiones, autor, alquiler y otros gastos de las funciones filtradas.')}${renderMiniBars(gastosEntries,0,'var(--danger)',6)}</div>
+    <div class="card">${panelTitle('Desglose de gastos',`Comisiones, autor, alquiler y otros gastos de los ${k.filtered}.`)}${renderMiniBars(gastosEntries,0,'var(--danger)',6)}</div>
     <div class="card">${panelTitle('Resumen financiero','Recorrido desde la venta bruta hasta el restante para La Opción.')}
       <div class="finance-split"><span>Venta bruta</span><strong class="cyan">${fmt(t.vb)}</strong></div>
       <div class="finance-split"><span>IVA entradas (10 %)</span><strong class="danger">-${fmt(r2(t.vb-t.vn))}</strong></div>
@@ -896,22 +1042,16 @@ function renderDashboard(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// LISTA DE FUNCIONES
+// LISTA DE FUNCIONES / EVENTOS
 // ══════════════════════════════════════════════════════════════
-function ensureShowFilters(){
-  if(!S.showFilters) S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};
-  if(S.search===undefined||S.search===null) S.search='';
-  return S.showFilters;
+function getShowMonths(kind){
+  return [...new Set(recordsOf(kind).map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
 }
-function getShowMonths(){
-  return [...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
-}
-// CORREGIDO: importes guardados y filtro de sala/obra también por nombre
-function getFilteredShowList(){
-  const f=ensureShowFilters();
-  const q=normalize(S.search);
+function getFilteredShowList(kind){
+  const st=listState(kind), f=st.filters;
+  const q=normalize(st.search);
   const catalog=f.agreementId?getAgreementCatalog():null;
-  let cs=S.shows.map(s=>({...s,c:showAmounts(s)})).filter(s=>{
+  let cs=recordsOf(kind).map(s=>({...s,c:showAmounts(s)})).filter(s=>{
     const searchText=normalize([s.date,s.workName,s.venueName,s.agreementSnapshot?.name,s.notes].join(' '));
     if(q && !searchText.includes(q)) return false;
     if(f.month && !(s.date||'').startsWith(f.month)) return false;
@@ -932,9 +1072,10 @@ function getFilteredShowList(){
   return cs;
 }
 function updateShowSearchLive(){
+  const kind=viewKind(), st=listState(kind);
   const input=document.querySelector('[data-bind="search"]');
-  if(input) S.search=input.value;
-  const q=normalize(S.search);
+  if(input) st.search=input.value;
+  const q=normalize(st.search);
   let visible=0;
   document.querySelectorAll('[data-show-row="1"]').forEach(row=>{
     const ok=!q || normalize(row.dataset.searchText||'').includes(q);
@@ -946,56 +1087,60 @@ function updateShowSearchLive(){
     card.style.display=ok?'':'none';
   });
   const count=document.getElementById('show-list-count');
-  if(count) count.textContent=`${visible} de ${S.shows.length} funciones`;
+  if(count) count.textContent=`${visible} de ${K(kind).count(recordsOf(kind).length)}`;
   const empty=document.getElementById('show-list-empty-live');
   if(empty) empty.style.display=visible===0?'table-row':'none';
   const emptyCards=document.getElementById('show-list-empty-cards');
   if(emptyCards) emptyCards.style.display=visible===0?'block':'none';
 }
 
-function renderShowList(){
-  ensureShowFilters();
-  const cs=getFilteredShowList();
+function renderShowList(kind='show'){
+  kind=normKind(kind); const k=K(kind);
+  const st=listState(kind), f=st.filters;
+  const cs=getFilteredShowList(kind);
   const isAdmin=S.role==='admin';
-  const months=getShowMonths();
-  const monthOpts=months.map(m=>`<option value="${m}" ${S.showFilters.month===m?'selected':''}>${m}</option>`).join('');
-  const venueOpts=getActiveSorted(S.config.venues).map(v=>`<option value="${v.id}" ${S.showFilters.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join('');
-  const workOpts=getActiveSorted(S.config.works).map(w=>`<option value="${w.id}" ${S.showFilters.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join('');
-  const agrOpts=getAgreementCatalog().map(a=>`<option value="${a.id}" ${S.showFilters.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
-  const activeFilters=Number(!!S.search)+['month','venueId','workId','agreementId'].reduce((n,k)=>n+Number(!!S.showFilters[k]),0);
+  const months=getShowMonths(kind);
+  const monthOpts=months.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('');
+  const venueOpts=getActiveSorted(S.config.venues).map(v=>`<option value="${v.id}" ${f.venueId===v.id?'selected':''}>${esc(v.name)}</option>`).join('');
+  const workOpts=getActiveSorted(S.config.works).map(w=>`<option value="${w.id}" ${f.workId===w.id?'selected':''}>${esc(w.name)}</option>`).join('');
+  const agrOpts=getAgreementCatalog().map(a=>`<option value="${a.id}" ${f.agreementId===a.id?'selected':''}>${esc(a.name)}</option>`).join('');
+  const activeFilters=Number(!!st.search)+['month','venueId','workId','agreementId'].reduce((n,key)=>n+Number(!!f[key]),0);
   const thAdmin=`<th class="right">V.Bruta</th><th class="right">V.Neta</th><th class="right">Restante</th>`;
+  const actions=s=>`<button class="btn btn-ghost btn-sm" data-action="viewShow" data-kind="${kind}" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-kind="${kind}" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-kind="${kind}" data-show-id="${s.id}">📄 Duplicar</button>${isAdmin?`<button class="btn btn-danger btn-sm" data-action="deleteShow" data-kind="${kind}" data-show-id="${s.id}">🗑️ Eliminar</button>`:''}`;
   const rowsHtml=cs.map(s=>{
     const txt=esc([s.date,s.workName,s.venueName,s.agreementSnapshot?.name,s.notes].join(' '));
-    return `<tr data-show-row="1" data-search-text="${txt}"><td>${esc(s.date)}</td><td><strong>${esc(s.workName||'—')}</strong></td><td>${esc(s.venueName||'—')}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td>${isAdmin?`<td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}${s.c.mismatch?' ⚠️':''}</td>`:''}<td><div class="row-actions"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button>${isAdmin?`<button class="btn btn-danger btn-sm" data-action="deleteShow" data-show-id="${s.id}">🗑️ Eliminar</button>`:''}</div></td></tr>`;
+    return `<tr data-show-row="1" data-search-text="${txt}"><td>${esc(s.date)}</td><td><strong>${esc(s.workName||'—')}</strong></td><td>${esc(s.venueName||'—')}</td><td>${esc(s.agreementSnapshot?.name||'—')}</td>${isAdmin?`<td class="right">${fmt(s.c.ventaBruta)}</td><td class="right">${fmt(s.c.ventaNeta)}</td><td class="right fw700 ${s.c.restanteOpcion>=0?'success':'danger'}">${fmt(s.c.restanteOpcion)}${s.c.mismatch?' ⚠️':''}</td>`:''}<td><div class="row-actions">${actions(s)}</div></td></tr>`;
   }).join('');
   const cardsHtml=cs.map(s=>{
     const txt=esc([s.date,s.workName,s.venueName,s.agreementSnapshot?.name,s.notes].join(' '));
-    return `<div class="card show-mobile-card" data-show-card="1" data-search-text="${txt}" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="fw700">${esc(s.workName||'—')}</div><div class="muted" style="font-size:12px">${esc(s.venueName||'—')} · ${esc(s.date||'—')}</div><div class="dim" style="font-size:11px;margin-top:4px">${esc(s.agreementSnapshot?.name||'Sin acuerdo')}</div></div>${isAdmin?`<div style="text-align:right"><div class="${s.c.restanteOpcion>=0?'success':'danger'} fw700">${fmt(s.c.restanteOpcion)}</div><div class="dim" style="font-size:11px">Restante</div></div>`:''}</div><div class="row-actions" style="margin-top:12px"><button class="btn btn-ghost btn-sm" data-action="viewShow" data-show-id="${s.id}">👁 Ver</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${s.id}">✏️ Editar</button><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${s.id}">📄 Duplicar</button>${isAdmin?`<button class="btn btn-danger btn-sm" data-action="deleteShow" data-show-id="${s.id}">🗑️ Eliminar</button>`:''}</div></div>`;
+    return `<div class="card show-mobile-card" data-show-card="1" data-search-text="${txt}" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="fw700">${esc(s.workName||'—')}</div><div class="muted" style="font-size:12px">${esc(s.venueName||'—')} · ${esc(s.date||'—')}</div><div class="dim" style="font-size:11px;margin-top:4px">${esc(s.agreementSnapshot?.name||'Sin acuerdo')}</div></div>${isAdmin?`<div style="text-align:right"><div class="${s.c.restanteOpcion>=0?'success':'danger'} fw700">${fmt(s.c.restanteOpcion)}</div><div class="dim" style="font-size:11px">Restante</div></div>`:''}</div><div class="row-actions" style="margin-top:12px">${actions(s)}</div></div>`;
   }).join('');
   const colspan=isAdmin?8:5;
-  return `<div class="section-top"><div><h1 class="page-title">Funciones</h1><p class="page-sub"><span id="show-list-count">${cs.length} de ${S.shows.length} funciones</span>${activeFilters?` · ${activeFilters} filtro${activeFilters>1?'s':''} activo${activeFilters>1?'s':''}`:''}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Actualizar</button><button class="btn btn-primary" data-view="newshow">➕ Nueva</button></div></div>
+  const kindNote=kind==='event'?`<div class="event-note">🎉 Los eventos se guardan en la hoja «EVENTOS» y se contabilizan aparte de las funciones.</div>`:'';
+  return `${eventsBackendNote(kind)}<div class="section-top"><div><h1 class="page-title">${k.icon} ${k.Many}</h1><p class="page-sub"><span id="show-list-count">${cs.length} de ${k.count(recordsOf(kind).length)}</span>${activeFilters?` · ${activeFilters} filtro${activeFilters>1?'s':''} activo${activeFilters>1?'s':''}`:''}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Actualizar</button><button class="btn btn-primary" data-view="${k.newView}">➕ ${k.aNew}</button></div></div>
+  ${kindNote}
   <div class="card show-list-card mb20">
     <div class="show-toolbar">
-      <div class="search-wrap"><label class="filter-label">Buscar</label><span class="search-icon">🔍</span><input id="show-search-input" class="inline-input" type="search" autocomplete="off" placeholder="Obra, sala, fecha, acuerdo o notas..." value="${esc(S.search)}" data-bind="search"/></div>
+      <div class="search-wrap"><label class="filter-label">Buscar</label><span class="search-icon">🔍</span><input id="show-search-input" class="inline-input" type="search" autocomplete="off" placeholder="Obra, sala, fecha, acuerdo o notas..." value="${esc(st.search)}" data-bind="search"/></div>
       <div><label class="filter-label">Mes</label><select class="inline-input" data-show-filter="month"><option value="">Todos</option>${monthOpts}</select></div>
       <div><label class="filter-label">Sala</label><select class="inline-input" data-show-filter="venueId"><option value="">Todas</option>${venueOpts}</select></div>
       <div><label class="filter-label">Obra</label><select class="inline-input" data-show-filter="workId"><option value="">Todas</option>${workOpts}</select></div>
       <div><label class="filter-label">Acuerdo</label><select class="inline-input" data-show-filter="agreementId"><option value="">Todos</option>${agrOpts}</select></div>
-      <div><label class="filter-label">Orden</label><select class="inline-input" data-show-filter="sort"><option value="dateDesc" ${S.showFilters.sort==='dateDesc'?'selected':''}>Fecha reciente</option><option value="dateAsc" ${S.showFilters.sort==='dateAsc'?'selected':''}>Fecha antigua</option><option value="workAsc" ${S.showFilters.sort==='workAsc'?'selected':''}>Obra A-Z</option><option value="venueAsc" ${S.showFilters.sort==='venueAsc'?'selected':''}>Sala A-Z</option>${isAdmin?`<option value="restDesc" ${S.showFilters.sort==='restDesc'?'selected':''}>Mayor restante</option><option value="ventaDesc" ${S.showFilters.sort==='ventaDesc'?'selected':''}>Mayor venta neta</option>`:''}</select></div>
+      <div><label class="filter-label">Orden</label><select class="inline-input" data-show-filter="sort"><option value="dateDesc" ${f.sort==='dateDesc'?'selected':''}>Fecha reciente</option><option value="dateAsc" ${f.sort==='dateAsc'?'selected':''}>Fecha antigua</option><option value="workAsc" ${f.sort==='workAsc'?'selected':''}>Obra A-Z</option><option value="venueAsc" ${f.sort==='venueAsc'?'selected':''}>Sala A-Z</option>${isAdmin?`<option value="restDesc" ${f.sort==='restDesc'?'selected':''}>Mayor restante</option><option value="ventaDesc" ${f.sort==='ventaDesc'?'selected':''}>Mayor venta neta</option>`:''}</select></div>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><p class="show-result-note">Busca sin perder el foco y combina filtros para encontrar funciones rápido.</p><button class="btn btn-ghost btn-sm" data-action="clearShowFilters">Limpiar filtros</button></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><p class="show-result-note">Busca sin perder el foco y combina filtros para encontrar ${k.many} rápido.</p><button class="btn btn-ghost btn-sm" data-action="clearShowFilters">Limpiar filtros</button></div>
   </div>
-  <div class="show-table-desktop table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th>${isAdmin?thAdmin:''}<th class="right">Acciones</th></tr></thead><tbody>${rowsHtml}<tr id="show-list-empty-live" style="display:${cs.length?'none':''}"><td colspan="${colspan}" class="empty">Sin funciones con estos filtros</td></tr></tbody></table></div>
-  <div>${cardsHtml}<div id="show-list-empty-cards" class="card show-mobile-card" style="display:${cs.length?'none':'block'}"><div class="empty">Sin funciones con estos filtros</div></div></div>`;
+  <div class="show-table-desktop table-wrap"><table><thead><tr><th>Fecha</th><th>Obra</th><th>Sala</th><th>Acuerdo</th>${isAdmin?thAdmin:''}<th class="right">Acciones</th></tr></thead><tbody>${rowsHtml}<tr id="show-list-empty-live" style="display:${cs.length?'none':''}"><td colspan="${colspan}" class="empty">${k.none} con estos filtros</td></tr></tbody></table></div>
+  <div>${cardsHtml}<div id="show-list-empty-cards" class="card show-mobile-card" style="display:${cs.length?'none':'block'}"><div class="empty">${k.none} con estos filtros</div></div></div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
 // DETALLE — admin ve todo, usuario NO ve ingresos totales
-// CORREGIDO: usa los importes guardados
 // ══════════════════════════════════════════════════════════════
-function renderShowDetail(){
-  const show=S.shows.find(s=>s.id===S.selectedId);
-  if(!show) return '<div class="card"><div class="empty">Función no encontrada</div></div>';
+function renderShowDetail(kind='show'){
+  kind=normKind(kind); const k=K(kind);
+  const show=findRecord(S.selectedId,kind);
+  if(!show) return `<div class="card"><div class="empty">${k.One} no encontrado/a</div></div>`;
   const c=showAmounts(show);
   const isA=S.role==='admin';
   const incomeRows=c.commissions.filter(x=>x.income>0).map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px">${esc(x.name)}</div>${isA?`<div style="font-size:10px;color:var(--text-dim)">Com: ${fmt(x.commBase)}${x.commIva>0?` +IVA ${fmt(x.commIva)}`:''} = ${fmt(x.commTotal)}</div>`:''}</div><div style="text-align:right"><div style="font-size:13px;font-weight:700;color:var(--cyan)">${fmt(x.income)}</div>${isA?`<div style="font-size:10px;color:var(--danger)">-${fmt(x.commTotal)}</div>`:''}</div></div>`).join('');
@@ -1012,20 +1157,21 @@ function renderShowDetail(){
 
   const agrLabel=c.agreement?`${esc(c.agreement.name)} · ${agreementValueLabel(c.agreement)}`:'—';
   const warn=[];
-  if(c.mismatch) warn.push('Los importes guardados de esta función no cuadran (caché + restante ≠ total neto). Pulsa «Editar función» y guarda para recalcularla.');
-  if(isA&&c.allToCompany) warn.push('Todo el total neto de esta función va a la compañía (acuerdo al 100 %), por eso el restante de La Opción es 0 €.');
+  if(c.mismatch) warn.push(`Los importes guardados de ${k.thisOne} no cuadran (caché + restante ≠ total neto). Pulsa «Editar» y guarda para recalcular.`);
+  if(isA&&c.allToCompany) warn.push(`Todo el total neto de ${k.thisOne} va a la compañía (acuerdo al 100 %), por eso el restante de La Opción es 0 €.`);
   const warnHtml=warn.map(x=>`<div class="dirty-note">ℹ️ ${esc(x)}</div>`).join('');
 
   const kpisAdmin=`<div class="card"><div class="kpi-label">V. Bruta</div><div class="kpi-value cyan">${fmt(c.ventaBruta)}</div></div><div class="card"><div class="kpi-label">V. Neta</div><div class="kpi-value purple">${fmt(c.ventaNeta)}</div></div><div class="card"><div class="kpi-label">Autor a pagar</div><div class="kpi-value danger">${fmt(c.autorImporte)}</div><div class="kpi-sub">${fmtPct(show.autorPct)} · ${expenseOwnerLabel(c.autorOwner)}</div></div><div class="card"><div class="kpi-label">Gastos</div><div class="kpi-value danger">${fmt(c.totalGastos)}</div></div><div class="card"><div class="kpi-label">Total Neto</div><div class="kpi-value yellow">${fmt(c.totalNeto)}</div></div><div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink">${fmt(c.cache)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</div></div>`;
   const kpisUser=`<div class="card"><div class="kpi-label">Caché</div><div class="kpi-value pink">${fmt(c.cache)}</div></div><div class="card"><div class="kpi-label">Restante La Opción</div><div class="kpi-value ${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</div></div>`;
 
-  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">←</button><div style="flex:1"><h1 class="page-title" style="font-size:22px">${esc(show.workName)}</h1><p class="page-sub">${esc(show.venueName)} · ${esc(show.date)}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-show-id="${show.id}">📄 Duplicar</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-show-id="${show.id}">✏️ Editar función</button></div></div>${warnHtml}<div class="grid grid-kpis mb20">${isA?kpisAdmin:kpisUser}</div><div class="grid grid-2 mb20"><div class="card"><h3>Ingresos por plataforma</h3>${incomeRows||'<div class="empty">Sin ingresos de plataforma</div>'}${cashRows.length?`<div style="padding-top:6px">${cashRows.join('')}</div>`:''}</div><div class="card"><h3>Reparto (${agrLabel})</h3>${isA?`<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Total Neto</span><span class="fw700">${fmt(c.totalNeto)}</span></div>`:''}${gastoRows.length?`<div style="padding-top:4px;border-top:1px solid var(--border);margin-top:4px">${gastoRows.join('')}</div>`:''}${(c.autorImporte>0||c.otrosGastos>0)?`<p class="dim" style="font-size:11px;margin-top:8px">Asignación: Autor → <strong>${expenseOwnerLabel(c.autorOwner)}</strong>${c.otrosGastos>0?` · Otros gastos → <strong>${expenseOwnerLabel(c.expenseOwner)}</strong>`:''}</p>`:''}<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Caché compañía</span><span class="fw700 pink">${fmt(c.cache)}</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800;border-top:1px solid var(--border);margin-top:4px"><span>Restante La Opción</span><span class="${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</span></div></div></div>`;
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="${k.listView}">←</button><div style="flex:1"><h1 class="page-title" style="font-size:22px">${esc(show.workName)} ${kindBadge(kind)}</h1><p class="page-sub">${esc(show.venueName)} · ${esc(show.date)}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="duplicateShow" data-kind="${kind}" data-show-id="${show.id}">📄 Duplicar</button><button class="btn btn-secondary btn-sm" data-action="editShow" data-kind="${kind}" data-show-id="${show.id}">✏️ Editar ${k.one}</button></div></div>${warnHtml}<div class="grid grid-kpis mb20">${isA?kpisAdmin:kpisUser}</div><div class="grid grid-2 mb20"><div class="card"><h3>Ingresos por plataforma</h3>${incomeRows||'<div class="empty">Sin ingresos de plataforma</div>'}${cashRows.length?`<div style="padding-top:6px">${cashRows.join('')}</div>`:''}</div><div class="card"><h3>Reparto (${agrLabel})</h3>${isA?`<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Total Neto</span><span class="fw700">${fmt(c.totalNeto)}</span></div>`:''}${gastoRows.length?`<div style="padding-top:4px;border-top:1px solid var(--border);margin-top:4px">${gastoRows.join('')}</div>`:''}${(c.autorImporte>0||c.otrosGastos>0)?`<p class="dim" style="font-size:11px;margin-top:8px">Asignación: Autor → <strong>${expenseOwnerLabel(c.autorOwner)}</strong>${c.otrosGastos>0?` · Otros gastos → <strong>${expenseOwnerLabel(c.expenseOwner)}</strong>`:''}</p>`:''}<div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span class="muted">Caché compañía</span><span class="fw700 pink">${fmt(c.cache)}</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-family:'Outfit',sans-serif;font-weight:800;border-top:1px solid var(--border);margin-top:4px"><span>Restante La Opción</span><span class="${c.restanteOpcion>=0?'success':'danger'}">${fmt(c.restanteOpcion)}</span></div></div></div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
-// FORMULARIO — nueva función o edición
+// FORMULARIO — nueva función / nuevo evento o edición (mismos campos)
 // ══════════════════════════════════════════════════════════════
-function renderShowForm(isEdit){
+function renderShowForm(isEdit,kind='show'){
+  kind=normKind(kind); const k=K(kind);
   const isU=S.role==='user';
   const d=S.newShowDraft||(isEdit?null:emptyDraft());
   if(!d) return '<div class="card"><div class="empty">Error al cargar el formulario.</div></div>';
@@ -1050,44 +1196,61 @@ function renderShowForm(isEdit){
       : `<div class="dirty-note">⚠️ Esta obra todavía no tiene acuerdo configurado. Ve a Administración → Obras y completa tipo y valor del acuerdo.</div>`)
     : `<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">Selecciona una obra para aplicar automáticamente su acuerdo.</p>`;
 
+  // Aviso cruzado: la obra también tiene registros del otro tipo en ese mes
+  let crossHint='';
+  if(d.workId&&d.date){
+    const otherKind=kind==='event'?'show':'event';
+    const month=String(d.date).slice(0,7);
+    const nOther=recordsOf(otherKind).filter(s=>matchesDashboardEntity(s,'works',d.workId)&&(s.date||'').startsWith(month)).length;
+    if(nOther) crossHint=`<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">ℹ️ Esta obra tiene también ${K(otherKind).count(nOther)} en ${esc(month)}. Se contabilizan por separado y se suman en el Dashboard del negocio.</p>`;
+  }
+
   const platFields=getActiveSorted(S.config.platforms).map(p=>{
     const label=isU?esc(p.name):`${esc(p.name)} (${p.commission}%${p.ivaOnCommission?' +IVA':''})`;
     return `<div class="field"><label>${label}</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income[p.id]||''}" data-plat-id="${p.id}"/></div>`;
   }).join('');
 
   const isDup=S.isDuplicating===true&&!isEdit;
-  const title=isEdit?'Editar función':(isDup?'Duplicar función':(isU?'Registrar ingreso':'Nueva función'));
-  const btnLabel=isEdit?'💾 Guardar cambios':(isDup?'📄 Crear función duplicada':'💾 Guardar');
-  const duplicateNote=isDup?`<div class="dirty-note">📄 Estás duplicando una función. Puedes cambiar fecha, sala, obra o importes. Al guardar se creará un registro nuevo y el original no se modificará.</div>`:'';
-  const editNote=isEdit?`<div class="dirty-note">✏️ Al guardar, la función se recalcula con el acuerdo y las comisiones que tiene ahora la configuración.</div>`:'';
+  const title=isEdit?`Editar ${k.one}`:(isDup?`Duplicar ${k.one}`:(isU?k.register:k.aNew));
+  const btnLabel=isEdit?'💾 Guardar cambios':(isDup?`📄 Crear ${k.one} duplicado/a`:'💾 Guardar');
+  const duplicateNote=isDup?`<div class="dirty-note">📄 Estás duplicando un registro. Puedes cambiar fecha, sala, obra o importes. Al guardar se creará un registro nuevo y el original no se modificará.</div>`:'';
+  const editNote=isEdit?`<div class="dirty-note">✏️ Al guardar, ${k.thisOne} se recalcula con el acuerdo y las comisiones que tiene ahora la configuración.</div>`:'';
+  const kindNote=kind==='event'?`<div class="event-note">🎉 Este registro se contabiliza como <strong>EVENTO</strong>, separado de las funciones. Mismos campos y mismos cálculos.</div>`:'';
+  const blocked=kind==='event'&&!S.eventsSupported;
 
-  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="shows">← Volver</button><h1 class="page-title" style="font-size:22px">${title}</h1></div>${duplicateNote}${editNote}<div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div>${agreementInfo}<div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div><div class="field" style="flex:1"><label>Día de la semana</label><select data-weekday-field ${d.date?'':'disabled'}>${d.date?weekdayOptions(weekdayIndexFromDate(d.date)):'<option value="">— Pon la fecha —</option>'}</select></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div></div><p class="dim" style="font-size:11px;margin-top:-6px;margin-bottom:12px">El día se rellena solo con la fecha. Si cambias el día, la fecha se mueve a ese día de la misma semana.</p><div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="Notas...">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox"/></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox"/></div></div></div><div class="card"><h3>Gastos</h3><div class="field"><label>Autor (% sobre venta neta)</label><input type="number" min="0" max="100" step="0.01" placeholder="0" value="${d.autorPct||''}" data-expense-flat="autorPct"/></div><div class="field"><label>¿A quién va autor?</label><select data-autor-owner><option value="both" ${normalizeAutorOwner(d.autorOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeAutorOwner(d.autorOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeAutorOwner(d.autorOwner)==='company'?'selected':''}>Compañía — se resta del caché</option></select></div><div class="field"><label>Otros gastos (€)</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.otrosGastos||''}" data-expense-flat="otrosGastos"/></div><div class="field"><label>¿A quién van otros gastos?</label><select data-expense-owner><option value="both" ${normalizeExpenseOwner(d.expenseOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeExpenseOwner(d.expenseOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeExpenseOwner(d.expenseOwner)==='company'?'selected':''}>Compañía — se resta del caché</option><option value="cache" ${normalizeExpenseOwner(d.expenseOwner)==='cache'?'selected':''}>Extra de caché — se suma al caché y se cobra a La Opción</option></select></div><p class="dim" style="font-size:11px;margin-top:-4px">Por defecto “Ambas partes” mantiene el cálculo anterior. “Extra de caché” aumenta el caché y reduce el restante de La Opción por el mismo importe.</p></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving?'disabled':''}>${S.isSaving?'⏳ Guardando...':btnLabel}</button><button class="btn btn-secondary" data-view="shows" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
+  return `${eventsBackendNote(kind)}<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><button class="btn btn-ghost" data-view="${k.listView}">← Volver</button><h1 class="page-title" style="font-size:22px">${k.icon} ${title}</h1></div>${kindNote}${duplicateNote}${editNote}<div class="grid grid-2 mb20"><div class="card"><h3>Datos básicos</h3><div class="field"><label>Obra *</label><select data-field="workId"><option value="">— Seleccionar —</option>${workOpts}</select></div>${agreementInfo}<div class="field"><label>Sala *</label><select data-field="venueId"><option value="">— Seleccionar —</option>${venueOpts}</select></div>${rentalInfo}<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Fecha *</label><input type="date" value="${esc(d.date)}" data-field="date"/></div><div class="field" style="flex:1"><label>Día de la semana</label><select data-weekday-field ${d.date?'':'disabled'}>${d.date?weekdayOptions(weekdayIndexFromDate(d.date)):'<option value="">— Pon la fecha —</option>'}</select></div><div class="field" style="flex:1"><label>Hora</label><input type="time" value="${esc(d.time)}" data-field="time"/></div></div><p class="dim" style="font-size:11px;margin-top:-6px;margin-bottom:12px">El día se rellena solo con la fecha. Si cambias el día, la fecha se mueve a ese día de la misma semana.</p>${crossHint}<div class="field"><label>Observaciones</label><textarea data-field="notes" placeholder="${kind==='event'?'Tipo de evento, cliente, notas...':'Notas...'}">${esc(d.notes)}</textarea></div></div><div class="card"><h3>Ingresos</h3>${platFields||'<p class="dim">No hay plataformas activas.</p>'}<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px"><div class="field"><label>Taquilla efectivo</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cashBox||''}" data-plat-id="cashBox"/></div><div class="field"><label>Taquilla tarjeta</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.income.cardBox||''}" data-plat-id="cardBox"/></div></div></div><div class="card"><h3>Gastos</h3><div class="field"><label>Autor (% sobre venta neta)</label><input type="number" min="0" max="100" step="0.01" placeholder="0" value="${d.autorPct||''}" data-expense-flat="autorPct"/></div><div class="field"><label>¿A quién va autor?</label><select data-autor-owner><option value="both" ${normalizeAutorOwner(d.autorOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeAutorOwner(d.autorOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeAutorOwner(d.autorOwner)==='company'?'selected':''}>Compañía — se resta del caché</option></select></div><div class="field"><label>Otros gastos (€)</label><input type="number" min="0" step="0.01" placeholder="0" value="${d.otrosGastos||''}" data-expense-flat="otrosGastos"/></div><div class="field"><label>¿A quién van otros gastos?</label><select data-expense-owner><option value="both" ${normalizeExpenseOwner(d.expenseOwner)==='both'?'selected':''}>Ambas partes — se resta antes del acuerdo</option><option value="laopcion" ${normalizeExpenseOwner(d.expenseOwner)==='laopcion'?'selected':''}>La Opción — se resta solo a La Opción</option><option value="company" ${normalizeExpenseOwner(d.expenseOwner)==='company'?'selected':''}>Compañía — se resta del caché</option><option value="cache" ${normalizeExpenseOwner(d.expenseOwner)==='cache'?'selected':''}>Extra de caché — se suma al caché y se cobra a La Opción</option></select></div><p class="dim" style="font-size:11px;margin-top:-4px">Por defecto “Ambas partes” mantiene el cálculo anterior. “Extra de caché” aumenta el caché y reduce el restante de La Opción por el mismo importe.</p></div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" data-action="saveNewShow" ${S.isSaving||blocked?'disabled':''}>${S.isSaving?'⏳ Guardando...':btnLabel}</button><button class="btn btn-secondary" data-view="${k.listView}" ${S.isSaving?'disabled':''}>Cancelar</button></div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
-// RESUMEN MENSUAL (CORREGIDO: importes guardados)
+// RESUMEN MENSUAL — funciones, eventos o todo
 // ══════════════════════════════════════════════════════════════
 function renderSummary(){
-  const months=[...new Set(S.shows.map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
+  const sk=['show','event','all'].includes(S.summaryKind)?S.summaryKind:'show';
+  const source=sk==='all'?[...S.shows,...S.events]:recordsOf(sk);
+  const months=[...new Set([...S.shows,...S.events].map(s=>(s.date||'').slice(0,7)).filter(Boolean))].sort().reverse();
   const sel=S.summaryMonth||months[0]||'';
   const opts=months.map(m=>`<option value="${m}" ${m===sel?'selected':''}>${m}</option>`).join('');
-  const cs=S.shows.filter(s=>(s.date||'').startsWith(sel)).map(s=>({...s,c:showAmounts(s)}));
+  const cs=source.filter(s=>(s.date||'').startsWith(sel)).map(s=>({...s,c:showAmounts(s)}));
   const byWork={};
   cs.forEach(s=>{
-    const k=`${s.workName||'Sin obra'}||${s.venueName||''}`;
-    if(!byWork[k])byWork[k]={work:s.workName||'Sin obra',venue:s.venueName,funciones:0,ingreso:0,coste:0,beneficio:0};
-    byWork[k].funciones+=1;byWork[k].ingreso+=s.c.totalNeto;byWork[k].coste+=s.c.cache;byWork[k].beneficio+=s.c.restanteOpcion;
+    const key=`${s.workName||'Sin obra'}||${s.venueName||''}`;
+    if(!byWork[key])byWork[key]={work:s.workName||'Sin obra',venue:s.venueName,funciones:0,eventos:0,ingreso:0,coste:0,beneficio:0};
+    if(s.kind==='event') byWork[key].eventos+=1; else byWork[key].funciones+=1;
+    byWork[key].ingreso+=s.c.totalNeto;byWork[key].coste+=s.c.cache;byWork[key].beneficio+=s.c.restanteOpcion;
   });
   const rows=Object.values(byWork).sort((a,b)=>b.beneficio-a.beneficio);
   const totB=rows.reduce((s,r)=>s+r.beneficio,0);
   const totI=rows.reduce((s,r)=>s+r.ingreso,0);
   const totC=rows.reduce((s,r)=>s+r.coste,0);
+  const totF=rows.reduce((s,r)=>s+r.funciones,0);
+  const totE=rows.reduce((s,r)=>s+r.eventos,0);
   rows.forEach(r=>{r.pct=totB!==0?r2(r.beneficio/totB*100):0;});
-  const tableRows=rows.map(r=>`<tr><td>${esc(r.venue)}</td><td>${esc(r.work)}</td><td class="right">${r.funciones}</td><td class="right">${fmt(r.ingreso)}</td><td class="right">${fmt(r.coste)}</td><td class="right fw700 ${r.beneficio>=0?'success':'danger'}">${fmt(r.beneficio)}</td><td class="right">${fmtPct(r.pct)}</td></tr>`).join('');
+  const tableRows=rows.map(r=>`<tr><td>${esc(r.venue)}</td><td>${esc(r.work)}</td><td class="right">${r.funciones}</td><td class="right">${r.eventos}</td><td class="right">${fmt(r.ingreso)}</td><td class="right">${fmt(r.coste)}</td><td class="right fw700 ${r.beneficio>=0?'success':'danger'}">${fmt(r.beneficio)}</td><td class="right">${fmtPct(r.pct)}</td></tr>`).join('');
   const platTotals={};
   cs.forEach(s=>{s.c.commissions.forEach(c=>{platTotals[c.name]=(platTotals[c.name]||0)+c.income;});platTotals['Taq. Efectivo']=(platTotals['Taq. Efectivo']||0)+s.c.cashBox;platTotals['Taq. Tarjeta']=(platTotals['Taq. Tarjeta']||0)+s.c.cardBox;});
   const platCards=Object.entries(platTotals).filter(([,v])=>v>0).sort(([,a],[,b])=>b-a).map(([name,total])=>`<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:10px;padding:14px 16px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:4px">${esc(name)}</div><div style="font-size:18px;font-family:'Outfit',sans-serif;font-weight:800;color:var(--cyan)">${fmt(total)}</div></div>`).join('');
-  return `<h1 class="page-title">Resumen Mensual</h1><p class="page-sub mb20">Visión por obra y plataforma</p><div style="display:flex;gap:8px;align-items:center;margin-bottom:18px"><span class="dim">📅</span><select data-bind="summaryMonth" class="inline-input" style="max-width:160px">${opts}</select><span class="dim" style="font-size:12px">${cs.length} funciones</span></div><div class="card mb20"><h3>Resumen por obra</h3><div class="table-wrap"><table><thead><tr><th>Sala</th><th>Obra</th><th class="right">Funciones</th><th class="right">Ingreso (neto)</th><th class="right">Coste CIA</th><th class="right">Beneficios</th><th class="right">%</th></tr></thead><tbody>${tableRows||'<tr><td colspan="7" class="empty">Sin datos</td></tr>'}</tbody>${rows.length?`<tfoot><tr><th colspan="2">Total</th><th class="right">${cs.length}</th><th class="right">${fmt(totI)}</th><th class="right">${fmt(totC)}</th><th class="right">${fmt(totB)}</th><th class="right">100.00%</th></tr></tfoot>`:''}</table></div></div><div class="card"><h3>Resumen por plataforma</h3><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${platCards||'<div class="empty">Sin datos</div>'}</div></div>`;
+  const kindOpts=[['show','Solo funciones'],['event','Solo eventos'],['all','Funciones + eventos']].map(([v,l])=>`<option value="${v}" ${sk===v?'selected':''}>${l}</option>`).join('');
+  return `<h1 class="page-title">Resumen Mensual</h1><p class="page-sub mb20">Visión por obra y plataforma</p><div style="display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap"><span class="dim">📅</span><select data-bind="summaryMonth" class="inline-input" style="max-width:160px">${opts}</select><select data-bind="summaryKind" class="inline-input" style="max-width:200px">${kindOpts}</select><span class="dim" style="font-size:12px">${K('show').count(totF)} · ${K('event').count(totE)}</span></div><div class="card mb20"><h3>Resumen por obra</h3><div class="table-wrap"><table><thead><tr><th>Sala</th><th>Obra</th><th class="right">Funciones</th><th class="right">Eventos</th><th class="right">Ingreso (neto)</th><th class="right">Coste CIA</th><th class="right">Beneficios</th><th class="right">%</th></tr></thead><tbody>${tableRows||'<tr><td colspan="8" class="empty">Sin datos</td></tr>'}</tbody>${rows.length?`<tfoot><tr><th colspan="2">Total</th><th class="right">${totF}</th><th class="right">${totE}</th><th class="right">${fmt(totI)}</th><th class="right">${fmt(totC)}</th><th class="right">${fmt(totB)}</th><th class="right">100.00%</th></tr></tfoot>`:''}</table></div></div><div class="card"><h3>Resumen por plataforma</h3><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${platCards||'<div class="empty">Sin datos</div>'}</div></div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1099,7 +1262,7 @@ function renderAdmin(){
   const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras y acuerdos'},{id:'expenses',label:'Gastos de funciones'},{id:'businessTypes',label:'Tipos de gasto del negocio'},{id:'barMethods',label:'Pagos de barra'},{id:'users',label:'Usuarios'}];
   const tabBtns=tabs.map(t=>`<button class="btn ${S.adminTab===t.id?'btn-primary':'btn-ghost'} btn-sm" data-admin-tab="${t.id}">${t.label}</button>`).join('');
   const content=S.adminTab==='businessTypes'?renderBusinessTypes():(S.adminTab==='barMethods'?renderBarMethods():(S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab)));
-  return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}${S.adminTab==='works'?'<div class="dirty-note">Cambiar el acuerdo de una obra no modifica las funciones ya guardadas. Para aplicarlo a una función existente, ábrela, pulsa Editar y guarda.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
+  return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}${S.adminTab==='works'?'<div class="dirty-note">Cambiar el acuerdo de una obra no modifica las funciones ni los eventos ya guardados. Para aplicarlo a un registro existente, ábrelo, pulsa Editar y guarda.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
 }
 function renderConfigEditor(tab){
   const meta=CONFIG_META[tab]||CONFIG_META.platforms;
@@ -1135,7 +1298,7 @@ function renderUsersAdmin(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// EVENTS
+// EVENTS (manejadores de la interfaz)
 // ══════════════════════════════════════════════════════════════
 function bindEvents(){
   bindBarEvents();bindExpenseEvents();bindBusinessEvents();
@@ -1152,12 +1315,13 @@ function bindEvents(){
       if(targetView==='businessExpenses')loadExpenses();
       if(targetView==='businessDashboard')loadBusiness();
       if(['barBilling','barDashboard'].includes(targetView)) loadBars();
+      if(targetView==='admin'&&S.adminTab==='users') loadUsers();
       S.selectedId=null;
       S.editShowId=null;
       S.isDuplicating=false;
       S.duplicateSourceId=null;
-      if(S.view==='newshow'){S.newShowDraft=emptyDraft();}
-      else if(S.view!=='editshow'){S.newShowDraft=null;}
+      if(targetView==='newshow'||targetView==='newevent'){S.newShowDraft=emptyDraft();}
+      else if(targetView!=='editshow'&&targetView!=='editevent'){S.newShowDraft=null;}
       render();
     };
   });
@@ -1165,11 +1329,12 @@ function bindEvents(){
   document.querySelectorAll('[data-action]').forEach(btn=>{
     btn.onclick=()=>{
       const a=btn.dataset.action;
+      const kind=normKind(btn.dataset.kind||viewKind());
       if(a==='logout')       return handleLogout();
       if(a==='refresh')      return S.view==='admin'&&S.adminTab==='businessTypes'?loadExpenses(true):(S.view==='admin'&&S.adminTab==='barMethods'?loadBars(true):loadFromSheet({manual:true}));
-      if(a==='resetDashboardFilters'){resetDashboardFilters();return render();}
-      if(a==='exportShowsPdf')  return exportShowsPdf();
-      if(a==='clearShowFilters'){S.search='';S.showFilters={month:'',venueId:'',workId:'',agreementId:'',sort:'dateDesc'};return render();}
+      if(a==='resetDashboardFilters'){resetDashboardFilters(viewKind());return render();}
+      if(a==='exportShowsPdf')  return exportShowsPdf(viewKind());
+      if(a==='clearShowFilters'){const st=listState(viewKind());st.search='';st.filters=EMPTY_LIST_FILTERS();return render();}
       if(a==='saveNewShow')  {btn.disabled=true;btn.innerHTML='⏳ Guardando...';return handleSaveShow();}
       if(a==='saveConfig')   return saveConfigToSheet();
       if(a==='addConfig')    return addConfigItem(btn.dataset.addConfigTab);
@@ -1177,29 +1342,28 @@ function bindEvents(){
       if(a==='updateUser')   return handleUpdateUser(btn.dataset.userId);
       if(a==='refreshUsers') return loadUsers();
       if(a==='deleteShow'){
-        const show=S.shows.find(s=>s.id===btn.dataset.showId);
-        return deleteShowFromSheet(show);
+        return deleteShowFromSheet(findRecord(btn.dataset.showId,kind));
       }
       if(a==='viewShow'){
-        const show=S.shows.find(s=>s.id===btn.dataset.showId);
-        if(show){S.selectedId=show.id;S.view='detail';S.isDuplicating=false;S.duplicateSourceId=null;render();}
+        const show=findRecord(btn.dataset.showId,kind);
+        if(show){S.selectedId=show.id;S.view=K(kind).detailView;S.isDuplicating=false;S.duplicateSourceId=null;render();}
         return;
       }
       if(a==='editShow'){
-        const show=S.shows.find(s=>s.id===btn.dataset.showId);
-        if(show){S.editShowId=show.id;S.newShowDraft=showToDraft(show);S.isDuplicating=false;S.duplicateSourceId=null;S.view='editshow';render();}
+        const show=findRecord(btn.dataset.showId,kind);
+        if(show){S.editShowId=show.id;S.newShowDraft=showToDraft(show);S.isDuplicating=false;S.duplicateSourceId=null;S.view=K(kind).editView;render();}
         return;
       }
       if(a==='duplicateShow'){
-        const show=S.shows.find(s=>s.id===btn.dataset.showId);
+        const show=findRecord(btn.dataset.showId,kind);
         if(show){
           S.editShowId=null;
           S.selectedId=null;
           S.newShowDraft=showToDuplicateDraft(show);
           S.isDuplicating=true;
           S.duplicateSourceId=show.appId||show.id||'';
-          S.view='newshow';
-          showToast('Copia preparada. Revisa los datos y guarda para crear una función nueva.','warn');
+          S.view=K(kind).newView;
+          showToast('Copia preparada. Revisa los datos y guarda para crear un registro nuevo.','warn');
           render();
         }
         return;
@@ -1209,8 +1373,9 @@ function bindEvents(){
 
   document.querySelectorAll('tbody tr.clickable[data-show-id]').forEach(row=>{
     row.onclick=()=>{
-      const show=S.shows.find(s=>s.id===row.dataset.showId);
-      if(show){S.selectedId=show.id;S.view='detail';render();}
+      const kind=normKind(row.dataset.kind||viewKind());
+      const show=findRecord(row.dataset.showId,kind);
+      if(show){S.selectedId=show.id;S.view=K(kind).detailView;render();}
     };
   });
 
@@ -1220,16 +1385,14 @@ function bindEvents(){
 
   document.querySelectorAll('[data-dash-filter]').forEach(el=>{
     el.onchange=()=>{
-      if(!S.dashboardFilters) resetDashboardFilters();
-      S.dashboardFilters[el.dataset.dashFilter]=el.value;
+      dashFiltersOf(viewKind())[el.dataset.dashFilter]=el.value;
       render();
     };
   });
 
   document.querySelectorAll('[data-show-filter]').forEach(el=>{
     el.onchange=()=>{
-      ensureShowFilters();
-      S.showFilters[el.dataset.showFilter]=el.value;
+      listState(viewKind()).filters[el.dataset.showFilter]=el.value;
       render();
     };
   });
@@ -1241,6 +1404,8 @@ function bindEvents(){
   }
   const sm=document.querySelector('[data-bind="summaryMonth"]');
   if(sm) sm.onchange=()=>{S.summaryMonth=sm.value;render();};
+  const sk=document.querySelector('[data-bind="summaryKind"]');
+  if(sk) sk.onchange=()=>{S.summaryKind=sk.value;render();};
   // campos básicos — selects en change y textos en input para evitar doble disparo
   document.querySelectorAll('[data-field]').forEach(el=>{
     const updateDraftField=()=>{
@@ -1258,8 +1423,9 @@ function bindEvents(){
     };
     if(el.tagName==='SELECT') el.onchange=updateDraftField;
     else el.oninput=updateDraftField;
+    // al confirmar la fecha se refrescan el día de la semana y el aviso cruzado
+    if(el.dataset.field==='date') el.onchange=()=>{updateDraftField();render();};
   });
-  // ingresos plataformas
   document.querySelectorAll('[data-plat-id]').forEach(el=>{
     el.oninput=()=>{
       if(!S.newShowDraft) S.newShowDraft=emptyDraft();
@@ -1267,7 +1433,6 @@ function bindEvents(){
       S.newShowDraft.income[el.dataset.platId]=parseFloat(el.value)||0;
     };
   });
-  // gastos planos: un solo evento, valor numérico inmediato
   document.querySelectorAll('[data-expense-flat]').forEach(el=>{
     el.oninput=()=>{
       if(!S.newShowDraft) S.newShowDraft=emptyDraft();
@@ -1359,10 +1524,11 @@ async function handleUpdateUser(id){
 }
 
 // ══════════════════════════════════════════════════════════════
-// GUARDAR FUNCIÓN (nueva o edición)
+// GUARDAR FUNCIÓN / EVENTO (nuevo o edición)
 // ══════════════════════════════════════════════════════════════
 async function handleSaveShow(){
   if(SAVE_LOCK||S.isSaving)return showToast('Ya se está guardando. Espera.','warn');
+  const kind=viewKind();
   const d=S.newShowDraft;
   if(!d)          {render();return showToast('Rellena el formulario','error');}
   if(!d.workId)   {render();return showToast('Selecciona una obra','error');}
@@ -1387,12 +1553,11 @@ async function handleSaveShow(){
   const expenseOwner=normalizeExpenseOwner(d.expenseOwner||'both');
   const venueRental= Number(venue?.alquiler || 0);
 
-  // Si es edición, mantiene el appId existente; si es nuevo, genera uno
-  const appId=d.appId||gid('s');
+  const appId=d.appId||gid(K(kind).prefix);
   d.appId=appId;
 
   const show={
-    id:appId, appId,
+    id:appId, appId, kind,
     workId:d.workId, venueId:d.venueId,
     workName:work?.name||'', venueName:venue?.name||'',
     date:d.date, time:d.time||'',
@@ -1424,7 +1589,7 @@ async function loadBars(force=false){
   const generation=B.generation;
   B.loading=true;B.error='';render();
   try{
-    const data=await apiPost({action:'getBarData'});
+    const data=await apiPost({action:'getBarData',fresh:force||undefined});
     if(generation!==B.generation) return;
     if(!Array.isArray(data.records)||!Array.isArray(data.methods)) throw new Error('Actualiza la implementación de Apps Script para activar Facturación barra.');
     B.records=data.records;B.methods=data.methods;B.originalMethods=JSON.parse(JSON.stringify(data.methods));B.loaded=true;
@@ -1586,7 +1751,7 @@ async function loadExpenses(force=false){
   if(E.loading||E.loaded&&!force)return;
   const generation=E.generation;E.loading=true;E.error='';render();
   try{
-    const data=await apiPost({action:'getBusinessExpenses'});
+    const data=await apiPost({action:'getBusinessExpenses',fresh:force||undefined});
     if(generation!==E.generation)return;
     if(!Array.isArray(data.records)||!Array.isArray(data.types))throw new Error('Actualiza la implementación de Apps Script para activar los gastos.');
     E.records=data.records;E.types=data.types;E.originalTypes=JSON.parse(JSON.stringify(data.types));if(!E.typeDraft)E.typeDraft=JSON.parse(JSON.stringify(data.types));E.loaded=true;
@@ -1616,7 +1781,7 @@ function renderExpenseEntry(){
   const types=E.types.filter(t=>t.active!==false||t.id===d.typeId);
   return `<div class="section-top"><div><h1 class="page-title">Gastos</h1><p class="page-sub">Personal, alquileres, proveedores y otros costes del negocio</p></div><button class="btn btn-secondary" data-expense-action="reload" ${E.loading?'disabled':''}>Actualizar gastos</button></div>${expenseNotice()}${!E.loaded?'':`
   <form id="expense-form"><div class="grid grid-2 mb20"><div class="card"><h3>${d.version?'Editar gasto':'Registrar gasto'}</h3><div class="grid grid-2"><div class="field"><label>Mes *</label><select data-expense-field="month">${businessMonthOptions(d.period.slice(5),false)}</select></div><div class="field"><label>Año *</label><input type="number" min="1900" max="2199" step="1" data-expense-field="year" required value="${esc(d.period.slice(0,4))}"/></div></div><div class="field"><label>Sala / gasto general</label><select data-expense-field="venueId">${expenseVenueOptions(d.venueId)}</select></div><p class="muted" style="font-size:12px">Los gastos generales se descuentan del resultado global. No se reparten automáticamente entre salas.</p></div>
-  <div class="card"><div class="field"><label>Tipo de gasto *</label><select required data-expense-field="typeId"><option value="">— Seleccionar —</option>${types.map(t=>`<option value="${esc(t.id)}" ${d.typeId===t.id?'selected':''}>${esc(t.name)}${t.active===false?' (inactivo)':''}</option>`).join('')}</select></div><div class="field"><label>Concepto</label><input maxlength="240" data-expense-field="concept" placeholder="Por ejemplo, personal de septiembre" value="${esc(d.concept)}"/></div><div class="field"><label>Importe (€) *</label><input type="number" min="0.01" step="0.01" inputmode="decimal" required data-expense-field="amount" value="${esc(d.amount)}" placeholder="0,00"/></div><p class="muted" style="font-size:12px">Incluye aquí únicamente gastos que no estén ya descontados en las funciones. Por ejemplo, no repitas un alquiler ya registrado en una función.</p></div></div><div class="nb-actions mb20"><button type="submit" class="btn btn-primary" ${S.isSaving?'disabled':''}>${d.version?'Guardar cambios':'Guardar gasto'}</button><button type="button" class="btn btn-secondary" data-expense-action="new">${d.version?'Cancelar edición':'Limpiar formulario'}</button></div></form>
+  <div class="card"><div class="field"><label>Tipo de gasto *</label><select required data-expense-field="typeId"><option value="">— Seleccionar —</option>${types.map(t=>`<option value="${esc(t.id)}" ${d.typeId===t.id?'selected':''}>${esc(t.name)}${t.active===false?' (inactivo)':''}</option>`).join('')}</select></div><div class="field"><label>Concepto</label><input maxlength="240" data-expense-field="concept" placeholder="Por ejemplo, personal de septiembre" value="${esc(d.concept)}"/></div><div class="field"><label>Importe (€) *</label><input type="number" min="0.01" step="0.01" inputmode="decimal" required data-expense-field="amount" value="${esc(d.amount)}" placeholder="0,00"/></div><p class="muted" style="font-size:12px">Incluye aquí únicamente gastos que no estén ya descontados en las funciones o eventos. Por ejemplo, no repitas un alquiler ya registrado en una función.</p></div></div><div class="nb-actions mb20"><button type="submit" class="btn btn-primary" ${S.isSaving?'disabled':''}>${d.version?'Guardar cambios':'Guardar gasto'}</button><button type="button" class="btn btn-secondary" data-expense-action="new">${d.version?'Cancelar edición':'Limpiar formulario'}</button></div></form>
   <div class="card mb20"><h3>Consultar gastos</h3><div class="dashboard-filters"><div class="field"><label>Mes</label><select data-expense-filter="month">${businessMonthOptions(f.month)}</select></div><div class="field"><label>Año</label><select data-expense-filter="year">${businessYearOptions(f.year,E.records.map(r=>r.period))}</select></div><div class="field"><label>Sala</label><select data-expense-filter="venueId">${expenseVenueOptions(f.venueId,true)}</select></div><div class="field"><label>Tipo</label><select data-expense-filter="typeId"><option value="">Todos</option>${E.types.map(t=>`<option value="${esc(t.id)}" ${f.typeId===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select></div></div></div>
   <div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">Total del periodo · todas las salas</div><div class="kpi-value danger" id="expense-period-total">${fmt(fullMonth)}</div><div class="kpi-sub">${esc(periodName(f.year,f.month))} · incluye generales</div></div><div class="card"><div class="kpi-label">Gasto con los filtros seleccionados</div><div class="kpi-value" id="expense-filtered-total">${fmt(total)}</div><div class="kpi-sub">${records.length} registros</div></div></div>
   <div class="card mb20"><h3>Distribución por tipo</h3>${renderMiniBars([...byType.values()].sort((a,b)=>b.cents-a.cents).map(t=>[t.name,t.cents/100]),0,'var(--danger)',byType.size)}</div>
@@ -1667,16 +1832,17 @@ function bindExpenseEvents(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// DASHBOARD DEL NEGOCIO
+// DASHBOARD DEL NEGOCIO — funciones + eventos + barras − gastos
 // ══════════════════════════════════════════════════════════════
 const N={snapshot:null,loaded:false,loading:false,error:'',generation:0,filters:{year:currentBusinessPeriod().slice(0,4),month:currentBusinessPeriod().slice(5),weekday:'',venueId:'',basis:'benefit'}};
 async function loadBusiness(force=false){
   if(N.loading||N.loaded&&!force)return;const generation=N.generation;N.loading=true;N.error='';render();
   try{
-    const data=await apiPost({action:'getBusinessData'});if(generation!==N.generation)return;
+    const data=await apiPost({action:'getBusinessData',fresh:force||undefined});if(generation!==N.generation)return;
     if(!data.snapshot||!['works','bars','expenses','venues','types'].every(k=>Array.isArray(data.snapshot[k])))throw new Error('Actualiza Apps Script para activar el Dashboard del negocio.');
     const snap=data.snapshot;
-    for(const r of snap.works)for(const key of ['gross','net','benefit','cache'])if(typeof r[key]!=='number'||!Number.isFinite(r[key]))throw new Error('Hay un importe de obra no válido. Revisa la hoja antes de calcular el resultado.');
+    if(!Array.isArray(snap.events))throw new Error('Actualiza Apps Script (nueva versión con eventos) para ver funciones y eventos en el Dashboard del negocio.');
+    for(const list of [snap.works,snap.events])for(const r of list)for(const key of ['gross','net','benefit','cache'])if(typeof r[key]!=='number'||!Number.isFinite(r[key]))throw new Error('Hay un importe de obra o evento no válido. Revisa la hoja antes de calcular el resultado.');
     for(const r of snap.bars)if(typeof r.total!=='number'||!Number.isFinite(r.total))throw new Error('Hay un importe de barra no válido.');
     for(const r of snap.expenses)if(typeof r.amount!=='number'||!Number.isFinite(r.amount))throw new Error('Hay un gasto no válido.');
     N.snapshot=snap;N.loaded=true;
@@ -1685,18 +1851,24 @@ async function loadBusiness(force=false){
 }
 function summarizeBusiness(snapshot,filters){
   const rows=new Map(),types=new Map(),works=new Map();let generalCents=0,periodGeneralCents=0,undated=0;
-  const rowFor=(id,name)=>{if(!rows.has(id))rows.set(id,{id,name,works:0,bars:0,expenses:0,gross:0,net:0,cache:0,count:0,barCount:0});return rows.get(id);};
+  const rowFor=(id,name)=>{if(!rows.has(id))rows.set(id,{id,name,works:0,events:0,bars:0,expenses:0,gross:0,net:0,cache:0,count:0,eventCount:0,barCount:0});return rows.get(id);};
   const matches=period=>period.slice(0,4)===filters.year&&(!filters.month||period.slice(5,7)===filters.month);
   const venueMatches=id=>!filters.venueId||filters.venueId===id;
   const weekdayFiltered=filters.weekday!==''&&filters.weekday!==null&&filters.weekday!==undefined;
   const dayMatches=date=>matchesWeekday(date,weekdayFiltered?filters.weekday:'');
   const addType=r=>{const type=types.get(r.typeId)||{name:snapshot.types.find(t=>t.id===r.typeId)?.name||r.typeName,cents:0};type.cents+=Math.round(r.amount*100);types.set(r.typeId,type);};
-  snapshot.works.forEach(r=>{
+  const addLine=(r,kind)=>{
     if(!r.date){undated++;return;}if(!matches(r.date)||!dayMatches(r.date)||!venueMatches(r.venueId))return;
-    const v=rowFor(r.venueId,r.venueName),cents=Math.round(r[filters.basis==='net'?'net':'benefit']*100);
-    v.works+=cents;v.gross+=Math.round(r.gross*100);v.net+=Math.round(r.net*100);v.cache+=Math.round(r.cache*100);v.count++;
-    const w=works.get(r.workName)||{name:r.workName||'Sin obra',cents:0,count:0};w.cents+=cents;w.count++;works.set(r.workName,w);
-  });
+    const v=rowFor(r.venueId,r.venueName),cents=Math.round(r[filters.basis==='net'?'net':'benefit']*100),gross=Math.round(r.gross*100);
+    if(kind==='event'){v.events+=cents;v.eventCount++;}else{v.works+=cents;v.count++;}
+    v.gross+=gross;v.net+=Math.round(r.net*100);v.cache+=Math.round(r.cache*100);
+    const key=normalize(r.workName)||'sin obra';
+    const w=works.get(key)||{name:r.workName||'Sin obra',showCents:0,eventCents:0,showCount:0,eventCount:0,showGross:0,eventGross:0};
+    if(kind==='event'){w.eventCents+=cents;w.eventCount++;w.eventGross+=gross;}else{w.showCents+=cents;w.showCount++;w.showGross+=gross;}
+    works.set(key,w);
+  };
+  snapshot.works.forEach(r=>addLine(r,'show'));
+  (snapshot.events||[]).forEach(r=>addLine(r,'event'));
   snapshot.bars.forEach(r=>{if(!r.date){undated++;return;}if(matches(r.date)&&dayMatches(r.date)&&venueMatches(r.venueId)){const v=rowFor(r.venueId,r.venueName);v.bars+=Math.round(r.total*100);v.barCount++;}});
   // Los gastos mensuales no tienen día: al filtrar por día de la semana quedan fuera.
   if(!weekdayFiltered) snapshot.expenses.forEach(r=>{
@@ -1704,10 +1876,11 @@ function summarizeBusiness(snapshot,filters){
     if(!r.venueId){periodGeneralCents+=Math.round(r.amount*100);if(!filters.venueId){generalCents+=Math.round(r.amount*100);addType(r);}return;}
     if(venueMatches(r.venueId)){rowFor(r.venueId,r.venueName).expenses+=Math.round(r.amount*100);addType(r);}
   });
-  const ranking=[...rows.values()].map(v=>({...v,result:v.works+v.bars-v.expenses})).sort((a,b)=>b.result-a.result||a.name.localeCompare(b.name));
-  const total=ranking.reduce((t,v)=>{for(const key of ['works','bars','expenses','gross','net','cache','count','barCount','result'])t[key]+=v[key];return t;},{works:0,bars:0,expenses:0,gross:0,net:0,cache:0,count:0,barCount:0,result:0});
+  const ranking=[...rows.values()].map(v=>({...v,result:v.works+v.events+v.bars-v.expenses})).sort((a,b)=>b.result-a.result||a.name.localeCompare(b.name));
+  const total=ranking.reduce((t,v)=>{for(const key of ['works','events','bars','expenses','gross','net','cache','count','eventCount','barCount','result'])t[key]+=v[key];return t;},{works:0,events:0,bars:0,expenses:0,gross:0,net:0,cache:0,count:0,eventCount:0,barCount:0,result:0});
   total.general=generalCents;total.periodGeneral=periodGeneralCents;total.result-=generalCents;
-  return {weekdayFiltered,total,ranking,types:[...types.values()].sort((a,b)=>b.cents-a.cents),works:[...works.values()].sort((a,b)=>b.cents-a.cents),undated,hasData:ranking.length>0||generalCents>0};
+  const workList=[...works.values()].map(w=>({...w,total:w.showCents+w.eventCents})).sort((a,b)=>b.total-a.total||a.name.localeCompare(b.name));
+  return {weekdayFiltered,total,ranking,types:[...types.values()].sort((a,b)=>b.cents-a.cents),works:workList,undated,hasData:ranking.length>0||generalCents>0};
 }
 function previousBusinessFilters(f){
   if(!f.month)return {...f,year:String(Number(f.year)-1)};
@@ -1715,7 +1888,7 @@ function previousBusinessFilters(f){
 }
 function businessVenueOptions(){
   const venues=new Map(N.snapshot.venues.map(v=>[String(v.id),v.name]));
-  [...N.snapshot.works,...N.snapshot.bars,...N.snapshot.expenses].forEach(r=>{if(r.venueId&&!venues.has(r.venueId))venues.set(r.venueId,r.venueName);});
+  [...N.snapshot.works,...(N.snapshot.events||[]),...N.snapshot.bars,...N.snapshot.expenses].forEach(r=>{if(r.venueId&&!venues.has(r.venueId))venues.set(r.venueId,r.venueName);});
   return '<option value="">Todo el negocio</option>'+[...venues].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,name])=>`<option value="${esc(id)}" ${N.filters.venueId===id?'selected':''}>${esc(name)}</option>`).join('');
 }
 function businessChart(months){
@@ -1723,37 +1896,60 @@ function businessChart(months){
   return `<div class="nb-chart" aria-label="Resultado mensual del año seleccionado">${months.map(m=>{const value=m.summary.total.result;return `<button class="nb-month ${N.filters.month===m.month?'selected':''}" data-business-month="${m.month}" title="${MONTH_NAMES[Number(m.month)-1]}: ${m.summary.hasData?fmt(value/100):'Sin registros'}" aria-label="Ver ${MONTH_NAMES[Number(m.month)-1]}: ${m.summary.hasData?fmt(value/100):'sin registros'}"><span class="nb-chart-value ${value<0?'danger':'success'}">${m.summary.hasData?fmt(value/100):'—'}</span><span class="nb-chart-track"><span style="height:${m.summary.hasData?Math.max(2,Math.abs(value)/max*100):0}%;background:${value<0?'var(--danger)':'var(--success)'}"></span></span><span>${MONTH_NAMES[Number(m.month)-1].slice(0,3)}</span></button>`;}).join('')}</div><p class="nb-note">Pulsa un mes para consultar su detalle. Rojo: resultado negativo. «—»: sin registros.</p>`;
 }
 function renderBusinessDashboard(){
-  const header=`<div class="section-top"><div><p class="nb-eyebrow">LA OPCIÓN · CONTROL DEL NEGOCIO</p><h1 class="page-title">Dashboard del negocio</h1><p class="page-sub">Obras + barras − gastos mensuales</p></div><button class="btn btn-secondary" data-business-action="reload" ${N.loading?'disabled':''}>${N.loading?'Actualizando…':'Actualizar todo'}</button></div>`;
-  if(N.loading)return header+'<div class="card empty">Cargando obras, barras y gastos…</div>';
+  const header=`<div class="section-top"><div><p class="nb-eyebrow">LA OPCIÓN · CONTROL DEL NEGOCIO</p><h1 class="page-title">Dashboard del negocio</h1><p class="page-sub">Funciones + eventos + barras − gastos mensuales</p></div><button class="btn btn-secondary" data-business-action="reload" ${N.loading?'disabled':''}>${N.loading?'Actualizando…':'Actualizar todo'}</button></div>`;
+  if(N.loading)return header+'<div class="card empty">Cargando funciones, eventos, barras y gastos…</div>';
   if(!N.loaded)return header+`<div class="card"><p class="${N.error?'danger':'muted'}">${esc(N.error||'Actualiza para reunir los datos del negocio.')}</p><button class="btn btn-primary mt10" data-business-action="reload">${N.error?'Reintentar':'Cargar datos'}</button></div>`;
   const f=N.filters,snapshot=N.snapshot,summary=summarizeBusiness(snapshot,f),t=summary.total;
   const prevFilter=previousBusinessFilters(f),previous=summarizeBusiness(snapshot,prevFilter),delta=t.result-previous.total.result;
   const months=MONTH_NAMES.map((_,i)=>{const month=String(i+1).padStart(2,'0');return {month,summary:summarizeBusiness(snapshot,{...f,month})};});
-  const periods=[...snapshot.works.map(r=>r.date),...snapshot.bars.map(r=>r.date),...snapshot.expenses.map(r=>r.period)];
+  const periods=[...snapshot.works.map(r=>r.date),...(snapshot.events||[]).map(r=>r.date),...snapshot.bars.map(r=>r.date),...snapshot.expenses.map(r=>r.period)];
   const venueName=f.venueId?(snapshot.venues.find(v=>String(v.id)===f.venueId)?.name||summary.ranking[0]?.name||'Sala seleccionada'):'Todo el negocio';
-  const basisLabel=f.basis==='net'?'Neto de obras antes del caché':'Beneficio de obras después del caché';
+  const basisLabel=f.basis==='net'?'Neto antes del caché':'Beneficio después del caché';
+  const basisShort=f.basis==='net'?'neto antes del caché':'beneficio después del caché';
   const weekdayOn=summary.weekdayFiltered;
   const weekdayPlural=name=>{const l=String(name||'').toLowerCase();return l.endsWith('s')?l:l+'s';};
-  const resultLabel=weekdayOn?`Obras + barras de los ${weekdayPlural(WEEKDAYS[Number(f.weekday)])}`:(f.venueId?'Resultado de la sala antes de gastos generales':f.basis==='net'?'Resultado antes del caché de obras':'Resultado del negocio');
+  const resultLabel=weekdayOn?`Funciones + eventos + barras de los ${weekdayPlural(WEEKDAYS[Number(f.weekday)])}`:(f.venueId?'Resultado de la sala antes de gastos generales':f.basis==='net'?'Resultado antes del caché':'Resultado del negocio');
   const weekdaySummaries=WEEKDAYS.map((name,i)=>({name,s:summarizeBusiness(snapshot,{...f,weekday:String(i)})}));
-  const weekdayRowsHtml=weekdaySummaries.filter(x=>x.s.total.count||x.s.total.barCount)
-    .map(({name,s})=>`<tr><td>${name}</td><td class="right">${s.total.count}</td><td class="right">${fmt(s.total.works/100)}</td><td class="right">${s.total.barCount}</td><td class="right">${fmt(s.total.bars/100)}</td><td class="right fw700 ${(s.total.works+s.total.bars)<0?'danger':'success'}">${fmt((s.total.works+s.total.bars)/100)}</td></tr>`).join('')
-    ||'<tr><td colspan="6" class="empty">Sin actividad en este periodo</td></tr>';
+  const weekdayRowsHtml=weekdaySummaries.filter(x=>x.s.total.count||x.s.total.eventCount||x.s.total.barCount)
+    .map(({name,s})=>{const tot=s.total.works+s.total.events+s.total.bars;return `<tr><td>${name}</td><td class="right">${s.total.count}</td><td class="right">${fmt(s.total.works/100)}</td><td class="right">${s.total.eventCount}</td><td class="right orange">${fmt(s.total.events/100)}</td><td class="right">${fmt(s.total.bars/100)}</td><td class="right fw700 ${tot<0?'danger':'success'}">${fmt(tot/100)}</td></tr>`;}).join('')
+    ||'<tr><td colspan="7" class="empty">Sin actividad en este periodo</td></tr>';
   const totalCosts=t.expenses+t.general;
+
+  // Reparto funciones / eventos / barras (solo positivos para la barra visual)
+  const lineas=[['Funciones',t.works,'var(--purple)'],['Eventos',t.events,'var(--orange)'],['Barras',t.bars,'var(--cyan)']];
+  const posSum=lineas.reduce((a,[,v])=>a+Math.max(0,v),0);
+  const splitBar=posSum>0?`<div class="nb-split">${lineas.map(([n,v,c])=>`<span title="${n}: ${fmt(v/100)}" style="width:${(Math.max(0,v)/posSum*100).toFixed(2)}%;background:${c}"></span>`).join('')}</div><p class="nb-note">${lineas.map(([n,v,c])=>`<span style="color:${c}">■</span> ${n} ${posSum?fmtPct(Math.max(0,v)/posSum*100):'—'}`).join(' · ')}</p>`:'<p class="nb-note">Sin ingresos positivos en el periodo.</p>';
+  const obrasYEventos=t.works+t.events;
+  const eventShare=obrasYEventos>0?t.events/obrasYEventos*100:0;
+
+  // Tabla por obra: funciones vs eventos
+  const bothCount=summary.works.filter(w=>w.showCount&&w.eventCount).length;
+  const workRows=summary.works.map(w=>`<tr><td>${esc(w.name)}${w.showCount&&w.eventCount?' <span class="badge badge-event">Funciones + eventos</span>':''}</td><td class="right">${w.showCount}</td><td class="right">${fmt(w.showGross/100)}</td><td class="right">${fmt(w.showCents/100)}</td><td class="right">${w.eventCount}</td><td class="right">${fmt(w.eventGross/100)}</td><td class="right orange">${fmt(w.eventCents/100)}</td><td class="right fw700 ${w.total<0?'danger':'success'}">${fmt(w.total/100)}</td></tr>`).join('')||'<tr><td colspan="8" class="empty">Sin funciones ni eventos en este periodo</td></tr>';
+  const wt=summary.works.reduce((a,w)=>({sc:a.sc+w.showCount,sg:a.sg+w.showGross,s:a.s+w.showCents,ec:a.ec+w.eventCount,eg:a.eg+w.eventGross,e:a.e+w.eventCents,t:a.t+w.total}),{sc:0,sg:0,s:0,ec:0,eg:0,e:0,t:0});
+
   return `<div class="nb-dashboard">${header}
-  <div class="card mb20"><div class="dashboard-filters"><div class="field"><label>Mes</label><select data-business-filter="month">${businessMonthOptions(f.month)}</select></div><div class="field"><label>Año</label><select data-business-filter="year">${businessYearOptions(f.year,periods)}</select></div><div class="field"><label>Día de la semana</label><select data-business-filter="weekday">${weekdayFilterOptions(f.weekday)}</select></div><div class="field"><label>Sala</label><select data-business-filter="venueId">${businessVenueOptions()}</select></div><div class="field"><label>Importe de obras que se suma</label><select data-business-filter="basis"><option value="benefit" ${f.basis==='benefit'?'selected':''}>Beneficio después del caché</option><option value="net" ${f.basis==='net'?'selected':''}>Neto antes del caché</option></select></div></div></div>
-  <div class="nb-hero mb20 ${t.result<0?'negative':''}"><div><p class="nb-eyebrow">${esc(periodName(f.year,f.month))} · ${esc(venueName)}</p><h2>${esc(resultLabel)}</h2><div class="nb-result ${t.result<0?'danger':'success'}" id="business-result">${summary.hasData?fmt(t.result/100):'Sin registros'}</div><p class="nb-comparison">${summary.hasData&&previous.hasData?`${delta>=0?'+':''}${fmt(delta/100)} frente a ${esc(periodName(prevFilter.year,prevFilter.month))}`:'Sin registros comparables en el periodo anterior'}</p></div><div class="nb-formula"><div><span>${esc(basisLabel)}</span><strong>${fmt(t.works/100)}</strong></div><div><span>+ Cobros de barras</span><strong>${fmt(t.bars/100)}</strong></div><div><span>− Gastos asignados a salas</span><strong>${fmt(t.expenses/100)}</strong></div><div><span>− Gastos generales incluidos</span><strong>${fmt(t.general/100)}</strong></div></div></div>
+  <div class="card mb20"><div class="dashboard-filters"><div class="field"><label>Mes</label><select data-business-filter="month">${businessMonthOptions(f.month)}</select></div><div class="field"><label>Año</label><select data-business-filter="year">${businessYearOptions(f.year,periods)}</select></div><div class="field"><label>Día de la semana</label><select data-business-filter="weekday">${weekdayFilterOptions(f.weekday)}</select></div><div class="field"><label>Sala</label><select data-business-filter="venueId">${businessVenueOptions()}</select></div><div class="field"><label>Importe de funciones y eventos</label><select data-business-filter="basis"><option value="benefit" ${f.basis==='benefit'?'selected':''}>Beneficio después del caché</option><option value="net" ${f.basis==='net'?'selected':''}>Neto antes del caché</option></select></div></div></div>
+  <div class="nb-hero mb20 ${t.result<0?'negative':''}"><div><p class="nb-eyebrow">${esc(periodName(f.year,f.month))} · ${esc(venueName)}</p><h2>${esc(resultLabel)}</h2><div class="nb-result ${t.result<0?'danger':'success'}" id="business-result">${summary.hasData?fmt(t.result/100):'Sin registros'}</div><p class="nb-comparison">${summary.hasData&&previous.hasData?`${delta>=0?'+':''}${fmt(delta/100)} frente a ${esc(periodName(prevFilter.year,prevFilter.month))}`:'Sin registros comparables en el periodo anterior'}</p></div><div class="nb-formula"><div><span>Funciones · ${esc(basisShort)}</span><strong>${fmt(t.works/100)}</strong></div><div><span>+ Eventos · ${esc(basisShort)}</span><strong class="orange">${fmt(t.events/100)}</strong></div><div><span>+ Cobros de barras</span><strong>${fmt(t.bars/100)}</strong></div><div><span>− Gastos asignados a salas</span><strong>${fmt(t.expenses/100)}</strong></div><div><span>− Gastos generales incluidos</span><strong>${fmt(t.general/100)}</strong></div></div></div>
   ${f.basis==='net'?'<div class="nb-context mb20">Vista antes del caché: el importe que corresponde a las compañías todavía no se ha descontado. Para ver el resultado después de ese coste, selecciona «Beneficio después del caché».</div>':''}
   ${f.venueId?`<div class="nb-context mb20">Hay ${fmt(t.periodGeneral/100)} de gastos generales del periodo. No están asignados a esta sala; se descuentan al seleccionar «Todo el negocio».</div>`:''}
-  ${weekdayOn?`<div class="nb-context mb20">Filtro por día de la semana activo (${esc(WEEKDAYS[Number(f.weekday)])}). Los gastos mensuales se registran por mes, no por día, así que no se incluyen en este resultado: aquí ves obras + barras de ese día.</div>`:''}
-  ${summary.undated?`<div class="nb-context mb20">${summary.undated} registros de obras o barras carecen de fecha y no se pueden incluir en los periodos. Revisa sus fechas.</div>`:''}
-  <div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">Aportación de obras</div><div class="kpi-value purple">${fmt(t.works/100)}</div><div class="nb-note">${t.count} funciones · ${f.basis==='net'?'antes':'después'} del caché</div></div><div class="card"><div class="kpi-label">Facturación de barras</div><div class="kpi-value cyan">${fmt(t.bars/100)}</div><div class="nb-note">${t.barCount} registros de cobros</div></div><div class="card"><div class="kpi-label">Gastos mensuales incluidos</div><div class="kpi-value danger">${fmt(totalCosts/100)}</div><div class="nb-note">${fmt(t.expenses/100)} asignados + ${fmt(t.general/100)} generales</div></div><div class="card"><div class="kpi-label">Salas con resultado negativo</div><div class="kpi-value ${summary.ranking.some(v=>v.result<0)?'danger':''}">${summary.ranking.filter(v=>v.result<0).length} / ${summary.ranking.length}</div><div class="nb-note">Antes de gastos generales</div></div></div>
-  <div class="card mb20"><h3>Resultado por día de la semana</h3><p class="nb-note" style="margin-bottom:14px">Obras + barras de cada día dentro del periodo y la sala seleccionados. No incluye gastos mensuales, que se registran por mes.</p><div class="table-wrap"><table><thead><tr><th>Día</th><th class="right">Funciones</th><th class="right">Obras</th><th class="right">Registros de barra</th><th class="right">Barras</th><th class="right">Total del día</th></tr></thead><tbody>${weekdayRowsHtml}</tbody></table></div></div>
+  ${weekdayOn?`<div class="nb-context mb20">Filtro por día de la semana activo (${esc(WEEKDAYS[Number(f.weekday)])}). Los gastos mensuales se registran por mes, no por día, así que no se incluyen en este resultado: aquí ves funciones + eventos + barras de ese día.</div>`:''}
+  ${summary.undated?`<div class="nb-context mb20">${summary.undated} registros de funciones, eventos o barras carecen de fecha y no se pueden incluir en los periodos. Revisa sus fechas.</div>`:''}
+  <div class="grid grid-kpis mb20">
+    <div class="card"><div class="kpi-label">Aportación de funciones</div><div class="kpi-value purple">${fmt(t.works/100)}</div><div class="nb-note">${K('show').count(t.count)} · ${f.basis==='net'?'antes':'después'} del caché</div></div>
+    <div class="card"><div class="kpi-label">Aportación de eventos</div><div class="kpi-value orange">${fmt(t.events/100)}</div><div class="nb-note">${K('event').count(t.eventCount)} · ${fmtPct(eventShare)} de funciones + eventos</div></div>
+    <div class="card"><div class="kpi-label">Facturación de barras</div><div class="kpi-value cyan">${fmt(t.bars/100)}</div><div class="nb-note">${t.barCount} registros de cobros</div></div>
+    <div class="card"><div class="kpi-label">Gastos mensuales incluidos</div><div class="kpi-value danger">${fmt(totalCosts/100)}</div><div class="nb-note">${fmt(t.expenses/100)} asignados + ${fmt(t.general/100)} generales</div></div>
+    <div class="card"><div class="kpi-label">Obras con actividad</div><div class="kpi-value">${summary.works.length}</div><div class="nb-note">${bothCount} con funciones y eventos</div></div>
+    <div class="card"><div class="kpi-label">Salas con resultado negativo</div><div class="kpi-value ${summary.ranking.some(v=>v.result<0)?'danger':''}">${summary.ranking.filter(v=>v.result<0).length} / ${summary.ranking.length}</div><div class="nb-note">Antes de gastos generales</div></div>
+  </div>
+  <div class="card mb20"><h3>De dónde viene el ingreso</h3>${splitBar}</div>
+  <div class="card mb20"><h3>Funciones y eventos por obra</h3><p class="nb-note" style="margin-bottom:14px">Total conjunto de cada obra en el periodo. Si una obra hizo funciones y también un evento, verás ambas partes y su suma. Importes: ${esc(basisShort)}; facturación = venta bruta.</p><div class="table-wrap"><table><thead><tr><th>Obra</th><th class="right">Funciones</th><th class="right">Facturación func.</th><th class="right">Importe func.</th><th class="right">Eventos</th><th class="right">Facturación ev.</th><th class="right">Importe ev.</th><th class="right">Total obra</th></tr></thead><tbody>${workRows}</tbody>${summary.works.length?`<tfoot><tr><th>Total</th><th class="right">${wt.sc}</th><th class="right">${fmt(wt.sg/100)}</th><th class="right">${fmt(wt.s/100)}</th><th class="right">${wt.ec}</th><th class="right">${fmt(wt.eg/100)}</th><th class="right">${fmt(wt.e/100)}</th><th class="right">${fmt(wt.t/100)}</th></tr></tfoot>`:''}</table></div></div>
+  <div class="card mb20"><h3>Resultado por día de la semana</h3><p class="nb-note" style="margin-bottom:14px">Funciones + eventos + barras de cada día dentro del periodo y la sala seleccionados. No incluye gastos mensuales, que se registran por mes.</p><div class="table-wrap"><table><thead><tr><th>Día</th><th class="right">Funciones</th><th class="right">Importe func.</th><th class="right">Eventos</th><th class="right">Importe ev.</th><th class="right">Barras</th><th class="right">Total del día</th></tr></thead><tbody>${weekdayRowsHtml}</tbody></table></div></div>
   <div class="card mb20"><div class="section-top"><div><h3 style="margin-bottom:4px">Evolución mensual · ${esc(f.year)}</h3><p class="nb-note">${esc(venueName)} · ${esc(basisLabel)}</p></div></div>${businessChart(months)}</div>
-  <div class="card mb20"><h3>Ranking de salas por resultado</h3><p class="nb-note" style="margin-bottom:14px">Obras + barras − gastos asignados. Pulsa una sala para ver su detalle.</p><div class="table-wrap"><table id="business-ranking"><thead><tr><th># / Sala</th><th class="right">Obras</th><th class="right">Barras</th><th class="right">Gastos asignados</th><th class="right">Resultado</th></tr></thead><tbody>${summary.ranking.map((v,i)=>`<tr><td><button class="nb-room-button" data-business-venue="${esc(v.id)}"><span class="nb-rank">${i+1}</span>${esc(v.name)}</button></td><td class="right">${fmt(v.works/100)}</td><td class="right">${fmt(v.bars/100)}</td><td class="right">${fmt(v.expenses/100)}</td><td class="right fw700 ${v.result<0?'danger':'success'}">${fmt(v.result/100)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin actividad en este periodo</td></tr>'}</tbody><tfoot><tr><th>Subtotal de salas</th><th class="right">${fmt(t.works/100)}</th><th class="right">${fmt(t.bars/100)}</th><th class="right">${fmt(t.expenses/100)}</th><th class="right">${fmt((t.result+t.general)/100)}</th></tr>${!f.venueId?`<tr><td colspan="4">Gastos generales sin asignar</td><td class="right danger">−${fmt(t.general/100)}</td></tr>`:''}<tr><th colspan="4">${esc(resultLabel)}</th><th class="right ${t.result<0?'danger':'success'}">${fmt(t.result/100)}</th></tr></tfoot></table></div></div>
-  <div class="grid grid-2 mb20"><div class="card"><h3>Gastos mensuales por tipo</h3>${renderMiniBars(summary.types.map(t=>[t.name,t.cents/100]),0,'var(--danger)',summary.types.length)}<p class="nb-note">Solo gastos del nuevo apartado «Gastos», dentro de los filtros.</p></div><div class="card"><h3>Obras que más aportan</h3>${renderMiniBars(summary.works.slice(0,8).map(w=>[w.name,w.cents/100]),0,'var(--purple)',8)}<p class="nb-note">${esc(basisLabel)}. No se asignan a las obras los gastos generales del negocio.</p></div></div>
-  <div class="card mb20"><h3>Detalle mensual del año</h3><div class="table-wrap"><table><thead><tr><th>Mes</th><th class="right">Obras</th><th class="right">Barras</th><th class="right">Gastos de salas</th><th class="right">Generales</th><th class="right">Resultado</th></tr></thead><tbody>${months.map(m=>{const v=m.summary.total;return `<tr><td>${MONTH_NAMES[Number(m.month)-1]}</td>${m.summary.hasData?`<td class="right">${fmt(v.works/100)}</td><td class="right">${fmt(v.bars/100)}</td><td class="right">${fmt(v.expenses/100)}</td><td class="right">${fmt(v.general/100)}</td><td class="right fw700 ${v.result<0?'danger':'success'}">${fmt(v.result/100)}</td>`:'<td colspan="5" class="right muted">Sin registros</td>'}</tr>`;}).join('')}</tbody></table></div></div>
-  <div class="card"><h3>Cómo se calcula</h3><p class="nb-note">${esc(basisLabel)} + cobros de barras − gastos asignados − gastos generales incluidos. Los gastos y el caché ya descontados en las funciones no se vuelven a restar. Registra en «Gastos» solo costes adicionales.</p><p class="nb-note mt10">Venta bruta de entradas del periodo: <strong>${fmt(t.gross/100)}</strong>. Se muestra como referencia; no se suma otra vez. Barras utiliza el importe cobrado, sin separar IVA. El resultado es de gestión con los importes registrados; no equivale a un beneficio contable después de impuestos.</p><p class="nb-note mt10">Última carga: ${esc(new Date(snapshot.updatedAt).toLocaleString('es-ES'))}. Los periodos sin registros no permiten saber si falta información o no hubo actividad.</p></div></div>`;
+  <div class="card mb20"><h3>Ranking de salas por resultado</h3><p class="nb-note" style="margin-bottom:14px">Funciones + eventos + barras − gastos asignados. Pulsa una sala para ver su detalle.</p><div class="table-wrap"><table id="business-ranking"><thead><tr><th># / Sala</th><th class="right">Funciones</th><th class="right">Eventos</th><th class="right">Barras</th><th class="right">Gastos asignados</th><th class="right">Resultado</th></tr></thead><tbody>${summary.ranking.map((v,i)=>`<tr><td><button class="nb-room-button" data-business-venue="${esc(v.id)}"><span class="nb-rank">${i+1}</span>${esc(v.name)}</button></td><td class="right">${fmt(v.works/100)}</td><td class="right orange">${fmt(v.events/100)}</td><td class="right">${fmt(v.bars/100)}</td><td class="right">${fmt(v.expenses/100)}</td><td class="right fw700 ${v.result<0?'danger':'success'}">${fmt(v.result/100)}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Sin actividad en este periodo</td></tr>'}</tbody><tfoot><tr><th>Subtotal de salas</th><th class="right">${fmt(t.works/100)}</th><th class="right">${fmt(t.events/100)}</th><th class="right">${fmt(t.bars/100)}</th><th class="right">${fmt(t.expenses/100)}</th><th class="right">${fmt((t.result+t.general)/100)}</th></tr>${!f.venueId?`<tr><td colspan="5">Gastos generales sin asignar</td><td class="right danger">−${fmt(t.general/100)}</td></tr>`:''}<tr><th colspan="5">${esc(resultLabel)}</th><th class="right ${t.result<0?'danger':'success'}">${fmt(t.result/100)}</th></tr></tfoot></table></div></div>
+  <div class="grid grid-2 mb20"><div class="card"><h3>Gastos mensuales por tipo</h3>${renderMiniBars(summary.types.map(t=>[t.name,t.cents/100]),0,'var(--danger)',summary.types.length)}<p class="nb-note">Solo gastos del apartado «Gastos», dentro de los filtros.</p></div><div class="card"><h3>Obras que más aportan (funciones + eventos)</h3>${renderMiniBars(summary.works.slice(0,8).map(w=>[w.name,w.total/100]),0,'var(--purple)',8)}<p class="nb-note">${esc(basisLabel)}. No se asignan a las obras los gastos generales del negocio.</p></div></div>
+  <div class="card mb20"><h3>Detalle mensual del año</h3><div class="table-wrap"><table><thead><tr><th>Mes</th><th class="right">Funciones</th><th class="right">Eventos</th><th class="right">Barras</th><th class="right">Gastos de salas</th><th class="right">Generales</th><th class="right">Resultado</th></tr></thead><tbody>${months.map(m=>{const v=m.summary.total;return `<tr><td>${MONTH_NAMES[Number(m.month)-1]}</td>${m.summary.hasData?`<td class="right">${fmt(v.works/100)} <span class="dim">(${v.count})</span></td><td class="right orange">${fmt(v.events/100)} <span class="dim">(${v.eventCount})</span></td><td class="right">${fmt(v.bars/100)}</td><td class="right">${fmt(v.expenses/100)}</td><td class="right">${fmt(v.general/100)}</td><td class="right fw700 ${v.result<0?'danger':'success'}">${fmt(v.result/100)}</td>`:'<td colspan="6" class="right muted">Sin registros</td>'}</tr>`;}).join('')}</tbody></table></div></div>
+  <div class="card"><h3>Cómo se calcula</h3><p class="nb-note">Funciones (${esc(basisShort)}) + eventos (${esc(basisShort)}) + cobros de barras − gastos asignados − gastos generales incluidos. Funciones y eventos se calculan igual pero se registran por separado; aquí se suman. Los gastos y el caché ya descontados en cada registro no se vuelven a restar. Registra en «Gastos» solo costes adicionales.</p><p class="nb-note mt10">Venta bruta de entradas del periodo (funciones + eventos): <strong>${fmt(t.gross/100)}</strong>. Se muestra como referencia; no se suma otra vez. Barras utiliza el importe cobrado, sin separar IVA. El resultado es de gestión con los importes registrados; no equivale a un beneficio contable después de impuestos.</p><p class="nb-note mt10">Última carga: ${esc(new Date(snapshot.updatedAt).toLocaleString('es-ES'))}. Los periodos sin registros no permiten saber si falta información o no hubo actividad.</p></div></div>`;
 }
 function bindBusinessEvents(){
   const chart=document.querySelector('.nb-chart'),selected=chart?.querySelector('.nb-month.selected');
@@ -1765,14 +1961,13 @@ function bindBusinessEvents(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// INFORME PDF CORPORATIVO DE FUNCIONES FILTRADAS
+// INFORME PDF DE FUNCIONES / EVENTOS FILTRADOS
 // Usa la impresión del navegador: «Guardar como PDF».
-// Incluye TODAS las funciones que cumplen los filtros del dashboard.
 // ══════════════════════════════════════════════════════════════
 function pdfMoney(n){ return `${new Intl.NumberFormat('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n||0))} €`; }
 
-function activeDashboardFilterLabels(){
-  const f=S.dashboardFilters||{};
+function activeDashboardFilterLabels(kind){
+  const f=dashFiltersOf(kind);
   const out=[];
   if(f.month) out.push(['Mes',f.month]);
   if(f.from) out.push(['Desde',f.from]);
@@ -1792,23 +1987,24 @@ function pdfLogo(){
   return `<svg viewBox="0 0 280 150" width="190" height="102" xmlns="http://www.w3.org/2000/svg"><text x="140" y="60" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="42" font-weight="700" letter-spacing="3" fill="#15151E">LA OPCIÓN</text><rect x="4" y="76" width="272" height="4" fill="#1B86AC"/><rect x="4" y="86" width="272" height="4" fill="#C93C86"/><rect x="4" y="96" width="272" height="4" fill="#B49A18"/><text x="140" y="126" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="17" letter-spacing="7" fill="#6B6B80">PRODUCCIONES</text></svg>`;
 }
 
-function buildShowsPdfHtml(){
-  const cs=getDashboardFilteredShows().map(s=>({...s,c:showAmounts(s)}))
+function buildShowsPdfHtml(kind='show'){
+  kind=normKind(kind); const k=K(kind);
+  const cs=getDashboardFilteredShows(kind).map(s=>({...s,c:showAmounts(s)}))
     .sort((a,b)=>(a.date||'').localeCompare(b.date||'')||String(a.workName).localeCompare(String(b.workName),'es'));
   const t=cs.reduce((a,s)=>({
     vb:a.vb+s.c.ventaBruta, vn:a.vn+s.c.ventaNeta, g:a.g+s.c.totalGastos, tn:a.tn+s.c.totalNeto,
     ca:a.ca+s.c.cache, ro:a.ro+s.c.restanteOpcion, comm:a.comm+s.c.totalComm, autor:a.autor+s.c.autorImporte,
     alquiler:a.alquiler+s.c.venueRental, otros:a.otros+s.c.otrosGastosRegulares,
   }),{vb:0,vn:0,g:0,tn:0,ca:0,ro:0,comm:0,autor:0,alquiler:0,otros:0});
-  Object.keys(t).forEach(k=>{t[k]=r2(t[k]);});
+  Object.keys(t).forEach(key=>{t[key]=r2(t[key]);});
   const n=cs.length;
 
   const dates=cs.map(s=>s.date).filter(Boolean).sort();
   const periodo=dates.length?(dates[0]===dates[dates.length-1]?dates[0]:`${dates[0]} a ${dates[dates.length-1]}`):'Sin fechas';
-  const filters=activeDashboardFilterLabels();
+  const filters=activeDashboardFilterLabels(kind);
   const filtersHtml=filters.length
-    ? filters.map(([k,v])=>`<span class="chip"><b>${esc(k)}:</b> ${esc(v)}</span>`).join('')
-    : '<span class="chip">Sin filtros: todas las funciones</span>';
+    ? filters.map(([key,v])=>`<span class="chip"><b>${esc(key)}:</b> ${esc(v)}</span>`).join('')
+    : `<span class="chip">Sin filtros: todos los registros</span>`;
 
   const rows=cs.map(s=>`<tr>
     <td>${esc(s.date||'—')}</td>
@@ -1821,7 +2017,7 @@ function buildShowsPdfHtml(){
     <td class="r">${pdfMoney(s.c.totalGastos)}</td>
     <td class="r">${pdfMoney(s.c.cache)}</td>
     <td class="r b ${s.c.restanteOpcion<0?'neg':''}">${pdfMoney(s.c.restanteOpcion)}</td>
-  </tr>`).join('')||'<tr><td colspan="10" class="empty">No hay funciones con estos filtros.</td></tr>';
+  </tr>`).join('')||`<tr><td colspan="10" class="empty">${k.none} con estos filtros.</td></tr>`;
 
   const months={};
   cs.forEach(s=>{
@@ -1840,7 +2036,7 @@ function buildShowsPdfHtml(){
   });
   const weekdayRows=wd.map((v,i)=>({v,i})).filter(x=>x.v.n>0)
     .map(({v,i})=>`<tr><td>${WEEKDAYS[i]}</td><td class="r">${v.n}</td><td class="r">${pdfMoney(v.vb)}</td><td class="r">${pdfMoney(v.vb/v.n)}</td><td class="r">${pdfMoney(v.tn)}</td><td class="r">${pdfMoney(v.ca)}</td><td class="r b ${v.ro<0?'neg':''}">${pdfMoney(v.ro)}</td></tr>`).join('')
-    ||'<tr><td colspan="7" class="empty">Sin funciones con fecha</td></tr>';
+    ||`<tr><td colspan="7" class="empty">${k.none} con fecha</td></tr>`;
 
   const plat={};
   cs.forEach(s=>{
@@ -1858,22 +2054,23 @@ function buildShowsPdfHtml(){
 
   const works={};
   cs.forEach(s=>{
-    const k=dashboardEntityName(s,'works')||'Sin obra';
-    if(!works[k]) works[k]={n:0,vb:0,tn:0,ca:0,ro:0};
-    works[k].n+=1; works[k].vb+=s.c.ventaBruta; works[k].tn+=s.c.totalNeto; works[k].ca+=s.c.cache; works[k].ro+=s.c.restanteOpcion;
+    const key=dashboardEntityName(s,'works')||'Sin obra';
+    if(!works[key]) works[key]={n:0,vb:0,tn:0,ca:0,ro:0};
+    works[key].n+=1; works[key].vb+=s.c.ventaBruta; works[key].tn+=s.c.totalNeto; works[key].ca+=s.c.cache; works[key].ro+=s.c.restanteOpcion;
   });
   const workRows=Object.entries(works).sort((a,b)=>b[1].ro-a[1].ro).map(([name,v])=>`<tr><td class="ell">${esc(name)}</td><td class="r">${v.n}</td><td class="r">${pdfMoney(v.vb)}</td><td class="r">${pdfMoney(v.tn)}</td><td class="r">${pdfMoney(v.ca)}</td><td class="r b ${v.ro<0?'neg':''}">${pdfMoney(v.ro)}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Sin datos</td></tr>';
 
   const avisos=[];
   const allToCompany=cs.filter(s=>s.c.allToCompany).length;
   const mismatched=cs.filter(s=>s.c.mismatch).length;
-  if(n&&allToCompany===n) avisos.push('En todas las funciones de este informe el caché equivale al total neto (acuerdo al 100 % de taquilla), por lo que el beneficio de La Opción es 0 €.');
-  else if(allToCompany) avisos.push(`${allToCompany} de ${n} funciones dejan 0 € a La Opción porque todo el neto va a la compañía.`);
-  if(mismatched) avisos.push(`${mismatched} función(es) tienen importes descuadrados en la hoja de cálculo (caché + restante ≠ total neto).`);
+  if(n&&allToCompany===n) avisos.push(`En todos los ${k.many} de este informe el caché equivale al total neto (acuerdo al 100 % de taquilla), por lo que el beneficio de La Opción es 0 €.`);
+  else if(allToCompany) avisos.push(`${allToCompany} de ${k.count(n)} dejan 0 € a La Opción porque todo el neto va a la compañía.`);
+  if(mismatched) avisos.push(`${mismatched} registro(s) tienen importes descuadrados en la hoja de cálculo (caché + restante ≠ total neto).`);
   const avisosHtml=avisos.length?`<div class="avisos"><b>Notas</b><ul>${avisos.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:'';
 
   const generado=new Date().toLocaleString('es-ES');
-  const titulo=filters.find(([k])=>k==='Obra')?`Informe de funciones · ${filters.find(([k])=>k==='Obra')[1]}`:'Informe de funciones';
+  const obraFiltro=filters.find(([key])=>key==='Obra');
+  const titulo=obraFiltro?`Informe de ${k.many} · ${obraFiltro[1]}`:`Informe de ${k.many}`;
 
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(titulo)} · La Opción Producciones</title><style>
 @page{size:A4 portrait;margin:14mm 12mm 16mm}
@@ -1899,7 +2096,6 @@ tfoot td{border-top:2px solid #15151E;font-weight:700;background:#fff}
 .empty{text-align:center;color:#6B6B80;padding:12px}
 .avisos{margin-top:14px;border-left:3px solid #B49A18;background:#FCFAF0;padding:8px 12px;font-size:8.5pt}
 .avisos ul{margin:4px 0 0 16px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
 footer{position:fixed;bottom:-10mm;left:0;right:0;border-top:1px solid #D3D3DE;padding-top:4px;font-size:7.5pt;color:#6B6B80;display:flex;justify-content:space-between}
 thead{display:table-header-group}
 tr{break-inside:avoid}
@@ -1909,35 +2105,35 @@ h2{break-after:avoid}
   <div>${pdfLogo()}</div>
   <div class="meta">
     <h1>${esc(titulo)}</h1>
-    <div class="sub">Periodo: ${esc(periodo)} · ${n} ${n===1?'función':'funciones'}</div>
+    <div class="sub">Periodo: ${esc(periodo)} · ${k.count(n)}</div>
     <div class="chips">${filtersHtml}</div>
   </div>
 </header>
 
 ${avisosHtml}
 
-<h2>Detalle de funciones (${n})</h2>
+<h2>Detalle de ${k.many} (${n})</h2>
 <table>
   <thead><tr><th>Fecha</th><th>Día</th><th>Obra</th><th>Sala</th><th>Acuerdo</th><th class="r">V. bruta</th><th class="r">V. neta</th><th class="r">Gastos</th><th class="r">Caché</th><th class="r">Restante</th></tr></thead>
   <tbody>${rows}</tbody>
-  <tfoot><tr><td colspan="5">Total · ${n} ${n===1?'función':'funciones'}</td><td class="r">${pdfMoney(t.vb)}</td><td class="r">${pdfMoney(t.vn)}</td><td class="r">${pdfMoney(t.g)}</td><td class="r">${pdfMoney(t.ca)}</td><td class="r">${pdfMoney(t.ro)}</td></tr></tfoot>
+  <tfoot><tr><td colspan="5">Total · ${k.count(n)}</td><td class="r">${pdfMoney(t.vb)}</td><td class="r">${pdfMoney(t.vn)}</td><td class="r">${pdfMoney(t.g)}</td><td class="r">${pdfMoney(t.ca)}</td><td class="r">${pdfMoney(t.ro)}</td></tr></tfoot>
 </table>
 
 <h2>Resumen por mes</h2>
 <table>
-  <thead><tr><th>Mes</th><th class="r">Func.</th><th class="r">V. bruta</th><th class="r">V. neta</th><th class="r">Gastos</th><th class="r">T. neto</th><th class="r">Caché</th><th class="r">Restante</th></tr></thead>
+  <thead><tr><th>Mes</th><th class="r">Núm.</th><th class="r">V. bruta</th><th class="r">V. neta</th><th class="r">Gastos</th><th class="r">T. neto</th><th class="r">Caché</th><th class="r">Restante</th></tr></thead>
   <tbody>${monthRows}</tbody>
 </table>
 
 <h2>Resumen por día de la semana</h2>
 <table>
-  <thead><tr><th>Día</th><th class="r">Func.</th><th class="r">V. bruta</th><th class="r">Media/func.</th><th class="r">T. neto</th><th class="r">Caché</th><th class="r">Restante</th></tr></thead>
+  <thead><tr><th>Día</th><th class="r">Núm.</th><th class="r">V. bruta</th><th class="r">Media</th><th class="r">T. neto</th><th class="r">Caché</th><th class="r">Restante</th></tr></thead>
   <tbody>${weekdayRows}</tbody>
 </table>
 
 <h2>Resumen por obra</h2>
 <table>
-  <thead><tr><th>Obra</th><th class="r">Func.</th><th class="r">V. bruta</th><th class="r">T. neto</th><th class="r">Caché</th><th class="r">Restante</th></tr></thead>
+  <thead><tr><th>Obra</th><th class="r">Núm.</th><th class="r">V. bruta</th><th class="r">T. neto</th><th class="r">Caché</th><th class="r">Restante</th></tr></thead>
   <tbody>${workRows}</tbody>
 </table>
 
@@ -1964,11 +2160,12 @@ ${avisosHtml}
 </body></html>`;
 }
 
-function exportShowsPdf(){
-  const cs=getDashboardFilteredShows();
-  if(!cs.length) return showToast('No hay funciones con estos filtros para exportar.','warn');
+function exportShowsPdf(kind='show'){
+  kind=normKind(kind);
+  const cs=getDashboardFilteredShows(kind);
+  if(!cs.length) return showToast(`No hay ${K(kind).many} con estos filtros para exportar.`,'warn');
   try{
-    const html=buildShowsPdfHtml();
+    const html=buildShowsPdfHtml(kind);
     const previous=document.getElementById('pdf-print-frame');
     if(previous) previous.remove();
     const frame=document.createElement('iframe');
@@ -1984,7 +2181,7 @@ function exportShowsPdf(){
     };
     if(doc.readyState==='complete') setTimeout(launch,350);
     else frame.onload=()=>setTimeout(launch,350);
-    showToast(`Informe de ${cs.length} funciones listo. Elige «Guardar como PDF».`,'success');
+    showToast(`Informe de ${K(kind).count(cs.length)} listo. Elige «Guardar como PDF».`,'success');
   }catch(err){showToast('Error al generar el informe: '+err.message,'error');}
 }
 
