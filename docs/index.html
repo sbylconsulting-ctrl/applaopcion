@@ -59,6 +59,18 @@
 .nb-split>span{display:block;height:100%}
 .sync-pill{position:fixed;bottom:16px;right:16px;z-index:120;display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:var(--card);border:1px solid var(--border-light);color:var(--text-muted);font-size:12px;box-shadow:var(--shadow)}
 .sync-pill .spinner{width:14px;height:14px;border-width:2px}
+.order-cell{white-space:nowrap;width:1%}
+.order-wrap{display:flex;align-items:center;gap:6px}
+.drag-handle{cursor:grab;user-select:none;color:var(--text-dim);font-size:15px;line-height:1;padding:4px 2px;letter-spacing:-2px}
+.drag-handle:active{cursor:grabbing}
+.order-num{min-width:20px;text-align:center;font-size:11px;font-weight:800;color:var(--text-muted);background:var(--surface-alt);border-radius:5px;padding:3px 5px}
+.order-btn{border:1px solid var(--border);background:var(--surface-alt);color:var(--text-muted);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:12px;line-height:1;display:inline-grid;place-items:center}
+.order-btn:hover:not(:disabled){color:var(--cyan);border-color:var(--cyan)}
+.order-btn:disabled{opacity:.3;cursor:default}
+tr.dragging{opacity:.35}
+tr.drop-before td{box-shadow:inset 0 2px 0 var(--cyan)}
+tr.drop-after td{box-shadow:inset 0 -2px 0 var(--cyan)}
+.order-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
 @media(max-width:900px){.nb-hero{grid-template-columns:1fr}.nb-formula{border-left:0;border-top:1px solid var(--border-light);padding-left:0;padding-top:12px}.nb-dashboard .bar-label{width:100px}}
 @media(max-width:500px){.nb-hero{padding:20px}.nb-formula>div{font-size:11px}.nb-chart{grid-template-columns:repeat(12,76px)}}
 
@@ -184,7 +196,8 @@ function matchesWeekday(dateStr,weekday){
 }
 
 function alphaSortByName(list){ return [...(list||[])].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es',{sensitivity:'base'})); }
-function getActiveSorted(list){ return alphaSortByName((list||[]).filter(x=>x.active!==false)); }
+// Respeta el orden definido en Administración (arrastrar / flechas)
+function getActiveSorted(list){ return (list||[]).filter(x=>x.active!==false); }
 function getLegacyAgreementById(config,id){ return (config?.agreements||[]).find(a=>a.id===id)||null; }
 function getLegacyAgreementByName(config,name){
   const list=config?.agreements||[];
@@ -242,7 +255,7 @@ function getAgreementCatalog(config=S.config){
   getActiveSorted(config.agreements||[]).forEach(a=>{
     if(!byId.has(a.id)) byId.set(a.id,{id:a.id,name:a.name,mode:a.mode||'percentage',value:Number(a.value||0),source:'legacy'});
   });
-  return alphaSortByName([...byId.values()]);
+  return [...byId.values()];
 }
 function matchesAgreementFilter(show,agreementId,catalog){
   if(!agreementId) return true;
@@ -1258,7 +1271,7 @@ function renderExtraExpenseFields(d,kind){
   Object.entries(map).forEach(([id,x])=>{ if(!types.some(t=>t.id===id)&&(parseFloat(x?.amount)||0)>0) types.push({id,name:x.name||'Gasto',active:false}); });
   const ownerOpts=o=>[['both','Ambas partes'],['laopcion','La Opción'],['company','Compañía']].map(([v,l])=>`<option value="${v}" ${normalizeAutorOwner(o)===v?'selected':''}>${l}</option>`).join('');
   const total=r2(Object.values(map).reduce((a,x)=>a+(parseFloat(x?.amount)||0),0));
-  const rows=alphaSortByName(types).map(t=>{const x=map[t.id]||{};return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end"><div class="field"><label>${esc(t.name)}${t.active===false?' (inactivo)':''} (€)</label><input type="number" min="0" step="0.01" placeholder="0" value="${x.amount||''}" data-extra-amount="${esc(t.id)}" data-extra-name="${esc(t.name)}"/></div><div class="field"><label>¿A quién va?</label><select data-extra-owner="${esc(t.id)}" data-extra-name="${esc(t.name)}">${ownerOpts(x.owner||'both')}</select></div></div>`;}).join('');
+  const rows=types.map(t=>{const x=map[t.id]||{};return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end"><div class="field"><label>${esc(t.name)}${t.active===false?' (inactivo)':''} (€)</label><input type="number" min="0" step="0.01" placeholder="0" value="${x.amount||''}" data-extra-amount="${esc(t.id)}" data-extra-name="${esc(t.name)}"/></div><div class="field"><label>¿A quién va?</label><select data-extra-owner="${esc(t.id)}" data-extra-name="${esc(t.name)}">${ownerOpts(x.owner||'both')}</select></div></div>`;}).join('');
   const empty=S.role==='admin'
     ?'<p class="dim" style="font-size:12px">No hay gastos de evento configurados. Añádelos en Administración → Gastos de eventos.</p>'
     :'<p class="dim" style="font-size:12px">No hay gastos de evento configurados. Pide al administrador que los añada.</p>';
@@ -1308,11 +1321,93 @@ function renderAdmin(){
   const content=S.adminTab==='businessTypes'?renderBusinessTypes():(S.adminTab==='barMethods'?renderBarMethods():(S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab)));
   return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}${S.adminTab==='eventExpenses'?'<div class="event-note">🎉 Cada gasto que añadas aquí (Hotel, Técnico, Artistas…) aparece como una línea en el formulario de eventos, debajo de Autor y Otros gastos. Desactívalo en vez de borrarlo para conservar el histórico.</div>':''}${S.adminTab==='works'?'<div class="dirty-note">Cambiar el acuerdo de una obra no modifica las funciones ni los eventos ya guardados. Para aplicarlo a un registro existente, ábrelo, pulsa Editar y guarda.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
 }
+// ══════════════════════════════════════════════════════════════
+// ORDEN MANUAL EN ADMINISTRACIÓN
+// listKey: "cfg:<tab>" (configuración), "barMethods" o "businessTypes"
+// ══════════════════════════════════════════════════════════════
+function reorderList(listKey){
+  if(listKey.startsWith('cfg:')){ const meta=CONFIG_META[listKey.slice(4)]; if(!meta) return null; if(!Array.isArray(S.config[meta.key])) S.config[meta.key]=[]; return S.config[meta.key]; }
+  if(listKey==='barMethods') return B.methodDraft;
+  if(listKey==='businessTypes') return E.typeDraft;
+  return null;
+}
+function afterReorder(listKey){
+  if(listKey.startsWith('cfg:')){ S.configDirty=true; }
+  else showToast(listKey==='barMethods'?'Orden cambiado. Pulsa «Guardar métodos» para conservarlo.':'Orden cambiado. Pulsa «Guardar tipos» para conservarlo.','warn');
+  render();
+}
+function moveItem(listKey,id,toIndex){
+  const list=reorderList(listKey); if(!list) return;
+  const from=list.findIndex(x=>String(x.id)===String(id)); if(from<0) return;
+  toIndex=Math.max(0,Math.min(list.length-1,toIndex));
+  if(from===toIndex) return;
+  const [item]=list.splice(from,1);
+  list.splice(toIndex,0,item);
+  afterReorder(listKey);
+}
+function renderOrderCell(listKey,id,index,len){
+  const b=(act,label,title,dis)=>`<button type="button" class="order-btn" data-order-action="${act}" data-order-list="${esc(listKey)}" data-order-id="${esc(id)}" title="${title}" aria-label="${title}" ${dis?'disabled':''}>${label}</button>`;
+  return `<td class="order-cell"><div class="order-wrap"><span class="drag-handle" draggable="true" data-drag-list="${esc(listKey)}" data-drag-id="${esc(id)}" title="Arrastra para mover">⋮⋮</span><span class="order-num">${index+1}</span>${b('top','⤒','Poner el primero',index===0)}${b('up','↑','Subir',index===0)}${b('down','↓','Bajar',index===len-1)}</div></td>`;
+}
+function orderToolbar(listKey,count){
+  return `<div class="order-toolbar"><p class="dim" style="font-size:12px;margin:0">Arrastra ⋮⋮ o usa ⤒ ↑ ↓ para ordenar. Este orden se usa en los desplegables de toda la app.</p>${count>1?`<button type="button" class="btn btn-ghost btn-sm" data-order-action="az" data-order-list="${esc(listKey)}">Ordenar A-Z</button>`:''}</div>`;
+}
+function withOrderCell(rowHtml,listKey,id,index,len){
+  return rowHtml.replace(/^<tr>/,`<tr data-drag-row="${esc(listKey)}" data-drag-id="${esc(id)}">${renderOrderCell(listKey,id,index,len)}`);
+}
+function bindOrderEvents(){
+  document.querySelectorAll('[data-order-action]').forEach(el=>{
+    el.onclick=()=>{
+      if(S.isSaving) return;
+      const listKey=el.dataset.orderList, act=el.dataset.orderAction, id=el.dataset.orderId;
+      const list=reorderList(listKey); if(!list) return;
+      if(act==='az'){ const sorted=alphaSortByName(list); list.splice(0,list.length,...sorted); return afterReorder(listKey); }
+      const i=list.findIndex(x=>String(x.id)===String(id));
+      if(act==='top') return moveItem(listKey,id,0);
+      if(act==='up') return moveItem(listKey,id,i-1);
+      if(act==='down') return moveItem(listKey,id,i+1);
+    };
+  });
+  let drag=null;
+  const clear=()=>document.querySelectorAll('tr.drop-before,tr.drop-after,tr.dragging').forEach(r=>r.classList.remove('drop-before','drop-after','dragging'));
+  document.querySelectorAll('.drag-handle[data-drag-id]').forEach(h=>{
+    h.ondragstart=e=>{
+      drag={list:h.dataset.dragList,id:h.dataset.dragId};
+      const row=h.closest('tr'); if(row){ row.classList.add('dragging'); try{e.dataTransfer.setDragImage(row,20,20);}catch(_){} }
+      try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',drag.id);}catch(_){}
+    };
+    h.ondragend=()=>{drag=null;clear();};
+  });
+  document.querySelectorAll('tr[data-drag-row]').forEach(row=>{
+    row.ondragover=e=>{
+      if(!drag||drag.list!==row.dataset.dragRow) return;
+      e.preventDefault();
+      const r=row.getBoundingClientRect(), after=e.clientY>r.top+r.height/2;
+      document.querySelectorAll('tr.drop-before,tr.drop-after').forEach(x=>x.classList.remove('drop-before','drop-after'));
+      row.classList.add(after?'drop-after':'drop-before');
+    };
+    row.ondrop=e=>{
+      if(!drag||drag.list!==row.dataset.dragRow) return;
+      e.preventDefault();
+      const list=reorderList(drag.list); if(!list){clear();return;}
+      const r=row.getBoundingClientRect(), after=e.clientY>r.top+r.height/2;
+      const from=list.findIndex(x=>String(x.id)===String(drag.id));
+      let to=list.findIndex(x=>String(x.id)===String(row.dataset.dragId));
+      if(from<0||to<0){clear();return;}
+      if(after) to+=1;
+      if(from<to) to-=1;
+      const id=drag.id,key=drag.list; drag=null; clear();
+      moveItem(key,id,to);
+    };
+  });
+}
+
 function renderConfigEditor(tab){
   const meta=CONFIG_META[tab]||CONFIG_META.platforms;
-  const items=alphaSortByName(S.config[meta.key]||[]);
-  const rows=items.map(item=>renderConfigRow(tab,item)).join('');
-  return `<div class="grid grid-2 mb20"><div class="card"><h3>Añadir ${meta.singular}</h3>${renderAddConfigForm(tab)}<p class="dim" style="font-size:12px;margin-top:10px">Añade el elemento y después guarda los cambios.</p></div><div class="card"><h3>${meta.title}</h3><div class="table-wrap"><table><thead>${renderConfigHeader(tab)}</thead><tbody>${rows||`<tr><td colspan="6" class="empty">Sin ${meta.title.toLowerCase()}</td></tr>`}</tbody></table></div><p class="dim" style="font-size:12px;margin-top:10px">Desactiva elementos en vez de borrarlos para conservar históricos.</p></div></div>`;
+  const items=S.config[meta.key]||[];
+  const listKey='cfg:'+tab;
+  const rows=items.map((item,i)=>withOrderCell(renderConfigRow(tab,item),listKey,item.id,i,items.length)).join('');
+  return `<div class="grid grid-2 mb20"><div class="card"><h3>Añadir ${meta.singular}</h3>${renderAddConfigForm(tab)}<p class="dim" style="font-size:12px;margin-top:10px">Añade el elemento y después guarda los cambios.</p></div><div class="card"><h3>${meta.title}</h3>${orderToolbar(listKey,items.length)}<div class="table-wrap"><table><thead>${renderConfigHeader(tab).replace(/^<tr>/,'<tr><th>Orden</th>')}</thead><tbody>${rows||`<tr><td colspan="6" class="empty">Sin ${meta.title.toLowerCase()}</td></tr>`}</tbody></table></div><p class="dim" style="font-size:12px;margin-top:10px">Desactiva elementos en vez de borrarlos para conservar históricos. Después de ordenar, pulsa «Guardar cambios».</p></div></div>`;
 }
 function renderAddConfigForm(tab){
   if(tab==='platforms') return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva plataforma"/></div><div class="grid grid-2"><div class="field"><label>Comisión %</label><input type="number" min="0" step="0.01" data-add="commission" data-add-tab="${tab}" placeholder="0"/></div><div class="field"><label>IVA comisión</label><select data-add="ivaOnCommission" data-add-tab="${tab}"><option value="true">Sí</option><option value="false">No</option></select></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir plataforma</button>`;
@@ -1345,7 +1440,7 @@ function renderUsersAdmin(){
 // EVENTS (manejadores de la interfaz)
 // ══════════════════════════════════════════════════════════════
 function bindEvents(){
-  bindBarEvents();bindExpenseEvents();bindBusinessEvents();
+  bindBarEvents();bindExpenseEvents();bindBusinessEvents();bindOrderEvents();
   document.querySelectorAll('[data-view]').forEach(btn=>{
     btn.onclick=()=>{
       if(S.isSaving)return showToast('Espera a que termine el guardado.','warn');
@@ -1722,7 +1817,7 @@ function renderBarDashboard(){
 }
 function renderBarMethods(){
   const methods=B.methodDraft||[];
-  return `${barLoadNotice()}${!B.loaded?'':`<div class="grid grid-2"><div class="card"><h3>Añadir método de pago de barra</h3><div class="field"><label>Nombre</label><input id="bar-method-name" maxlength="100" placeholder="Por ejemplo, Bizum"/></div><button class="btn btn-primary" data-bar-action="addMethod">Añadir método</button><p class="dim mt10">Después pulsa «Guardar métodos».</p></div><div class="card"><h3>Métodos de pago de barra</h3><div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Activo</th></tr></thead><tbody>${methods.map(m=>`<tr><td><input class="inline-input" maxlength="100" data-bar-method-name="${esc(m.id)}" value="${esc(m.name)}"/></td><td><input type="checkbox" data-bar-method-active="${esc(m.id)}" ${m.active!==false?'checked':''}/></td></tr>`).join('')}</tbody></table></div><p class="dim mt10">Desactiva un método para dejar de usarlo en nuevos registros. Los ingresos anteriores se conservan.</p><div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary" data-bar-action="saveMethods">Guardar métodos</button><button class="btn btn-secondary" data-bar-action="reloadMethods">Descartar cambios y recargar</button></div></div></div>`}`;
+  return `${barLoadNotice()}${!B.loaded?'':`<div class="grid grid-2"><div class="card"><h3>Añadir método de pago de barra</h3><div class="field"><label>Nombre</label><input id="bar-method-name" maxlength="100" placeholder="Por ejemplo, Bizum"/></div><button class="btn btn-primary" data-bar-action="addMethod">Añadir método</button><p class="dim mt10">Después pulsa «Guardar métodos».</p></div><div class="card"><h3>Métodos de pago de barra</h3>${orderToolbar('barMethods',methods.length)}<div class="table-wrap"><table><thead><tr><th>Orden</th><th>Nombre</th><th>Activo</th></tr></thead><tbody>${methods.map((m,i)=>withOrderCell(`<tr><td><input class="inline-input" maxlength="100" data-bar-method-name="${esc(m.id)}" value="${esc(m.name)}"/></td><td><input type="checkbox" data-bar-method-active="${esc(m.id)}" ${m.active!==false?'checked':''}/></td></tr>`,'barMethods',m.id,i,methods.length)).join('')}</tbody></table></div><p class="dim mt10">Desactiva un método para dejar de usarlo en nuevos registros. Los ingresos anteriores se conservan.</p><div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary" data-bar-action="saveMethods">Guardar métodos</button><button class="btn btn-secondary" data-bar-action="reloadMethods">Descartar cambios y recargar</button></div></div></div>`}`;
 }
 async function saveBarForm(){
   if(S.isSaving||!B.draft)return;
@@ -1851,7 +1946,7 @@ function renderExpenseEntry(){
   <div class="card"><h3>Detalle de gastos</h3><div class="table-wrap"><table><thead><tr><th>Periodo</th><th>Sala</th><th>Tipo</th><th>Concepto</th><th class="right">Importe</th><th>Acciones</th></tr></thead><tbody>${records.map(r=>`<tr><td>${esc(r.period)}</td><td>${esc(r.venueName)}</td><td>${esc(E.types.find(t=>t.id===r.typeId)?.name||r.typeName)}</td><td style="white-space:normal;min-width:130px">${esc(r.concept||'—')}</td><td class="right">${fmt(r.amount)}</td><td><div class="nb-actions"><button class="btn btn-secondary btn-sm" data-expense-action="edit" data-expense-id="${esc(r.id)}">Editar</button>${S.role==='admin'?`<button class="btn btn-danger btn-sm" data-expense-action="delete" data-expense-id="${esc(r.id)}">Eliminar</button>`:''}</div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No hay gastos con estos filtros</td></tr>'}</tbody><tfoot><tr><th colspan="4">Total filtrado</th><th class="right">${fmt(total)}</th><th></th></tr></tfoot></table></div></div>`}`;
 }
 function renderBusinessTypes(){
-  return `${expenseNotice()}${!E.loaded?'':`<div class="grid grid-2"><div class="card"><h3>Añadir tipo de gasto del negocio</h3><div class="field"><label>Nombre</label><input maxlength="100" id="business-type-name" placeholder="Por ejemplo, Publicidad"/></div><button class="btn btn-primary" data-expense-action="addType">Añadir tipo</button><p class="muted mt10">Después pulsa «Guardar tipos».</p></div><div class="card"><h3>Tipos de gasto del negocio</h3><div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Activo</th></tr></thead><tbody>${(E.typeDraft||[]).map(t=>`<tr><td><input class="inline-input" maxlength="100" data-business-type-name="${esc(t.id)}" value="${esc(t.name)}"/></td><td><input type="checkbox" data-business-type-active="${esc(t.id)}" ${t.active!==false?'checked':''}/></td></tr>`).join('')}</tbody></table></div><p class="muted mt10">Puedes desactivar un tipo; los gastos históricos se mantienen.</p><div class="nb-actions mt10"><button class="btn btn-primary" data-expense-action="saveTypes">Guardar tipos</button><button class="btn btn-secondary" data-expense-action="reloadTypes">Descartar cambios y recargar</button></div></div></div>`}`;
+  return `${expenseNotice()}${!E.loaded?'':`<div class="grid grid-2"><div class="card"><h3>Añadir tipo de gasto del negocio</h3><div class="field"><label>Nombre</label><input maxlength="100" id="business-type-name" placeholder="Por ejemplo, Publicidad"/></div><button class="btn btn-primary" data-expense-action="addType">Añadir tipo</button><p class="muted mt10">Después pulsa «Guardar tipos».</p></div><div class="card"><h3>Tipos de gasto del negocio</h3>${orderToolbar('businessTypes',(E.typeDraft||[]).length)}<div class="table-wrap"><table><thead><tr><th>Orden</th><th>Nombre</th><th>Activo</th></tr></thead><tbody>${(E.typeDraft||[]).map((t,i,arr)=>withOrderCell(`<tr><td><input class="inline-input" maxlength="100" data-business-type-name="${esc(t.id)}" value="${esc(t.name)}"/></td><td><input type="checkbox" data-business-type-active="${esc(t.id)}" ${t.active!==false?'checked':''}/></td></tr>`,'businessTypes',t.id,i,arr.length)).join('')}</tbody></table></div><p class="muted mt10">Puedes desactivar un tipo; los gastos históricos se mantienen.</p><div class="nb-actions mt10"><button class="btn btn-primary" data-expense-action="saveTypes">Guardar tipos</button><button class="btn btn-secondary" data-expense-action="reloadTypes">Descartar cambios y recargar</button></div></div></div>`}`;
 }
 async function saveExpenseForm(){
   if(S.isSaving||!E.draft)return;const d=E.draft;
