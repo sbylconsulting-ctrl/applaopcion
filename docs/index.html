@@ -263,6 +263,23 @@ function matchesAgreementFilter(show,agreementId,catalog){
   const selected=(catalog||getAgreementCatalog()).find(a=>a.id===agreementId);
   return !!(selected&&String(show.agreementSnapshot?.name||'').trim()===String(selected.name||'').trim());
 }
+// ── REPARTO DE SALA (p. ej. Broadway 70/30) ──────────────────
+// splitPct: % para ellos en FUNCIONES (va al caché) · barSplitPct: % para ellos en BARRA
+function splitPctOf(v){ const n=Number(v); return (v===null||v===undefined||v===''||!Number.isFinite(n)||n<=0)?null:Math.min(100,r2(n)); }
+function venueById(id){ return (S.config.venues||[]).find(v=>String(v.id)===String(id))||null; }
+function venueByName(name){ return (S.config.venues||[]).find(v=>normalize(v.name)===normalize(name))||null; }
+function venueAgreement(venue,kind){
+  if(normKind(kind)!=='show'||!venue) return null;
+  const pct=splitPctOf(venue.splitPct); if(pct===null) return null;
+  return {id:'venue_'+venue.id,snapshot:{name:`${venue.name} ${pct}/${r2(100-pct)}`,mode:'percentage',value:pct}};
+}
+function barSplitFor(venueId,venues){
+  const v=(venues||S.config.venues||[]).find(x=>String(x.id)===String(venueId));
+  return v?splitPctOf(v.barSplitPct):null;
+}
+// Parte de La Opción de la venta neta de barra
+function barOurNet(record,venues){ const net=barNet(record.total); const pct=barSplitFor(record.venueId,venues); return pct===null?net:r2(net*(100-pct)/100); }
+
 function agreementValueLabel(agr){ return !agr?'—':(agr.mode==='fixed'?fmt(agr.value):fmtPct(agr.value)); }
 function showToast(msg,type='success'){ S.toast={message:msg,type}; clearTimeout(S.toastTimer); S.toastTimer=setTimeout(()=>{S.toast=null;render();},3500); render(); }
 function logoSVG(w=150){ const h=w*.55; return `<svg width="${w}" height="${h}" viewBox="-28 -8 336 174" preserveAspectRatio="xMidYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible"><text x="140" y="68" text-anchor="middle" font-family="'Outfit','Arial Black',sans-serif" font-size="48" font-weight="900" letter-spacing="4" fill="var(--text)">LA OPCIÓN</text><line x1="4" y1="82" x2="276" y2="82" stroke="var(--cyan)" stroke-width="4"/><line x1="4" y1="92" x2="276" y2="92" stroke="var(--pink)" stroke-width="4"/><line x1="4" y1="102" x2="276" y2="102" stroke="var(--yellow)" stroke-width="4"/><text x="140" y="132" text-anchor="middle" font-family="'Outfit','Arial',sans-serif" font-size="20" font-weight="300" letter-spacing="9" fill="var(--text-muted)">PRODUCCIONES</text></svg>`; }
@@ -740,9 +757,36 @@ async function deleteShowFromSheet(show){
 
 async function saveConfigToSheet(){
   if(S.role!=='admin') return showToast('No tienes permisos.','error');
+  // salas cuyo reparto de funciones ha cambiado respecto a lo guardado
+  const before=new Map(((S.rawConfig&&S.rawConfig.venues)||[]).map(v=>[String(v.id),splitPctOf(v.splitPct)]));
+  const changed=(S.config.venues||[]).filter(v=>before.has(String(v.id))&&before.get(String(v.id))!==splitPctOf(v.splitPct));
   S.isSaving=true;render();
-  try{syncAllWorkAgreementsToConfig();await apiPost({action:'saveConfig',config:S.config});S.configDirty=false;showToast('Configuración guardada','success');S.isSaving=false;await loadFromSheet({background:true});}
+  try{
+    syncAllWorkAgreementsToConfig();await apiPost({action:'saveConfig',config:S.config});S.configDirty=false;showToast('Configuración guardada','success');S.isSaving=false;
+    for(const v of changed){
+      const n=S.shows.filter(s=>normalize(s.venueName)===normalize(v.name)).length;
+      if(n&&window.confirm(`Has cambiado el reparto de funciones de ${v.name}.\n\n¿Recalcular ahora las ${n} funciones ya guardadas en esa sala con el reparto nuevo?`)) await recalcVenueShows(v.id,true);
+    }
+    await loadFromSheet({background:true});
+  }
   catch(err){showToast('Error al guardar configuración: '+err.message,'error');}
+  finally{S.isSaving=false;render();}
+}
+
+async function recalcVenueShows(venueId,skipConfirm=false){
+  if(S.role!=='admin') return;
+  const v=venueById(venueId); if(!v) return;
+  if(S.configDirty) return showToast('Guarda primero los cambios de configuración.','warn');
+  const n=S.shows.filter(s=>normalize(s.venueName)===normalize(v.name)).length;
+  if(!skipConfirm&&!window.confirm(`¿Recalcular las ${n} funciones guardadas en ${v.name} con su reparto actual?\n\nSe mantienen ingresos, comisiones, gastos y alquiler; solo cambia el reparto caché / La Opción.`)) return;
+  S.isSaving=true;render();
+  try{
+    const res=await apiPost({action:'recalcVenueShows',venueId});
+    if(res.recalculated===undefined) throw new Error('Actualiza el Apps Script (nueva versión) para poder recalcular.');
+    showToast(res.message+(res.skipped?` · ${res.skipped} sin identificador no se tocaron`:''),'success');
+    S.isSaving=false;
+    await loadFromSheet({manual:false,background:true});
+  }catch(err){showToast('Error al recalcular: '+err.message,'error');}
   finally{S.isSaving=false;render();}
 }
 
@@ -1232,7 +1276,10 @@ function renderShowForm(isEdit,kind='show'){
   const venueRental=Number(selectedVenue?.alquiler||0);
   const rentalInfo=d.venueId?`<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">Alquiler configurado: <strong style="color:var(--yellow)">${fmt(venueRental)}</strong> (se aplica automáticamente)</p>`:'';
 
-  const agreementInfo=d.workId
+  const venueAgr=venueAgreement(selectedVenue,kind);
+  const agreementInfo=venueAgr
+    ? `<div class="event-note">🏛️ En <strong>${esc(selectedVenue.name)}</strong> se aplica el reparto de sala <strong>${esc(venueAgr.snapshot.name)}</strong>: ${venueAgr.snapshot.value} % para la compañía (caché) y ${r2(100-venueAgr.snapshot.value)} % para La Opción, sea cual sea la obra.</div>`
+    : d.workId
     ? (resolvedAgreement.snapshot
       ? `<p class="dim" style="font-size:12px;margin-top:-4px;margin-bottom:12px">Acuerdo vinculado a la obra: <strong style="color:var(--cyan)">${esc(resolvedAgreement.snapshot.name)}</strong> · ${resolvedAgreement.snapshot.mode==='fixed'?'Fijo':'Porcentaje'} ${agreementValueLabel(resolvedAgreement.snapshot)}${resolvedAgreement.snapshot.mode==='percentage'&&Number(resolvedAgreement.snapshot.value)>=100?' <span style="color:var(--warn)">(todo el neto irá a la compañía)</span>':''}</p>`
       : `<div class="dirty-note">⚠️ Esta obra todavía no tiene acuerdo configurado. Ve a Administración → Obras y completa tipo y valor del acuerdo.</div>`)
@@ -1321,7 +1368,7 @@ function renderAdmin(){
   const tabs=[{id:'platforms',label:'Plataformas'},{id:'venues',label:'Salas'},{id:'works',label:'Obras y acuerdos'},{id:'expenses',label:'Gastos de funciones'},{id:'eventExpenses',label:'Gastos de eventos'},{id:'businessTypes',label:'Tipos de gasto del negocio'},{id:'barMethods',label:'Pagos de barra'},{id:'users',label:'Usuarios'}];
   const tabBtns=tabs.map(t=>`<button class="btn ${S.adminTab===t.id?'btn-primary':'btn-ghost'} btn-sm" data-admin-tab="${t.id}">${t.label}</button>`).join('');
   const content=S.adminTab==='businessTypes'?renderBusinessTypes():(S.adminTab==='barMethods'?renderBarMethods():(S.adminTab==='users'?renderUsersAdmin():renderConfigEditor(S.adminTab)));
-  return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}${S.adminTab==='eventExpenses'?'<div class="event-note">🎉 Cada gasto que añadas aquí (Hotel, Técnico, Artistas…) aparece como una línea en el formulario de eventos, debajo de Autor y Otros gastos. Desactívalo en vez de borrarlo para conservar el histórico.</div>':''}${S.adminTab==='works'?'<div class="dirty-note">Cambiar el acuerdo de una obra no modifica las funciones ni los eventos ya guardados. Para aplicarlo a un registro existente, ábrelo, pulsa Editar y guarda.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
+  return `<div class="section-top"><div><h1 class="page-title">Administración</h1><p class="page-sub">Configuración desde la app</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" data-action="refresh">🔄 Recargar</button>${S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?`<button class="btn btn-primary btn-sm" data-action="saveConfig" ${S.isSaving?'disabled':''}>💾 Guardar cambios</button>`:''}</div></div>${S.configDirty&&S.adminTab!=='users'&&S.adminTab!=='barMethods'&&S.adminTab!=='businessTypes'?'<div class="dirty-note">Tienes cambios pendientes. Pulsa "Guardar cambios" para enviarlos al Sheet.</div>':''}${S.adminTab==='venues'?'<div class="event-note">🏛️ <strong>Reparto de sala:</strong> «Funciones · % ellos» aplica ese porcentaje como caché de la compañía en todas las funciones de la sala, sustituyendo al acuerdo de cada obra (los eventos no se ven afectados). «Barra · % ellos» reparte la venta neta de barra: ese % para ellos y el resto para La Opción. Déjalos vacíos para no aplicar reparto.</div>':''}${S.adminTab==='eventExpenses'?'<div class="event-note">🎉 Cada gasto que añadas aquí (Hotel, Técnico, Artistas…) aparece como una línea en el formulario de eventos, debajo de Autor y Otros gastos. Desactívalo en vez de borrarlo para conservar el histórico.</div>':''}${S.adminTab==='works'?'<div class="dirty-note">Cambiar el acuerdo de una obra no modifica las funciones ni los eventos ya guardados. Para aplicarlo a un registro existente, ábrelo, pulsa Editar y guarda.</div>':''}<div style="display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap">${tabBtns}</div>${content}`;
 }
 // ══════════════════════════════════════════════════════════════
 // ORDEN MANUAL EN ADMINISTRACIÓN
@@ -1413,7 +1460,7 @@ function renderConfigEditor(tab){
 }
 function renderAddConfigForm(tab){
   if(tab==='platforms') return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva plataforma"/></div><div class="grid grid-2"><div class="field"><label>Comisión %</label><input type="number" min="0" step="0.01" data-add="commission" data-add-tab="${tab}" placeholder="0"/></div><div class="field"><label>IVA comisión</label><select data-add="ivaOnCommission" data-add-tab="${tab}"><option value="true">Sí</option><option value="false">No</option></select></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir plataforma</button>`;
-  if(tab==='venues') return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva sala"/></div><div class="field"><label>Alquiler por función</label><input type="number" min="0" step="0.01" data-add="alquiler" data-add-tab="${tab}" placeholder="0"/></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir sala</button>`;
+  if(tab==='venues') return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva sala"/></div><div class="field"><label>Alquiler por función</label><input type="number" min="0" step="0.01" data-add="alquiler" data-add-tab="${tab}" placeholder="0"/></div><div class="grid grid-2"><div class="field"><label>Reparto funciones · % ellos</label><input type="number" min="0" max="100" step="0.01" data-add="splitPct" data-add-tab="${tab}" placeholder="Vacío = acuerdo de cada obra"/></div><div class="field"><label>Reparto barra · % ellos</label><input type="number" min="0" max="100" step="0.01" data-add="barSplitPct" data-add-tab="${tab}" placeholder="Vacío = 100 % La Opción"/></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir sala</button>`;
   if(tab==='works') return `<div class="field"><label>Nombre de la obra</label><input data-add="name" data-add-tab="${tab}" placeholder="Nueva obra"/></div><div class="field"><label>Nombre del acuerdo</label><input data-add="agreementName" data-add-tab="${tab}" placeholder="Acuerdo vinculado a esta obra"/></div><div class="grid grid-2"><div class="field"><label>Tipo de acuerdo</label><select data-add="agreementMode" data-add-tab="${tab}"><option value="percentage">Porcentaje</option><option value="fixed">Fijo</option></select></div><div class="field"><label>Valor del acuerdo</label><input type="number" min="0" step="0.01" data-add="agreementValue" data-add-tab="${tab}" placeholder="0"/></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir obra con acuerdo</button>`;
   if(tab==='agreements') return `<div class="field"><label>Nombre</label><input data-add="name" data-add-tab="${tab}" placeholder="Nuevo acuerdo"/></div><div class="grid grid-2"><div class="field"><label>Tipo</label><select data-add="mode" data-add-tab="${tab}"><option value="percentage">Porcentaje</option><option value="fixed">Fijo</option></select></div><div class="field"><label>Valor</label><input type="number" min="0" step="0.01" data-add="value" data-add-tab="${tab}" placeholder="0"/></div></div><button class="btn btn-primary" data-action="addConfig" data-add-config-tab="${tab}">➕ Añadir acuerdo</button>`;
   const meta=CONFIG_META[tab];
@@ -1421,14 +1468,14 @@ function renderAddConfigForm(tab){
 }
 function renderConfigHeader(tab){
   if(tab==='platforms') return '<tr><th>Nombre</th><th>Comisión</th><th>IVA</th><th>Activa</th></tr>';
-  if(tab==='venues')    return '<tr><th>Nombre</th><th>Alquiler por función</th><th>Activa</th></tr>';
+  if(tab==='venues')    return '<tr><th>Nombre</th><th>Alquiler por función</th><th>Funciones · % ellos</th><th>Barra · % ellos</th><th></th><th>Activa</th></tr>';
   if(tab==='works')     return '<tr><th>Obra</th><th>Acuerdo</th><th>Tipo acuerdo</th><th>Valor acuerdo</th><th>Activa</th></tr>';
   if(tab==='agreements')return '<tr><th>Nombre</th><th>Tipo</th><th>Valor</th><th>Activo</th></tr>';
   return '<tr><th>Nombre</th><th>Activo</th></tr>';
 }
 function renderConfigRow(tab,item){
   if(tab==='platforms') return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="commission" value="${Number(item.commission||0)}"/></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="ivaOnCommission"><option value="true" ${item.ivaOnCommission?'selected':''}>Sí</option><option value="false" ${!item.ivaOnCommission?'selected':''}>No</option></select></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
-  if(tab==='venues')    return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="alquiler" value="${Number(item.alquiler||0)}"/></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
+  if(tab==='venues')    return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="alquiler" value="${Number(item.alquiler||0)}"/></td><td><input class="inline-input" style="min-width:90px" type="number" min="0" max="100" step="0.01" placeholder="—" title="% para la compañía en todas las funciones de esta sala. Vacío = acuerdo de cada obra" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="splitPct" value="${splitPctOf(item.splitPct)??''}"/></td><td><input class="inline-input" style="min-width:90px" type="number" min="0" max="100" step="0.01" placeholder="—" title="% para ellos de la venta neta de barra. Vacío = todo para La Opción" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="barSplitPct" value="${splitPctOf(item.barSplitPct)??''}"/></td><td>${splitPctOf(item.splitPct)!==null?`<button type="button" class="btn btn-secondary btn-sm" data-action="recalcVenue" data-venue-id="${esc(item.id)}" title="Recalcula todas las funciones ya guardadas en esta sala con el reparto actual">↻ Recalcular funciones</button>`:''}</td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
   if(tab==='works'){ const resolved=resolveAgreementForWork(item,S.config); const agr=resolved.snapshot||{name:item.agreementName||item.name,mode:'percentage',value:0}; return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="agreementName" value="${esc(agr.name||item.name)}"/></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="agreementMode"><option value="percentage" ${agr.mode==='percentage'?'selected':''}>Porcentaje</option><option value="fixed" ${agr.mode==='fixed'?'selected':''}>Fijo</option></select></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="agreementValue" value="${Number(agr.value||0)}"/></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`; }
   if(tab==='agreements')return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><select class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="mode"><option value="percentage" ${item.mode==='percentage'?'selected':''}>Porcentaje</option><option value="fixed" ${item.mode==='fixed'?'selected':''}>Fijo</option></select></td><td><input class="inline-input" type="number" min="0" step="0.01" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="value" value="${Number(item.value||0)}"/></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
   return `<tr><td><input class="inline-input" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="name" value="${esc(item.name)}"/></td><td><input class="inline-check" type="checkbox" data-cfg-tab="${tab}" data-cfg-id="${item.id}" data-cfg-field="active" ${item.active!==false?'checked':''}/></td></tr>`;
@@ -1478,6 +1525,7 @@ function bindEvents(){
       if(a==='clearShowFilters'){const st=listState(viewKind());st.search='';st.filters=EMPTY_LIST_FILTERS();return render();}
       if(a==='saveNewShow')  {btn.disabled=true;btn.innerHTML='⏳ Guardando...';return handleSaveShow();}
       if(a==='saveConfig')   return saveConfigToSheet();
+      if(a==='recalcVenue')  return recalcVenueShows(btn.dataset.venueId);
       if(a==='addConfig')    return addConfigItem(btn.dataset.addConfigTab);
       if(a==='createUser')   return handleCreateUser();
       if(a==='updateUser')   return handleUpdateUser(btn.dataset.userId);
@@ -1632,6 +1680,10 @@ function updateConfigFromInput(el){
   const field=el.dataset.cfgField;
   let value=el.type==='checkbox'?el.checked:el.value;
   if(['commission','value','alquiler','agreementValue'].includes(field)) value=Number(value||0);
+  if(['splitPct','barSplitPct'].includes(field)){
+    value=splitPctOf(value);
+    if(el.value!==''&&(Number(el.value)<0||Number(el.value)>100)){ showToast('El reparto debe estar entre 0 y 100 %.','error'); el.value=value??''; }
+  }
   if(field==='ivaOnCommission') value=value==='true';
   item[field]=value;
   if(el.dataset.cfgTab==='works'){
@@ -1649,7 +1701,7 @@ function addConfigItem(tab){
   if((S.config[meta.key]||[]).some(x=>normalize(x.name)===normalize(name))) return showToast(`Ya existe un elemento llamado "${name}" (o casi igual). Usa otro nombre.`,'error');
   let item={id:gid(meta.prefix),name,active:true};
   if(tab==='platforms') item={...item,commission:Number(values.commission||0),ivaOnCommission:values.ivaOnCommission==='true'};
-  if(tab==='venues')    item={...item,alquiler:Number(values.alquiler||0)};
+  if(tab==='venues')    item={...item,alquiler:Number(values.alquiler||0),splitPct:splitPctOf(values.splitPct),barSplitPct:splitPctOf(values.barSplitPct)};
   if(tab==='works'){
     const agreementName=String(values.agreementName||name).trim();
     if((S.config.agreements||[]).some(a=>normalize(a.name)===normalize(agreementName))) return showToast(`Ya existe un acuerdo llamado "${agreementName}" (o casi igual). Usa otro nombre de acuerdo.`,'error');
@@ -1696,7 +1748,9 @@ async function handleSaveShow(){
   const work=S.config.works.find(w=>w.id===d.workId);
   const venue=S.config.venues.find(v=>v.id===d.venueId);
   const legacyAgreement=d.agreementId?getLegacyAgreementById(S.config,d.agreementId):null;
-  const resolvedAgreement=resolveAgreementForWork(work,S.config,legacyAgreement);
+  let resolvedAgreement=resolveAgreementForWork(work,S.config,legacyAgreement);
+  const venueAgr=venueAgreement(venue,kind);
+  if(venueAgr) resolvedAgreement=venueAgr; // el reparto de sala manda sobre el acuerdo de la obra
 
   const income={};
   S.config.platforms.forEach(p=>{income[p.id]=parseFloat(d.income?.[p.id])||0;});
@@ -1773,7 +1827,7 @@ const BAR_VAT_RATE=0.10;
 function barNet(gross){ return r2(Number(gross||0)/(1+BAR_VAT_RATE)); }
 function barVat(gross){ return r2(Number(gross||0)-barNet(gross)); }
 function barTotals(records){
-  return records.reduce((a,r)=>({gross:r2(a.gross+Number(r.total||0)),net:r2(a.net+barNet(r.total)),vat:r2(a.vat+barVat(r.total))}),{gross:0,net:0,vat:0});
+  return records.reduce((a,r)=>({gross:r2(a.gross+Number(r.total||0)),net:r2(a.net+barNet(r.total)),vat:r2(a.vat+barVat(r.total)),ours:r2(a.ours+barOurNet(r))}),{gross:0,net:0,vat:0,ours:0});
 }
 
 function barSummary(records){
@@ -1808,7 +1862,8 @@ function barFiltersHtml(){
 }
 function barRecordsHtml(records){
   const t=barTotals(records);
-  return `<div class="card"><h3>Registros de barra · ${records.length}</h3><p class="dim" style="font-size:11px;margin:-8px 0 10px">El importe registrado es bruto (IVA 10 % incluido). La venta neta es el bruto sin ese IVA.</p><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Sala</th><th>Ingresos por método</th><th class="right">Bruto (IVA incl.)</th><th class="right">IVA 10 %</th><th class="right">Venta neta</th><th>Acciones</th></tr></thead><tbody>${records.map(r=>`<tr><td>${esc(r.date)} <span class="dim">${weekdayShort(r.date)}</span></td><td>${esc(r.venueName)}</td><td>${r.payments.filter(p=>p.amount!==0).map(p=>`${esc(p.name)}: ${fmt(p.amount)}`).join('<br>')}</td><td class="right">${fmt(r.total)}</td><td class="right danger">-${fmt(barVat(r.total))}</td><td class="right fw700 cyan">${fmt(barNet(r.total))}</td><td><div class="row-actions"><button class="btn btn-secondary btn-sm" data-bar-action="edit" data-bar-id="${esc(r.id)}">✏️ Editar</button>${S.role==='admin'?`<button class="btn btn-danger btn-sm" data-bar-action="delete" data-bar-id="${esc(r.id)}">Eliminar</button>`:''}</div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Sin registros con estos filtros</td></tr>'}</tbody>${records.length?`<tfoot><tr><th colspan="3">Total · ${records.length} registros</th><th class="right">${fmt(t.gross)}</th><th class="right">-${fmt(t.vat)}</th><th class="right">${fmt(t.net)}</th><th></th></tr></tfoot>`:''}</table></div></div>`;
+  const anySplit=records.some(r=>barSplitFor(r.venueId)!==null);
+  return `<div class="card"><h3>Registros de barra · ${records.length}</h3><p class="dim" style="font-size:11px;margin:-8px 0 10px">El importe registrado es bruto (IVA 10 % incluido). La venta neta es el bruto sin ese IVA.</p><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Sala</th><th>Ingresos por método</th><th class="right">Bruto (IVA incl.)</th><th class="right">IVA 10 %</th><th class="right">Venta neta</th>${anySplit?'<th class="right">Parte ellos</th><th class="right">Parte La Opción</th>':''}<th>Acciones</th></tr></thead><tbody>${records.map(r=>`<tr><td>${esc(r.date)} <span class="dim">${weekdayShort(r.date)}</span></td><td>${esc(r.venueName)}</td><td>${r.payments.filter(p=>p.amount!==0).map(p=>`${esc(p.name)}: ${fmt(p.amount)}`).join('<br>')}</td><td class="right">${fmt(r.total)}</td><td class="right danger">-${fmt(barVat(r.total))}</td><td class="right fw700 cyan">${fmt(barNet(r.total))}</td>${anySplit?(()=>{const p=barSplitFor(r.venueId);return p===null?'<td class="right dim">—</td><td class="right fw700 success">'+fmt(barNet(r.total))+'</td>':`<td class="right pink">${fmt(r2(barNet(r.total)-barOurNet(r)))} <span class="dim">(${p} %)</span></td><td class="right fw700 success">${fmt(barOurNet(r))}</td>`;})():''}<td><div class="row-actions"><button class="btn btn-secondary btn-sm" data-bar-action="edit" data-bar-id="${esc(r.id)}">✏️ Editar</button>${S.role==='admin'?`<button class="btn btn-danger btn-sm" data-bar-action="delete" data-bar-id="${esc(r.id)}">Eliminar</button>`:''}</div></td></tr>`).join('')||`<tr><td colspan="${anySplit?9:7}" class="empty">Sin registros con estos filtros</td></tr>`}</tbody>${records.length?`<tfoot><tr><th colspan="3">Total · ${records.length} registros</th><th class="right">${fmt(t.gross)}</th><th class="right">-${fmt(t.vat)}</th><th class="right">${fmt(t.net)}</th>${anySplit?`<th class="right">${fmt(r2(t.net-t.ours))}</th><th class="right">${fmt(t.ours)}</th>`:''}<th></th></tr></tfoot>`:''}</table></div></div>`;
 }
 function renderBarBilling(){
   if(!B.draft) B.draft=emptyBarDraft();
@@ -1818,13 +1873,13 @@ function renderBarBilling(){
   return `<div class="section-top"><div><h1 class="page-title">Facturación barra</h1><p class="page-sub">Consumos por sala y fecha</p></div><button class="btn btn-secondary btn-sm" data-bar-action="reload" ${B.loading?'disabled':''}>🔄 Actualizar barras</button></div>
     ${barLoadNotice()}${!B.loaded?'':`<form id="bar-form"><div class="grid grid-2 mb20">
     <div class="card"><h3>${d.version?'Editar registro':'Nuevo registro'}</h3><div class="field"><label>Sala *</label><select data-bar-field="venueId" required><option value="">— Seleccionar —</option>${venues.map(v=>`<option value="${esc(v.id)}" ${d.venueId===v.id?'selected':''}>${esc(v.name)}${v.active===false?' (inactiva)':''}</option>`).join('')}</select></div><div class="field"><label>Fecha *</label><input type="date" data-bar-field="date" required value="${esc(d.date)}"/></div><div class="field"><label>Día de la semana</label><select data-bar-weekday ${d.date?'':'disabled'}>${d.date?weekdayOptions(weekdayIndexFromDate(d.date)):'<option value="">— Pon la fecha —</option>'}</select></div><p class="dim" style="font-size:11px;margin-top:-6px">El día se rellena solo con la fecha. Si cambias el día, la fecha se mueve a ese día de la misma semana.</p></div>
-    <div class="card"><h3>Ingresos</h3>${methods.map(m=>`<div class="field"><label>${esc(m.name)}${m.active===false?' (inactivo; registro histórico)':''}</label><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00" data-bar-payment="${esc(m.id)}" value="${esc(d.payments.find(p=>p.id===m.id)?.amount??'')}"/></div>`).join('')||'<p>No hay métodos activos. Añádelos en Administración.</p>'}${(()=>{const g=r2(d.payments.reduce((a,p)=>a+(Number(p.amount)||0),0));return `<div class="finance-split"><span>Total bruto (IVA incl.)</span><strong id="bar-draft-total">${fmt(g)}</strong></div><div class="finance-split"><span>IVA 10 %</span><strong id="bar-draft-vat" class="danger">-${fmt(barVat(g))}</strong></div><div class="finance-split total"><span>Venta neta</span><strong id="bar-draft-net" class="cyan">${fmt(barNet(g))}</strong></div>`;})()}<p class="dim" style="font-size:11px;margin-top:8px">Introduce los importes cobrados con IVA incluido. La app resta el 10 % de IVA para obtener la venta neta.</p></div></div>
+    <div class="card"><h3>Ingresos</h3>${methods.map(m=>`<div class="field"><label>${esc(m.name)}${m.active===false?' (inactivo; registro histórico)':''}</label><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00" data-bar-payment="${esc(m.id)}" value="${esc(d.payments.find(p=>p.id===m.id)?.amount??'')}"/></div>`).join('')||'<p>No hay métodos activos. Añádelos en Administración.</p>'}${(()=>{const g=r2(d.payments.reduce((a,p)=>a+(Number(p.amount)||0),0));return `<div class="finance-split"><span>Total bruto (IVA incl.)</span><strong id="bar-draft-total">${fmt(g)}</strong></div><div class="finance-split"><span>IVA 10 %</span><strong id="bar-draft-vat" class="danger">-${fmt(barVat(g))}</strong></div><div class="finance-split total"><span>Venta neta</span><strong id="bar-draft-net" class="cyan">${fmt(barNet(g))}</strong></div>${(()=>{const p=barSplitFor(d.venueId);return p===null?'':`<p class="dim" style="font-size:11px;margin-top:6px">Reparto de sala: ${p} % de la venta neta para ellos y ${r2(100-p)} % para La Opción.</p>`;})()}`;})()}<p class="dim" style="font-size:11px;margin-top:8px">Introduce los importes cobrados con IVA incluido. La app resta el 10 % de IVA para obtener la venta neta.</p></div></div>
     <div style="display:flex;gap:10px;margin-bottom:24px"><button type="submit" class="btn btn-primary" ${S.isSaving||!methods.length?'disabled':''}>${d.version?'Guardar cambios':'Guardar ingreso de barra'}</button><button type="button" class="btn btn-secondary" data-bar-action="new">${d.version?'Cancelar edición':'Limpiar formulario'}</button></div></form>${barFiltersHtml()}${barRecordsHtml(filteredBars())}`}`;
 }
 function renderBarDashboard(){
   const records=filteredBars(),summary=barSummary(records);
   return `<div class="section-top"><div><h1 class="page-title">Dashboard barras</h1><p class="page-sub">Facturación de consumiciones</p></div><button class="btn btn-secondary btn-sm" data-bar-action="reload" ${B.loading?'disabled':''}>🔄 Actualizar barras</button></div>${barLoadNotice()}${!B.loaded?'':`${barFiltersHtml()}
-    <div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">Total bruto (IVA incl.)</div><div class="kpi-value">${fmt(summary.total)}</div></div><div class="card"><div class="kpi-label">IVA 10 %</div><div class="kpi-value danger">-${fmt(summary.vat)}</div></div><div class="card"><div class="kpi-label">Venta neta</div><div class="kpi-value cyan">${fmt(summary.net)}</div><div class="kpi-sub">Bruto sin IVA</div></div><div class="card"><div class="kpi-label">Registros</div><div class="kpi-value">${records.length}</div><div class="kpi-sub">${summary.days.length} días con registros</div></div><div class="card"><div class="kpi-label">Media neta por día</div><div class="kpi-value purple">${fmt(summary.days.length?summary.net/summary.days.length:0)}</div></div></div>
+    <div class="grid grid-kpis mb20"><div class="card"><div class="kpi-label">Total bruto (IVA incl.)</div><div class="kpi-value">${fmt(summary.total)}</div></div><div class="card"><div class="kpi-label">IVA 10 %</div><div class="kpi-value danger">-${fmt(summary.vat)}</div></div><div class="card"><div class="kpi-label">Venta neta</div><div class="kpi-value cyan">${fmt(summary.net)}</div><div class="kpi-sub">Bruto sin IVA</div></div>${(()=>{const t=barTotals(records);return t.ours!==t.net?`<div class="card"><div class="kpi-label">Parte La Opción</div><div class="kpi-value success">${fmt(t.ours)}</div><div class="kpi-sub">${fmt(r2(t.net-t.ours))} para ellos (reparto de sala)</div></div>`:'';})()}<div class="card"><div class="kpi-label">Registros</div><div class="kpi-value">${records.length}</div><div class="kpi-sub">${summary.days.length} días con registros</div></div><div class="card"><div class="kpi-label">Media neta por día</div><div class="kpi-value purple">${fmt(summary.days.length?summary.net/summary.days.length:0)}</div></div></div>
     <div class="grid grid-2 mb20"><div class="card"><h3>Facturación por sala</h3>${renderMiniBars(summary.venues,0,'var(--purple)',summary.venues.length)}</div><div class="card"><h3>Facturación por método de pago</h3>${renderMiniBars(summary.methods,0,'var(--cyan)',summary.methods.length)}</div></div>
     <div class="card mb20"><h3>Facturación por día de la semana</h3><div class="table-wrap"><table><thead><tr><th>Día</th><th class="right">Registros</th><th class="right">Bruto</th><th class="right">Venta neta</th><th class="right">Media neta por registro</th></tr></thead><tbody>${summary.weekdays.map((w,i)=>({w,i})).filter(x=>x.w.n>0).map(({w,i})=>`<tr><td>${WEEKDAYS[i]}</td><td class="right">${w.n}</td><td class="right">${fmt(w.cents/100)}</td><td class="right cyan fw700">${fmt(w.netCents/100)}</td><td class="right">${fmt(w.netCents/100/w.n)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin registros con estos filtros</td></tr>'}</tbody></table></div><div style="margin-top:14px">${renderMiniBars(summary.weekdays.map((w,i)=>[`${WEEKDAYS[i]} (${w.n})`,w.cents/100]).filter((e,i)=>summary.weekdays[i].n>0),0,'var(--cyan)',7)}</div></div>
     <div class="card mb20"><h3>Facturación por día</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th class="right">Bruto (IVA incl.)</th><th class="right">IVA 10 %</th><th class="right">Venta neta</th></tr></thead><tbody>${summary.days.map(([date,total,net])=>`<tr><td>${esc(date)}</td><td class="right">${fmt(total)}</td><td class="right danger">-${fmt(r2(total-net))}</td><td class="right cyan fw700">${fmt(net)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">Sin registros con estos filtros</td></tr>'}</tbody><tfoot><tr><th>Total</th><th class="right">${fmt(summary.total)}</th><th class="right">-${fmt(summary.vat)}</th><th class="right">${fmt(summary.net)}</th></tr></tfoot></table></div></div>${barRecordsHtml(records)}`}`;
@@ -1869,7 +1924,7 @@ async function saveBarMethods(){
 }
 function bindBarEvents(){
   const form=document.getElementById('bar-form');if(form)form.onsubmit=e=>{e.preventDefault();saveBarForm();};
-  document.querySelectorAll('[data-bar-field]').forEach(el=>{el.onchange=()=>{if(B.draft)B.draft[el.dataset.barField]=el.value;};});
+  document.querySelectorAll('[data-bar-field]').forEach(el=>{el.onchange=()=>{if(B.draft)B.draft[el.dataset.barField]=el.value;if(el.dataset.barField==='venueId')render();};});
   document.querySelectorAll('[data-bar-payment]').forEach(el=>{el.oninput=()=>{
     if(!B.draft)return;
     const id=el.dataset.barPayment;let p=B.draft.payments.find(x=>x.id===id);
@@ -2044,7 +2099,7 @@ function summarizeBusiness(snapshot,filters){
   };
   snapshot.works.forEach(r=>addLine(r,'show'));
   (snapshot.events||[]).forEach(r=>addLine(r,'event'));
-  snapshot.bars.forEach(r=>{if(!r.date){undated++;return;}if(matches(r.date)&&dayMatches(r.date)&&venueMatches(r.venueId)){const v=rowFor(r.venueId,r.venueName);v.bars+=Math.round(barNet(r.total)*100);v.barCount++;}});
+  snapshot.bars.forEach(r=>{if(!r.date){undated++;return;}if(matches(r.date)&&dayMatches(r.date)&&venueMatches(r.venueId)){const v=rowFor(r.venueId,r.venueName);v.bars+=Math.round(barOurNet(r,snapshot.venues)*100);v.barCount++;}});
   // Los gastos mensuales no tienen día: al filtrar por día de la semana quedan fuera.
   if(!weekdayFiltered) snapshot.expenses.forEach(r=>{
     if(!matches(r.period))return;
@@ -2124,7 +2179,7 @@ function renderBusinessDashboard(){
   <div class="card mb20"><h3>Ranking de salas por resultado</h3><p class="nb-note" style="margin-bottom:14px">Funciones + eventos + barras − gastos asignados. Pulsa una sala para ver su detalle.</p><div class="table-wrap"><table id="business-ranking"><thead><tr><th># / Sala</th><th class="right">Funciones</th><th class="right">Eventos</th><th class="right">Barras</th><th class="right">Gastos asignados</th><th class="right">Resultado</th></tr></thead><tbody>${summary.ranking.map((v,i)=>`<tr><td><button class="nb-room-button" data-business-venue="${esc(v.id)}"><span class="nb-rank">${i+1}</span>${esc(v.name)}</button></td><td class="right">${fmt(v.works/100)}</td><td class="right orange">${fmt(v.events/100)}</td><td class="right">${fmt(v.bars/100)}</td><td class="right">${fmt(v.expenses/100)}</td><td class="right fw700 ${v.result<0?'danger':'success'}">${fmt(v.result/100)}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Sin actividad en este periodo</td></tr>'}</tbody><tfoot><tr><th>Subtotal de salas</th><th class="right">${fmt(t.works/100)}</th><th class="right">${fmt(t.events/100)}</th><th class="right">${fmt(t.bars/100)}</th><th class="right">${fmt(t.expenses/100)}</th><th class="right">${fmt((t.result+t.general)/100)}</th></tr>${!f.venueId?`<tr><td colspan="5">Gastos generales sin asignar</td><td class="right danger">−${fmt(t.general/100)}</td></tr>`:''}<tr><th colspan="5">${esc(resultLabel)}</th><th class="right ${t.result<0?'danger':'success'}">${fmt(t.result/100)}</th></tr></tfoot></table></div></div>
   <div class="grid grid-2 mb20"><div class="card"><h3>Gastos mensuales por tipo</h3>${renderMiniBars(summary.types.map(t=>[t.name,t.cents/100]),0,'var(--danger)',summary.types.length)}<p class="nb-note">Solo gastos del apartado «Gastos», dentro de los filtros.</p></div><div class="card"><h3>Obras que más aportan (funciones + eventos)</h3>${renderMiniBars(summary.works.slice(0,8).map(w=>[w.name,w.total/100]),0,'var(--purple)',8)}<p class="nb-note">${esc(basisLabel)}. No se asignan a las obras los gastos generales del negocio.</p></div></div>
   <div class="card mb20"><h3>Detalle mensual del año</h3><div class="table-wrap"><table><thead><tr><th>Mes</th><th class="right">Funciones</th><th class="right">Eventos</th><th class="right">Barras</th><th class="right">Gastos de salas</th><th class="right">Generales</th><th class="right">Resultado</th></tr></thead><tbody>${months.map(m=>{const v=m.summary.total;return `<tr><td>${MONTH_NAMES[Number(m.month)-1]}</td>${m.summary.hasData?`<td class="right">${fmt(v.works/100)} <span class="dim">(${v.count})</span></td><td class="right orange">${fmt(v.events/100)} <span class="dim">(${v.eventCount})</span></td><td class="right">${fmt(v.bars/100)}</td><td class="right">${fmt(v.expenses/100)}</td><td class="right">${fmt(v.general/100)}</td><td class="right fw700 ${v.result<0?'danger':'success'}">${fmt(v.result/100)}</td>`:'<td colspan="6" class="right muted">Sin registros</td>'}</tr>`;}).join('')}</tbody></table></div></div>
-  <div class="card"><h3>Cómo se calcula</h3><p class="nb-note">Funciones (${esc(basisShort)}) + eventos (${esc(basisShort)}) + venta neta de barras (sin IVA 10 %) − gastos asignados − gastos generales incluidos. Funciones y eventos se calculan igual pero se registran por separado; aquí se suman. Los gastos y el caché ya descontados en cada registro no se vuelven a restar. Registra en «Gastos» solo costes adicionales.</p><p class="nb-note mt10">Venta bruta de entradas del periodo (funciones + eventos): <strong>${fmt(t.gross/100)}</strong>. Se muestra como referencia; no se suma otra vez. Barras utiliza la venta neta: el importe cobrado menos el 10 % de IVA. El resultado es de gestión con los importes registrados; no equivale a un beneficio contable después de impuestos.</p><p class="nb-note mt10">Última carga: ${esc(new Date(snapshot.updatedAt).toLocaleString('es-ES'))}. Los periodos sin registros no permiten saber si falta información o no hubo actividad.</p></div></div>`;
+  <div class="card"><h3>Cómo se calcula</h3><p class="nb-note">Funciones (${esc(basisShort)}) + eventos (${esc(basisShort)}) + venta neta de barras (sin IVA 10 %) − gastos asignados − gastos generales incluidos. Funciones y eventos se calculan igual pero se registran por separado; aquí se suman. Los gastos y el caché ya descontados en cada registro no se vuelven a restar. Registra en «Gastos» solo costes adicionales.</p><p class="nb-note mt10">Venta bruta de entradas del periodo (funciones + eventos): <strong>${fmt(t.gross/100)}</strong>. Se muestra como referencia; no se suma otra vez. Barras utiliza la venta neta (el importe cobrado menos el 10 % de IVA) y, si la sala tiene reparto de barra, solo la parte de La Opción. El resultado es de gestión con los importes registrados; no equivale a un beneficio contable después de impuestos.</p><p class="nb-note mt10">Última carga: ${esc(new Date(snapshot.updatedAt).toLocaleString('es-ES'))}. Los periodos sin registros no permiten saber si falta información o no hubo actividad.</p></div></div>`;
 }
 function bindBusinessEvents(){
   const chart=document.querySelector('.nb-chart'),selected=chart?.querySelector('.nb-month.selected');
